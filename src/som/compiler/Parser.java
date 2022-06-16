@@ -87,6 +87,7 @@ import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -912,8 +913,7 @@ public class Parser {
     builder.setSignature(binarySelector());
     builder.addMethodDefinitionSource(getSource(coord));
 
-    coord = getStartIndex();
-    builder.addArgument(symbolFor(argument()), getSource(coord));
+    argument(builder);
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
@@ -923,8 +923,7 @@ public class Parser {
       kw.append(keyword());
       builder.addMethodDefinitionSource(getSource(coord));
 
-      coord = getStartIndex();
-      builder.addArgument(symbolFor(argument()), getSource(coord));
+      argument(builder);
     } while (sym == Keyword);
 
     builder.setSignature(symbolFor(kw.toString()));
@@ -984,9 +983,10 @@ public class Parser {
     return s;
   }
 
-  protected String argument() throws ParseError {
+  protected Argument argument(final MethodBuilder builder) throws ParseError {
     int coord = getStartIndex();
-    String id = identifier();
+    SSymbol name = symbolFor(identifier());
+    Argument arg = builder.addArgument(name, getSource(coord));
 
     comments();
 
@@ -995,7 +995,7 @@ public class Parser {
     comments();
 
     reportSyntaxElement(ArgumentTag.class, getSource(coord));
-    return id;
+    return arg;
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder)
@@ -1742,8 +1742,7 @@ public class Parser {
   private void blockArguments(final MethodBuilder builder) throws ParseError {
     do {
       expect(Colon, KeywordTag.class);
-      int coord = getStartIndex();
-      builder.addArgument(symbolFor(argument()), getSource(coord));
+      argument(builder);
     } while (sym == Colon);
   }
 
