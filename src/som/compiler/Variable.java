@@ -68,6 +68,14 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   }
 
   @Override
+  public int hashCode() {
+    if (source == null) {
+      return name.hashCode();
+    }
+    return source.hashCode();
+  }
+
+  @Override
   public boolean equals(final Object o) {
     assert o != null;
     if (o == this) {
