@@ -654,11 +654,11 @@ public class Parser {
     expect(OperatorSequence, DelimiterClosingTag.class);
   }
 
-  private void slotDefinition(final MixinBuilder mxnBuilder)
+  protected SlotDefinition slotDefinition(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     comments();
     if (sym == Or) {
-      return;
+      return null;
     }
 
     AccessModifier acccessModifier = accessModifier();
@@ -684,7 +684,7 @@ public class Parser {
       immutable = false;
       init = null;
     }
-    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init, source);
+    return mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init, source);
   }
 
   private AccessModifier accessModifier() {

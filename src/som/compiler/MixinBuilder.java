@@ -375,7 +375,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     }
   }
 
-  public void addSlot(final SSymbol name, final AccessModifier acccessModifier,
+  public SlotDefinition addSlot(final SSymbol name, final AccessModifier acccessModifier,
       final boolean immutable, final ExpressionNode init,
       final SourceSection source) throws MixinDefinitionError {
     if (dispatchables.containsKey(name)) {
@@ -408,6 +408,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     if (structuralProbe != null) {
       structuralProbe.recordNewSlot(slot);
     }
+    return slot;
   }
 
   /**
