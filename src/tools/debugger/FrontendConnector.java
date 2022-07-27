@@ -1,5 +1,6 @@
 package tools.debugger;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -24,6 +25,10 @@ import com.sun.net.httpserver.HttpServer;
 
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
+import som.VM;
+import som.compiler.MixinDefinition;
+import som.interpreter.SomLanguage;
+import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
@@ -189,6 +194,7 @@ public class FrontendConnector {
   private static TaggedSourceCoordinate[] createSourceSections(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> sourcesTags,
       final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
+
     Set<SourceSection> sections = new HashSet<>();
     Map<SourceSection, Set<Class<? extends Tag>>> tagsForSections = sourcesTags.get(source);
 
@@ -348,5 +354,16 @@ public class FrontendConnector {
       messageHandler.stop(delay);
       traceHandler.stop(delay);
     } catch (InterruptedException e) {}
+  }
+
+  // Code Uptading stuff
+  public void updateClass(String filePath) {
+    try {
+      this.get
+      MixinDefinition newMethod = webDebugger.vm.getProcessPool()
+      System.out.println(newMethod.getName().toString());
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

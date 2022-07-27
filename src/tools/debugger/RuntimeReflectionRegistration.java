@@ -13,24 +13,9 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import tools.debugger.message.InitializationResponse;
-import tools.debugger.message.InitializeConnection;
+import tools.debugger.message.*;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.ProgramInfoRequest;
-import tools.debugger.message.ProgramInfoResponse;
-import tools.debugger.message.ScopesRequest;
-import tools.debugger.message.ScopesResponse;
-import tools.debugger.message.SourceMessage;
-import tools.debugger.message.StackTraceRequest;
-import tools.debugger.message.StackTraceResponse;
-import tools.debugger.message.StepMessage;
-import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.TraceDataRequest;
-import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.message.VariablesRequest;
-import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.LineBreakpoint;
 import tools.debugger.session.SectionBreakpoint;
@@ -89,6 +74,7 @@ public class RuntimeReflectionRegistration implements Feature {
     inMsgs.register(VariablesRequest.class);
     inMsgs.register(ProgramInfoRequest.class);
     inMsgs.register(TraceDataRequest.class);
+    inMsgs.register(UpdateClass.class);
 
     ClassGroup bps = new ClassGroup(BreakpointInfo.class, "type", true);
     bps.register(LineBreakpoint.class);
