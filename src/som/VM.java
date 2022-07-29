@@ -409,6 +409,8 @@ public final class VM {
           : "Currently, CandidateIdentifer and Snapshots are not compatible";
       structuralProbe = SnapshotBackend.getProbe();
     }
+
+    System.out.println(structuralProbe);
   }
 
   public SClass loadExtensionModule(final String filename) {
@@ -442,5 +444,9 @@ public final class VM {
     ThreadingModule.ConditionClassId = null;
 
     ChannelPrimitives.resetClassReferences();
+  }
+
+  public StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> getStructuralProbe(){
+    return objectSystem.getStructuralProbe();
   }
 }

@@ -5,10 +5,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -25,11 +22,15 @@ import com.sun.net.httpserver.HttpServer;
 
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
+import bd.tools.structure.StructuralProbe;
 import som.VM;
 import som.compiler.MixinDefinition;
+import som.compiler.Variable;
 import som.interpreter.SomLanguage;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
+import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
 import tools.TraceData;
@@ -60,6 +61,8 @@ import tools.debugger.message.VariablesRequest.FilterType;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
+
+import java.util.function.Consumer;
 
 
 /**
@@ -359,9 +362,19 @@ public class FrontendConnector {
   // Code Uptading stuff
   public void updateClass(String filePath) {
     try {
-      this.get
-      MixinDefinition newMethod = webDebugger.vm.getProcessPool()
-      System.out.println(newMethod.getName().toString());
+      VM vm = webDebugger.vm;
+      MixinDefinition newModule = vm.loadModule(filePath);
+      System.out.println(newModule.getName().toString());
+      StructuralProbe<SSymbol, MixinDefinition, SInvokable, MixinDefinition.SlotDefinition, Variable> structuralProbe = vm.getStructuralProbe();
+      Iterator<MixinDefinition> it =  structuralProbe.getClasses().iterator();
+      while (it.hasNext()) {
+        MixinDefinition klass = it.next();
+        if(klass == newModule){
+         System.out.println("FOUND");
+         System.out.println(klass.getIdentifier());
+         System.out.println(newModule.getIdentifier());
+        }
+      }
     } catch (IOException e) {
       e.printStackTrace();
     }
