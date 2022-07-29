@@ -62,4 +62,12 @@ public class SourcecodeCompiler {
     language.getVM().reportLoadedSource(source);
     return result;
   }
+
+  public MixinDefinition recompileModule(Source source, StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe) throws ProgramDefinitionError {
+    Parser parser = new Parser(source.getCharacters().toString(), source, null, language);
+    int coord = parser.getStartIndex();
+    MixinBuilder mxnBuilder = parser.moduleDeclaration();
+    MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
+    return result;
+  }
 }

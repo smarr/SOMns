@@ -907,4 +907,5 @@ public final class MixinDefinition implements SomInteropObject {
 
     return identifier;
   }
+
 }

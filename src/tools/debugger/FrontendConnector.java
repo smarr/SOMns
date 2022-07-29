@@ -5,11 +5,15 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
+import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
@@ -27,6 +31,7 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -363,18 +368,29 @@ public class FrontendConnector {
   public void updateClass(String filePath) {
     try {
       VM vm = webDebugger.vm;
-      MixinDefinition newModule = vm.loadModule(filePath);
-      System.out.println(newModule.getName().toString());
       StructuralProbe<SSymbol, MixinDefinition, SInvokable, MixinDefinition.SlotDefinition, Variable> structuralProbe = vm.getStructuralProbe();
-      Iterator<MixinDefinition> it =  structuralProbe.getClasses().iterator();
-      while (it.hasNext()) {
-        MixinDefinition klass = it.next();
-        if(klass == newModule){
-         System.out.println("FOUND");
-         System.out.println(klass.getIdentifier());
-         System.out.println(newModule.getIdentifier());
+      EconomicSet<MixinDefinition> modules = structuralProbe.getClasses();
+      MixinDefinition oldModule = null;
+      Path newSource = Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(Path.of(filePath));
+      for(MixinDefinition module : modules ) {
+        if(module.getIdentifier().getString().split(":")[0].equals(newSource.toString())) {
+          oldModule = module;
         }
       }
+      MixinDefinition newModule = vm.loadModule(filePath);
+      System.out.println(newModule.getName().toString());
+      EconomicMap<SSymbol, Dispatchable> oldMethods = oldModule.getInstanceDispatchables();
+      oldMethods.putAll(newModule.getInstanceDispatchables());
+      System.out.println("SUBSTITUTED METHODS IN MODULE");
+//      Iterator<MixinDefinition> it =  structuralProbe.getClasses().iterator();
+//      while (it.hasNext()) {
+//        MixinDefinition klass = it.next();
+//        if (klass.getName().equals(newModule.getName())) {
+//          System.out.println("FOUND");
+//          System.out.println(klass.getIdentifier());
+//          System.out.println(newModule.getIdentifier());
+//        }
+//      }
     } catch (IOException e) {
       e.printStackTrace();
     }

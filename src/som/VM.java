@@ -447,6 +447,6 @@ public final class VM {
   }
 
   public StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> getStructuralProbe(){
-    return objectSystem.getStructuralProbe();
+    return structuralProbe;
   }
 }

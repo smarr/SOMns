@@ -12,6 +12,8 @@ import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.frontend.ApplicationThreadTask;
 
+import java.util.ArrayList;
+
 
 public class UpdateClass extends IncommingMessage {
   private final String classToRecompile ;
@@ -47,9 +49,12 @@ public class UpdateClass extends IncommingMessage {
     @Override
     public boolean execute() {
       frontend.updateClass(filePath);
-      suspension.getEvent().prepareUnwindFrame(suspension.getFrame(2));
-      suspension.resume();
-      System.out.println(suspension.getEvent().getTopStackFrame().getName());
+      ArrayList<DebugStackFrame> frames =  suspension.getStackFrames();
+      int a = 1 + 1;
+      System.out.println(a);
+      //suspension.getEvent().prepareUnwindFrame(suspension.getFrame(2));
+      //suspension.resume();
+     // System.out.println(suspension.getEvent().getTopStackFrame().getName());
 
 //      RootNode node = suspension.getStackFrames().get(2).getRawNode(SomLanguage.class).getRootNode();
 //
