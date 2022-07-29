@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.java_websocket.WebSocket;
+import som.compiler.MixinDefinition;
 import som.interpreter.SomLanguage;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.ApplicationThreadTask;
@@ -48,13 +49,13 @@ public class UpdateClass extends IncommingMessage {
 
     @Override
     public boolean execute() {
-      frontend.updateClass(filePath);
+      MixinDefinition updatedModule = frontend.updateClass(filePath);
       ArrayList<DebugStackFrame> frames =  suspension.getStackFrames();
-      int a = 1 + 1;
-      System.out.println(a);
+//      int a = 1 + 1;
+//      System.out.println(a);
       //suspension.getEvent().prepareUnwindFrame(suspension.getFrame(2));
       //suspension.resume();
-     // System.out.println(suspension.getEvent().getTopStackFrame().getName());
+      System.out.println(suspension.getEvent().getTopStackFrame().getName());
 
 //      RootNode node = suspension.getStackFrames().get(2).getRawNode(SomLanguage.class).getRootNode();
 //

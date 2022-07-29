@@ -365,7 +365,7 @@ public class FrontendConnector {
   }
 
   // Code Uptading stuff
-  public void updateClass(String filePath) {
+  public MixinDefinition updateClass(String filePath) {
     try {
       VM vm = webDebugger.vm;
       StructuralProbe<SSymbol, MixinDefinition, SInvokable, MixinDefinition.SlotDefinition, Variable> structuralProbe = vm.getStructuralProbe();
@@ -382,17 +382,10 @@ public class FrontendConnector {
       EconomicMap<SSymbol, Dispatchable> oldMethods = oldModule.getInstanceDispatchables();
       oldMethods.putAll(newModule.getInstanceDispatchables());
       System.out.println("SUBSTITUTED METHODS IN MODULE");
-//      Iterator<MixinDefinition> it =  structuralProbe.getClasses().iterator();
-//      while (it.hasNext()) {
-//        MixinDefinition klass = it.next();
-//        if (klass.getName().equals(newModule.getName())) {
-//          System.out.println("FOUND");
-//          System.out.println(klass.getIdentifier());
-//          System.out.println(newModule.getIdentifier());
-//        }
-//      }
+      return oldModule;
     } catch (IOException e) {
       e.printStackTrace();
+      return null;
     }
   }
 }
