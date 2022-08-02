@@ -335,6 +335,13 @@ public class Parser {
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
 
+  public MixinBuilder moduleDeclaration(MixinBuilder.MixinDefinitionId mixinDefinitionId) throws ProgramDefinitionError {
+    compatibilityNewspeakVersionAndFileCategory();
+
+    comments();
+    return classDeclaration(null, AccessModifier.PUBLIC, mixinDefinitionId);
+  }
+
   protected String className() throws ParseError {
     String mixinName = text;
     expect(Identifier, IdentifierTag.class);
@@ -375,6 +382,45 @@ public class Parser {
         + " Tried to parse the class declaration of " + mixinName
         + " and expect '=' before the (optional) inheritance declaration.",
         KeywordTag.class);
+
+    inheritanceListAndOrBody(mxnBuilder);
+    return mxnBuilder;
+  }
+
+  private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
+                                        final AccessModifier accessModifier, MixinBuilder.MixinDefinitionId mixinDefinitionId) throws ProgramDefinitionError {
+    expectIdentifier("class", "Found unexpected token %(found)s. " +
+                    "Tried parsing a class declaration and expected 'class' instead.",
+            KeywordTag.class);
+
+    int coord = getStartIndex();
+    String mixinName = className();
+    SourceSection nameSS = getSource(coord);
+
+    MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
+            symbolFor(mixinName), nameSS, structuralProbe, language,mixinDefinitionId);
+
+    MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
+    coord = getStartIndex();
+
+    // Newspeak-spec: this is not strictly sufficient for Newspeak
+    // it could also parse a binary selector here, I think
+    // but, doesn't seem so useful, so, let's keep it simple
+    if (sym == Identifier || sym == Keyword) {
+      messagePattern(primaryFactory);
+    } else {
+      // in the standard case, the primary factory method is #new
+      primaryFactory.addArgument(Symbols.SELF, getEmptySource());
+      primaryFactory.setSignature(Symbols.NEW);
+    }
+    mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
+
+    comments();
+
+    expect(Equal, "Unexpected symbol %(found)s."
+                    + " Tried to parse the class declaration of " + mixinName
+                    + " and expect '=' before the (optional) inheritance declaration.",
+            KeywordTag.class);
 
     inheritanceListAndOrBody(mxnBuilder);
     return mxnBuilder;

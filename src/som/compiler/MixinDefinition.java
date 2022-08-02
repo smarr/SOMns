@@ -291,7 +291,7 @@ public final class MixinDefinition implements SomInteropObject {
     return sameClassConstruction(aC.getSuperClass(), bC.getSuperClass());
   }
 
-  private final ArrayList<ClassFactory> cache = new ArrayList<>(2);
+  public final ArrayList<ClassFactory> cache = new ArrayList<>(2);
 
   private ClassFactory getCached(final Object superclassAndMixins) {
     if (superclassAndMixins == null) {
