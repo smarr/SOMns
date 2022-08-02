@@ -53,8 +53,17 @@ public class UpdateClass extends IncommingMessage {
       ArrayList<DebugStackFrame> frames =  suspension.getStackFrames();
 //      int a = 1 + 1;
 //      System.out.println(a);
-      //suspension.getEvent().prepareUnwindFrame(suspension.getFrame(2));
-      //suspension.resume();
+      DebugStackFrame restartFrame = null;
+      for(DebugStackFrame frame : frames){
+        if(frame.getSourceSection().getSource().getURI() == updatedModule.getSourceSection().getSource().getURI()) {
+          restartFrame = frame;
+          break;
+        }
+      }
+
+      //frontend.restartFrame(suspension, restartFrame);
+      //suspension.resum
+
       System.out.println(suspension.getEvent().getTopStackFrame().getName());
 
 //      RootNode node = suspension.getStackFrames().get(2).getRawNode(SomLanguage.class).getRootNode();

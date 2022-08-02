@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
+import com.oracle.truffle.api.debug.DebugStackFrame;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 import org.java_websocket.WebSocket;
@@ -31,7 +32,10 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -66,6 +70,7 @@ import tools.debugger.message.VariablesRequest.FilterType;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
+import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 import java.util.function.Consumer;
 
@@ -364,9 +369,16 @@ public class FrontendConnector {
     } catch (InterruptedException e) {}
   }
 
+  public void restartFrame(Suspension suspension, DebugStackFrame frame) {
+    suspension.getEvent().prepareUnwindFrame(frame);
+    suspension.resume();
+    suspension.resume();
+  }
+
   // Code Uptading stuff
   public MixinDefinition updateClass(String filePath) {
     try {
+      //TODO: support inner classes
       VM vm = webDebugger.vm;
       StructuralProbe<SSymbol, MixinDefinition, SInvokable, MixinDefinition.SlotDefinition, Variable> structuralProbe = vm.getStructuralProbe();
       EconomicSet<MixinDefinition> modules = structuralProbe.getClasses();
@@ -377,11 +389,26 @@ public class FrontendConnector {
           oldModule = module;
         }
       }
-      MixinDefinition newModule = vm.loadModule(filePath);
+      MixinDefinition newModule = vm.loadModule(filePath,oldModule);
       System.out.println(newModule.getName().toString());
       EconomicMap<SSymbol, Dispatchable> oldMethods = oldModule.getInstanceDispatchables();
       oldMethods.putAll(newModule.getInstanceDispatchables());
+      for(ClassFactory module : oldModule.cache) {
+        module.dispatchables.putAll(newModule.getInstanceDispatchables());
+      }
+     UpdateMixinIdVisitor visitor;
+      for (Dispatchable disp : oldModule.getInstanceDispatchables().getValues()) {
+          if (disp instanceof SInvokable){
+            SInvokable inv = (SInvokable) disp;
+            inv.setHolder(oldModule);
+//            visitor = new UpdateMixinIdVisitor(oldModule.getMixinId());
+//            inv.getInvokable().accept(visitor);
+          }
+      }
       System.out.println("SUBSTITUTED METHODS IN MODULE");
+
+      DispatchGuard.invalidateAssumption();
+
       return oldModule;
     } catch (IOException e) {
       e.printStackTrace();
