@@ -29,6 +29,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
+import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 
 /**
@@ -63,7 +64,7 @@ public abstract class OuterObjectRead
    * encloses either {@code self} or one of its superclasses. {@code mixinId} is used
    * to distinguish the two where necessary.
    */
-  private final MixinDefinitionId enclosingMixinId;
+  private MixinDefinitionId enclosingMixinId;
 
   private final ValueProfile enclosingObj;
 
@@ -72,6 +73,12 @@ public abstract class OuterObjectRead
     this.mixinId = mixinId;
     this.enclosingMixinId = enclosingMixinId;
     this.enclosingObj = ValueProfile.createIdentityProfile();
+  }
+
+
+
+  public void accept(UpdateMixinIdVisitor visitor){
+     this.enclosingMixinId = visitor.getMixinDefinitionId();
   }
 
   public MixinDefinitionId getMixinId() {

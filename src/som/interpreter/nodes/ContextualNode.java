@@ -28,6 +28,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
+import som.compiler.MixinBuilder;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SBlock;
@@ -53,7 +54,17 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     this.rcvrType = ValueProfile.createClassProfile();
   }
 
-  public final int getContextLevel() {
+    public ContextualNode(ContextualNode oldInstance, MixinBuilder.MixinDefinitionId newMixinId) {
+        super();
+        this.outerType = oldInstance.outerType;
+        this.rcvrType = oldInstance.rcvrType;
+        this.contextLevel = oldInstance.contextLevel;
+        this.determineContext = oldInstance.determineContext;
+        this.sourceSection = oldInstance.sourceSection;
+        this.tagMark = oldInstance.tagMark;
+    }
+
+    public final int getContextLevel() {
     return contextLevel;
   }
 

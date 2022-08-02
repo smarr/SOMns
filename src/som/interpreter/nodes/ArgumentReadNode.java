@@ -9,6 +9,7 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import bd.inlining.ScopeAdaptationVisitor;
 import bd.tools.nodes.Invocation;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition;
 import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
 import som.interpreter.SArguments;
@@ -16,6 +17,7 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SSymbol;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.KeywordTag;
+import tools.debugger.visitors.UpdateMixinIdVisitor;
 import tools.dym.Tags.LocalArgRead;
 
 
@@ -47,6 +49,7 @@ public abstract class ArgumentReadNode {
       this.arg = null;
       assert insidePrim : "Only to be used for primitive nodes";
     }
+
 
     @Override
     public WrapperNode createWrapper(final ProbeNode probe) {
@@ -92,11 +95,21 @@ public abstract class ArgumentReadNode {
   public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {
 
     private final MixinDefinitionId mixin;
-    private final ValueProfile      rcvrClass = ValueProfile.createClassProfile();
+    private ValueProfile      rcvrClass = ValueProfile.createClassProfile();
 
     public LocalSelfReadNode(final Argument arg, final MixinDefinitionId mixin) {
       super(arg);
       this.mixin = mixin;
+    }
+
+    public LocalSelfReadNode(LocalSelfReadNode oldInstance, MixinDefinitionId newMixinId) {
+      this.mixin = newMixinId;
+      this.rcvrClass = oldInstance.rcvrClass;
+    }
+
+
+    public void accept(UpdateMixinIdVisitor visitor){
+      this.replace(new LocalSelfReadNode(this,visitor.getMixinDefinitionId()));
     }
 
     @Override
@@ -149,6 +162,18 @@ public abstract class ArgumentReadNode {
       this.arg = arg;
     }
 
+    public NonLocalArgumentReadNode(NonLocalArgumentReadNode oldInstance, MixinDefinitionId newMixinId) {
+        super(oldInstance,newMixinId);
+        this.argumentIndex = oldInstance.argumentIndex;
+        this.arg = oldInstance.arg;
+    }
+
+
+    public void accept(UpdateMixinIdVisitor visitor){
+      this.replace(new NonLocalArgumentReadNode(this,visitor.getMixinDefinitionId()));
+    }
+
+
     public final Argument getArg() {
       return arg;
     }
@@ -190,6 +215,16 @@ public abstract class ArgumentReadNode {
         final int contextLevel) {
       super(arg, contextLevel);
       this.mixin = mixin;
+    }
+    public NonLocalSelfReadNode(NonLocalSelfReadNode oldInstance, MixinDefinitionId newMixinId) {
+      super(oldInstance,newMixinId);
+      this.mixin = newMixinId;
+      //this.rcvrClass = oldInstance.rcvrClass;
+    }
+
+
+    public void accept(UpdateMixinIdVisitor visitor){
+      this.replace(new NonLocalSelfReadNode(this,visitor.getMixinDefinitionId()));
     }
 
     @Override
@@ -239,6 +274,16 @@ public abstract class ArgumentReadNode {
       this.holderMixin = holderMixin;
       this.classSide = classSide;
     }
+    public LocalSuperReadNode(LocalSuperReadNode oldInstance, MixinDefinitionId newMixinId) {
+      this.holderMixin = newMixinId;
+      this.classSide = oldInstance.classSide;
+    }
+
+
+    public void accept(UpdateMixinIdVisitor visitor){
+      this.replace(new LocalSuperReadNode(this,visitor.getMixinDefinitionId()));
+    }
+
 
     @Override
     public MixinDefinitionId getEnclosingMixinId() {
@@ -276,6 +321,18 @@ public abstract class ArgumentReadNode {
       super(arg, contextLevel);
       this.holderMixin = holderMixin;
       this.classSide = classSide;
+    }
+
+
+    public NonLocalSuperReadNode(NonLocalSuperReadNode oldInstance, MixinDefinitionId newMixinId) {
+      super(oldInstance,newMixinId);
+      this.holderMixin = newMixinId;
+      this.classSide = oldInstance.classSide;
+    }
+
+
+    public void accept(UpdateMixinIdVisitor visitor){
+      this.replace(new NonLocalSuperReadNode(this,visitor.getMixinDefinitionId()));
     }
 
     @Override

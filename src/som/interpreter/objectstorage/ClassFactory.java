@@ -53,7 +53,7 @@ public final class ClassFactory {
   private final MixinDefinition mixinDef;
 
   private final EconomicSet<SlotDefinition>        instanceSlots;
-  private final EconomicMap<SSymbol, Dispatchable> dispatchables;
+  public final EconomicMap<SSymbol, Dispatchable> dispatchables;
 
   private final boolean hasOnlyImmutableFields;
 

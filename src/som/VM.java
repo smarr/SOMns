@@ -410,7 +410,7 @@ public final class VM {
       structuralProbe = SnapshotBackend.getProbe();
     }
 
-    System.out.println(structuralProbe);
+    structuralProbe = new StructuralProbe<>();
   }
 
   public SClass loadExtensionModule(final String filename) {
@@ -419,6 +419,13 @@ public final class VM {
 
   public MixinDefinition loadModule(final String filename) throws IOException {
     return objectSystem.loadModule(filename);
+  }
+
+  public MixinDefinition loadModule(final String filename,MixinDefinition oldModule) throws IOException {
+    if (oldModule == null) {
+      return objectSystem.loadModule(filename);
+    }
+    return objectSystem.reLoadModule(filename,oldModule);
   }
 
   public MixinDefinition loadModule(final Source source) throws IOException {
