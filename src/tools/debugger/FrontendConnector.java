@@ -393,18 +393,29 @@ public class FrontendConnector {
       System.out.println(newModule.getName().toString());
       EconomicMap<SSymbol, Dispatchable> oldMethods = oldModule.getInstanceDispatchables();
       oldMethods.putAll(newModule.getInstanceDispatchables());
+      EconomicMap<SSymbol,Dispatchable> newDisp = newModule.getInstanceDispatchables();
+      //remove slot definition from dispatchables
       for(ClassFactory module : oldModule.cache) {
+        for (SSymbol key : newDisp.getKeys()){
+          if(newDisp.get(key) instanceof MixinDefinition.SlotDefinition){
+            newDisp.removeKey(key);
+          }
+        }
         module.dispatchables.putAll(newModule.getInstanceDispatchables());
       }
      UpdateMixinIdVisitor visitor;
       for (Dispatchable disp : oldModule.getInstanceDispatchables().getValues()) {
+        if(disp instanceof MixinDefinition.SlotDefinition){
+          System.out.println("Skipping slot definition");
+      } else{
           if (disp instanceof SInvokable){
             SInvokable inv = (SInvokable) disp;
             inv.setHolder(oldModule);
 //            visitor = new UpdateMixinIdVisitor(oldModule.getMixinId());
 //            inv.getInvokable().accept(visitor);
           }
-      }
+      }}
+      //oldModule.getSlots().putAll(newModule.getSlots());
       System.out.println("SUBSTITUTED METHODS IN MODULE");
 
       DispatchGuard.invalidateAssumption();

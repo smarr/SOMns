@@ -20,7 +20,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 public abstract class DispatchGuard {
 
   @CompilerDirectives.CompilationFinal
-  private static Assumption noModuleReloaded = Truffle.getRuntime().createAssumption("no module reloaded");
+  private static Assumption noModuleReloaded = Truffle.getRuntime().createAssumption("noMoRel");
 
   public static void invalidateAssumption() {
     noModuleReloaded.invalidate();

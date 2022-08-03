@@ -60,11 +60,13 @@ public class UpdateClass extends IncommingMessage {
           break;
         }
       }
-
-      //frontend.restartFrame(suspension, restartFrame);
+      if (restartFrame != null) {
+       // frontend.restartFrame(suspension, restartFrame);
+      }
       //suspension.resum
 
       System.out.println(suspension.getEvent().getTopStackFrame().getName());
+
 
 //      RootNode node = suspension.getStackFrames().get(2).getRawNode(SomLanguage.class).getRootNode();
 //

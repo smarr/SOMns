@@ -698,6 +698,10 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     slots.put(name, cacheSlot);
   }
 
+  public void addSlotsUnsafe(EconomicMap<SSymbol, SlotDefinition> newSlots){
+    slots.putAll(newSlots);
+  }
+
   public MixinDefinitionId getMixinId() {
     return mixinId;
   }
