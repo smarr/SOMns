@@ -12,7 +12,6 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
-import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 
 public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
@@ -46,23 +45,6 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
     this.currentScope = currentScope;
     this.mixinId = mixinId;
     this.vm = vm;
-  }
-
-  public ResolvingImplicitReceiverSend(ResolvingImplicitReceiverSend oldInstance, MixinDefinitionId newMixinId) {
-    super(oldInstance.argumentNodes);
-    this.currentScope = oldInstance.currentScope;
-    this.mixinId = newMixinId;
-    this.selector = oldInstance.selector;
-    this.vm = oldInstance.vm;
-    this.newReceiverNodeForOuterSend = oldInstance.newReceiverNodeForOuterSend;
-    this.replacedBy = oldInstance.replacedBy;
-    this.sourceSection = oldInstance.sourceSection;
-    this.tagMark = oldInstance.tagMark;
-  }
-
-
-  public void accept(UpdateMixinIdVisitor visitor){
-    this.replace(new ResolvingImplicitReceiverSend(this,visitor.getMixinDefinitionId()));
   }
 
   /**

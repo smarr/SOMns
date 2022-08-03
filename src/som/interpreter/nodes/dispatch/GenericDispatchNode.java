@@ -5,10 +5,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.nodes.ArgumentReadNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 
 public final class GenericDispatchNode extends AbstractGenericDispatchNode {
@@ -21,17 +19,6 @@ public final class GenericDispatchNode extends AbstractGenericDispatchNode {
     assert minimalAccess.ordinal() >= AccessModifier.PROTECTED.ordinal() || mixinId != null;
     this.minimalVisibility = minimalAccess;
     this.mixinId = mixinId;
-  }
-
-  public GenericDispatchNode(GenericDispatchNode oldInstance, MixinDefinitionId newMixinId) {
-    super(oldInstance.sourceSection,oldInstance.selector);
-    this.mixinId = newMixinId;
-    this.minimalVisibility = oldInstance.minimalVisibility;
-  }
-
-
-  public void accept(UpdateMixinIdVisitor visitor){
-    this.replace(new GenericDispatchNode(this,visitor.getMixinDefinitionId()));
   }
 
   @Override

@@ -17,7 +17,6 @@ import som.interpreter.Invokable;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
-import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -25,7 +24,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 
 public final class UninitializedDispatchNode {
@@ -239,16 +237,6 @@ public final class UninitializedDispatchNode {
       this.mixinForPrivateLookup = mixinForPrivateLookup;
     }
 
-    public UninitializedLexicallyBound(UninitializedLexicallyBound oldInstance, MixinDefinitionId newMixinId) {
-      super(oldInstance.sourceSection,oldInstance.selector);
-      this.mixinForPrivateLookup = newMixinId;
-    }
-
-
-    public void accept(UpdateMixinIdVisitor visitor){
-      this.replace(new UninitializedLexicallyBound(this,visitor.getMixinDefinitionId()));
-    }
-
     @Override
     protected AbstractUninitialized createNewChainEnd(final Object rcvr,
         final SClass rcvrClass, final Dispatchable result) {
@@ -303,17 +291,6 @@ public final class UninitializedDispatchNode {
     protected Dispatchable doLookup(final SClass rcvrClass) {
       return GenericSuperDispatchNode.lookup(
           rcvrClass, selector, holderMixin, classSide);
-    }
-
-    public UninitializedSuper(UninitializedSuper oldInstance, MixinDefinitionId newMixinId) {
-      super(oldInstance.sourceSection,oldInstance.selector);
-      this.holderMixin = newMixinId;
-      this.classSide = oldInstance.classSide;
-    }
-
-
-    public void accept(UpdateMixinIdVisitor visitor){
-      this.replace(new UninitializedSuper(this,visitor.getMixinDefinitionId()));
     }
 
     @Override

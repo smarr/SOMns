@@ -5,10 +5,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.nodes.ArgumentReadNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-import tools.debugger.visitors.UpdateMixinIdVisitor;
 
 
 public class GenericSuperDispatchNode extends AbstractGenericDispatchNode {
@@ -21,17 +19,6 @@ public class GenericSuperDispatchNode extends AbstractGenericDispatchNode {
     super(source, selector);
     this.holderMixin = holderMixin;
     this.classSide = classSide;
-  }
-
-  public GenericSuperDispatchNode(GenericSuperDispatchNode oldInstance, MixinDefinitionId newMixinId) {
-    super(oldInstance.sourceSection,oldInstance.selector);
-    this.holderMixin = newMixinId;
-    this.classSide = oldInstance.classSide;
-  }
-
-
-  public void accept(UpdateMixinIdVisitor visitor){
-    this.replace(new GenericSuperDispatchNode(this,visitor.getMixinDefinitionId()));
   }
 
   private static SClass getSuperClass(final SClass rcvrClass,
