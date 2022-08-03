@@ -1,6 +1,5 @@
 package tools.debugger;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
@@ -15,7 +14,6 @@ import java.util.function.Function;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
-import org.graalvm.collections.Pair;
 import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
@@ -32,15 +30,11 @@ import bd.tools.structure.StructuralProbe;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
-import som.interpreter.SomLanguage;
-import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.StorageLocation;
-import som.vm.ObjectSystem;
 import som.vm.VmSettings;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
@@ -72,9 +66,6 @@ import tools.debugger.message.VariablesRequest.FilterType;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
-import tools.debugger.visitors.UpdateMixinIdVisitor;
-
-import java.util.function.Consumer;
 
 
 /**
@@ -405,7 +396,7 @@ public class FrontendConnector {
 //        }
         module.dispatchables.putAll(newModule.getInstanceDispatchables());
       }
-     UpdateMixinIdVisitor visitor;
+
       for (Dispatchable disp : oldModule.getInstanceDispatchables().getValues()) {
         if(disp instanceof MixinDefinition.SlotDefinition){
           System.out.println("Skipping slot definition");
@@ -413,8 +404,6 @@ public class FrontendConnector {
           if (disp instanceof SInvokable){
             SInvokable inv = (SInvokable) disp;
             inv.setHolder(oldModule);
-//            visitor = new UpdateMixinIdVisitor(oldModule.getMixinId());
-//            inv.getInvokable().accept(visitor);
           }
       }}
       oldModule.getSlots().putAll(newModule.getSlots());
