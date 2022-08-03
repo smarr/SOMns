@@ -15,6 +15,7 @@ import java.util.function.Function;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
+import org.graalvm.collections.Pair;
 import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
@@ -36,6 +37,7 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
+import som.interpreter.objectstorage.StorageLocation;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -396,11 +398,11 @@ public class FrontendConnector {
       EconomicMap<SSymbol,Dispatchable> newDisp = newModule.getInstanceDispatchables();
       //remove slot definition from dispatchables
       for(ClassFactory module : oldModule.cache) {
-        for (SSymbol key : newDisp.getKeys()){
-          if(newDisp.get(key) instanceof MixinDefinition.SlotDefinition){
-            newDisp.removeKey(key);
-          }
-        }
+//        for (SSymbol key : newDisp.getKeys()){
+//          if(newDisp.get(key) instanceof MixinDefinition.SlotDefinition){
+//            newDisp.removeKey(key);
+//          }
+//        }
         module.dispatchables.putAll(newModule.getInstanceDispatchables());
       }
      UpdateMixinIdVisitor visitor;
@@ -415,7 +417,27 @@ public class FrontendConnector {
 //            inv.getInvokable().accept(visitor);
           }
       }}
-      //oldModule.getSlots().putAll(newModule.getSlots());
+      oldModule.getSlots().putAll(newModule.getSlots());
+      // Pushing new slots
+      for (MixinDefinition.SlotDefinition sl : oldModule.getSlots().getValues()){
+        for(ClassFactory module : oldModule.cache) {
+          EconomicMap<som.compiler.MixinDefinition.SlotDefinition, StorageLocation> storageLocations  =
+                  module.getInstanceLayout().getStorageLocations();
+          Iterable<MixinDefinition.SlotDefinition> oldKeys = storageLocations.getKeys();
+          Map<MixinDefinition.SlotDefinition, MixinDefinition.SlotDefinition> toSubstitute = new HashMap<>();
+          for (MixinDefinition.SlotDefinition oldKey : oldKeys){
+            if(oldKey.getName() == sl.getName()){
+              toSubstitute.put(oldKey,sl);
+              break;
+            }
+          }
+          for (Map.Entry<MixinDefinition.SlotDefinition, MixinDefinition.SlotDefinition> newOld : toSubstitute.entrySet()){
+            StorageLocation location = storageLocations.get(newOld.getKey());
+            storageLocations.removeKey(newOld.getKey());
+            storageLocations.put(newOld.getValue(),location);
+          }
+        }
+      }
       System.out.println("SUBSTITUTED METHODS IN MODULE");
 
       DispatchGuard.invalidateAssumption();

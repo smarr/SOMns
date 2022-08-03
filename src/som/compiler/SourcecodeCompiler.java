@@ -75,7 +75,7 @@ public class SourcecodeCompiler {
     Parser parser = new Parser(source.getCharacters().toString(), source, null, language);
     int coord = parser.getStartIndex();
     MixinBuilder mxnBuilder = parser.moduleDeclaration(oldModule.getMixinId());
-    mxnBuilder.addSlotsUnsafe(oldModule.getSlots());
+    //mxnBuilder.addSlotsUnsafe(oldModule.getSlots());
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
     return result;
   }
