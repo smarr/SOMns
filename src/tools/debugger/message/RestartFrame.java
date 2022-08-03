@@ -13,7 +13,9 @@ public class RestartFrame extends IncommingMessage {
     @Override
     public void process(FrontendConnector connector, WebSocket conn) {
         Suspension suspension= connector.getSuspension(0);
-        int realId = currentFrameId + suspension.getFrameSkipCount();
+        int skipCount = suspension.getFrameSkipCount();
+        skipCount = skipCount > 0 ? skipCount - 1 : skipCount;
+        int realId = currentFrameId + skipCount;
         connector.restartFrame(suspension,suspension.getStackFrames().get(realId));
     }
 }
