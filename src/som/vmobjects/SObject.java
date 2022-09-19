@@ -416,7 +416,7 @@ public abstract class SObject extends SObjectWithClass {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstancesToUpdateObject();
 
     if (objectLayout != layoutAtClass) {
-      setLayoutAndTransferFieldsOnClassUpdate(layoutAtClass);
+      setLayoutAndTransferFields(layoutAtClass);
       return true;
     } else {
       return false;
@@ -437,20 +437,18 @@ public abstract class SObject extends SObjectWithClass {
     setAllFields(fieldValues);
     } catch ( ArithmeticException error){
       objectLayout = oldObjectLayout;
-      this.updateLayoutToMatchClass();
+      this.setLayoutAndTransferFieldsOnClassUpdate(layoutAtClass, fieldValues);
     }
   }
 
-  private void setLayoutAndTransferFieldsOnClassUpdate(final ObjectLayout layoutAtClass) {
+  private void setLayoutAndTransferFieldsOnClassUpdate(final ObjectLayout layoutAtClass,EconomicMap<SlotDefinition, Object> fieldValues) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
-
-    EconomicMap<SlotDefinition, Object> fieldValues = getAllFields();
-    fieldValues = fixFieldsToNewSlots(layoutAtClass, fieldValues);
+    EconomicMap<SlotDefinition, Object> newSlots = fixFieldsToNewSlots(layoutAtClass, fieldValues);
     objectLayout = layoutAtClass;
     extensionPrimFields = getExtendedPrimStorage(layoutAtClass);
     extensionObjFields = getExtendedObjectStorage(layoutAtClass);
 
-    setAllFields(fieldValues);
+    setAllFields(newSlots);
     DispatchGuard.invalidateAssumption();
   }
 
