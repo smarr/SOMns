@@ -25,6 +25,8 @@
 package som.vmobjects;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.MapCursor;
@@ -35,8 +37,10 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
@@ -394,7 +398,6 @@ public abstract class SObject extends SObjectWithClass {
   private void setAllFields(final EconomicMap<SlotDefinition, Object> fieldValues) {
     resetFields();
     primitiveUsedMap = 0;
-
     MapCursor<SlotDefinition, Object> entry = fieldValues.getEntries();
     while (entry.advance()) {
       if (entry.getValue() != null) {
@@ -413,7 +416,7 @@ public abstract class SObject extends SObjectWithClass {
     ObjectLayout layoutAtClass = clazz.getLayoutForInstancesToUpdateObject();
 
     if (objectLayout != layoutAtClass) {
-      setLayoutAndTransferFields(layoutAtClass);
+      setLayoutAndTransferFieldsOnClassUpdate(layoutAtClass);
       return true;
     } else {
       return false;
@@ -424,12 +427,50 @@ public abstract class SObject extends SObjectWithClass {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
     EconomicMap<SlotDefinition, Object> fieldValues = getAllFields();
+   //fieldValues = fixFieldsToNewSlots(layoutAtClass, fieldValues);
+    ObjectLayout oldObjectLayout = objectLayout;
+    objectLayout = layoutAtClass;
+    assert oldObjectLayout != objectLayout;
+    extensionPrimFields = getExtendedPrimStorage(layoutAtClass);
+    extensionObjFields = getExtendedObjectStorage(layoutAtClass);
+    try {
+    setAllFields(fieldValues);
+    } catch ( ArithmeticException error){
+      objectLayout = oldObjectLayout;
+      this.updateLayoutToMatchClass();
+    }
+  }
 
+  private void setLayoutAndTransferFieldsOnClassUpdate(final ObjectLayout layoutAtClass) {
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+
+    EconomicMap<SlotDefinition, Object> fieldValues = getAllFields();
+    fieldValues = fixFieldsToNewSlots(layoutAtClass, fieldValues);
     objectLayout = layoutAtClass;
     extensionPrimFields = getExtendedPrimStorage(layoutAtClass);
     extensionObjFields = getExtendedObjectStorage(layoutAtClass);
 
     setAllFields(fieldValues);
+    DispatchGuard.invalidateAssumption();
+  }
+
+  private EconomicMap<SlotDefinition, Object> fixFieldsToNewSlots(ObjectLayout layoutAtClass, EconomicMap<SlotDefinition, Object> fieldValues ) {
+    EconomicMap<SlotDefinition, StorageLocation> oldSlots = objectLayout.getStorageLocations();
+    EconomicMap<SlotDefinition, StorageLocation> newSlots = layoutAtClass.getStorageLocations();
+    Map<StorageLocation,SlotDefinition> layoutLocations = new HashMap<StorageLocation,SlotDefinition>();
+    EconomicMap<SlotDefinition,Object> newFieldValues = EconomicMap.create();
+    for (SlotDefinition d : newSlots.getKeys()){
+             layoutLocations.put(newSlots.get(d),d);
+    }
+
+    for (SlotDefinition slot : fieldValues.getKeys()) {
+      StorageLocation location = oldSlots.get(slot);
+      SlotDefinition newSlotDef = layoutLocations.get(location);
+      if (newSlotDef != null) {
+        newFieldValues.put(newSlotDef, fieldValues.get(slot));
+      }
+    }
+    return newFieldValues;
   }
 
   /**
@@ -483,7 +524,12 @@ public abstract class SObject extends SObjectWithClass {
 
   private StorageLocation getLocation(final SlotDefinition slot) {
     StorageLocation location = objectLayout.getStorageLocation(slot);
-    assert location != null;
+    // TODO: added here a division by 0 to be able to debug this when it happens.
+    // I do not recall what it is due to, but probably it is about reloading nested classes
+    // assert location != null;
+    if (location == null) {
+      int a = 1 / 0;
+    }
     return location;
   }
 
