@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.debug.DebugValue;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 import org.java_websocket.WebSocket;
@@ -363,7 +364,7 @@ public class FrontendConnector {
   }
 
   public void restartFrame(Suspension suspension, DebugStackFrame frame) {
-    suspension.getEvent().prepareUnwindFrame(frame);
+    suspension.getEvent().prepareUnwindFrame(frame,null) ;
     suspension.resume();
     suspension.resume();
   }
@@ -398,14 +399,11 @@ public class FrontendConnector {
       }
 
       for (Dispatchable disp : oldModule.getInstanceDispatchables().getValues()) {
-        if(disp instanceof MixinDefinition.SlotDefinition){
-          System.out.println("Skipping slot definition");
-      } else{
           if (disp instanceof SInvokable){
             SInvokable inv = (SInvokable) disp;
             inv.setHolder(oldModule);
           }
-      }}
+      }
       oldModule.getSlots().putAll(newModule.getSlots());
       // Pushing new slots
       for (MixinDefinition.SlotDefinition sl : oldModule.getSlots().getValues()){
@@ -424,6 +422,7 @@ public class FrontendConnector {
             StorageLocation location = storageLocations.get(newOld.getKey());
             storageLocations.removeKey(newOld.getKey());
             storageLocations.put(newOld.getValue(),location);
+            location.setSlot(newOld.getValue());
           }
         }
       }

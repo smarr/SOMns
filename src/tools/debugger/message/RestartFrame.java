@@ -4,10 +4,10 @@ import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.IncommingMessage;
 public class RestartFrame extends IncommingMessage {
-    private final int currentFrameId;
+    private final int frameId;
 
     public RestartFrame(int currentFrameId) {
-        this.currentFrameId = currentFrameId;
+        this.frameId = currentFrameId;
     }
 
     @Override
@@ -15,7 +15,8 @@ public class RestartFrame extends IncommingMessage {
         Suspension suspension= connector.getSuspension(0);
         int skipCount = suspension.getFrameSkipCount();
         skipCount = skipCount > 0 ? skipCount - 1 : skipCount;
-        int realId = currentFrameId + skipCount;
+        int realId = frameId + skipCount;
+        System.out.print("Restarted Frame Request " + frameId + "After skipping " + realId);
         connector.restartFrame(suspension,suspension.getStackFrames().get(realId));
     }
 }

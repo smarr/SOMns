@@ -74,11 +74,14 @@ public final class StackTraceResponse extends Response {
     /** An optional number of characters in the range. */
     private final int length;
 
-    StackFrame(final long globalId, final String name, final String sourceUri,
+    private final long frameId;
+
+    StackFrame(final long globalId, final long frameId, final String name, final String sourceUri,
         final int line, final int column, final int endLine,
         final int endColumn, final int length) {
       assert TraceData.isWithinJSIntValueRange(globalId);
       this.id = globalId;
+      this.frameId = frameId;
       this.name = name;
       this.sourceUri = sourceUri;
       this.line = line;
@@ -170,6 +173,6 @@ public final class StackTraceResponse extends Response {
       endColumn = 0;
       length = 0;
     }
-    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length);
+    return new StackFrame(id, frameId, name, sourceUri, line, column, endLine, endColumn, length);
   }
 }
