@@ -36,6 +36,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
+import org.graalvm.collections.Pair;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.objectstorage.ClassFactory;
@@ -230,7 +231,7 @@ public abstract class SObject extends SObjectWithClass {
         // need to ignore mutators and class slots
         // ignore primitives, have been checked separately before
         if (e.getKey().getClass() == SlotDefinition.class && e.getValue().isObjectLocation() &&
-            e.getValue().read(this) != oLocs.get(e.getKey()).read(o)) {
+            e.getValue().read(this) != oLocs.get(e.getKey()).read(this)) {
           return false;
         }
       }
@@ -455,17 +456,25 @@ public abstract class SObject extends SObjectWithClass {
   private EconomicMap<SlotDefinition, Object> fixFieldsToNewSlots(ObjectLayout layoutAtClass, EconomicMap<SlotDefinition, Object> fieldValues ) {
     EconomicMap<SlotDefinition, StorageLocation> oldSlots = objectLayout.getStorageLocations();
     EconomicMap<SlotDefinition, StorageLocation> newSlots = layoutAtClass.getStorageLocations();
-    Map<StorageLocation,SlotDefinition> layoutLocations = new HashMap<StorageLocation,SlotDefinition>();
+    Map<SlotDefinition,Pair<SlotDefinition,Object>> layoutLocations = new HashMap<>();
     EconomicMap<SlotDefinition,Object> newFieldValues = EconomicMap.create();
-    for (SlotDefinition d : newSlots.getKeys()){
-             layoutLocations.put(newSlots.get(d),d);
-    }
+    for (SlotDefinition newSlot : newSlots.getKeys()){
+      for (SlotDefinition oldSlot : oldSlots.getKeys()){
+        if(oldSlot.getName() == newSlot.getName()){
+          StorageLocation newLoc = newSlots.get(newSlot);
+          if (newLoc.isObjectLocation()){
+            layoutLocations.put(oldSlot,  Pair.create(newSlot,fieldValues.get(oldSlot)));
+            break;
+          }
+        }
+      }
 
+    }
     for (SlotDefinition slot : fieldValues.getKeys()) {
-      StorageLocation location = oldSlots.get(slot);
-      SlotDefinition newSlotDef = layoutLocations.get(location);
+      //StorageLocation location = oldSlots.get(slot);
+      Pair<SlotDefinition,Object> newSlotDef = layoutLocations.get(slot);
       if (newSlotDef != null) {
-        newFieldValues.put(newSlotDef, fieldValues.get(slot));
+        newFieldValues.put(newSlotDef.getLeft(),newSlotDef.getRight());
       }
     }
     return newFieldValues;
