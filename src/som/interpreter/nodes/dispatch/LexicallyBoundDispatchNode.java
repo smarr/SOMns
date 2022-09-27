@@ -15,6 +15,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
+import som.interpreter.Method;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 

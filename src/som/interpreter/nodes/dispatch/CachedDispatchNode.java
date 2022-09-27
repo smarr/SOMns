@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import java.util.Map;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;

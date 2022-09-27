@@ -12,8 +12,6 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -25,7 +23,6 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.CachedLibrary;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -59,16 +56,15 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.asyncstacktraces.StackIterator;
-import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
-import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.actors.UniformExecutionTrace;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -386,15 +382,6 @@ public final class SystemPrims {
       }
       return res;
     }
-
-    @Override
-    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
-      if (tag == BasicPrimitiveOperation.class) {
-        return true;
-      } else {
-        return super.hasTagIgnoringEagerness(tag);
-      }
-    }
   }
 
   /**
@@ -486,15 +473,6 @@ public final class SystemPrims {
     @Override
     public int getNumArguments() {
       return 1;
-    }
-
-    @Override
-    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
-      if (tag == BasicPrimitiveOperation.class) {
-        return true;
-      } else {
-        return super.hasTagIgnoringEagerness(tag);
-      }
     }
   }
 
