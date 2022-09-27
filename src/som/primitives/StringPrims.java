@@ -1,5 +1,6 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -186,11 +187,11 @@ public class StringPrims {
     public final String doString(final VirtualFrame frame, final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
           "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
-      return doStringWithBoundary(chars);
+      return doStringWithBoundary(frame, chars);
     }
 
-    @TruffleBoundary
-    private String doStringWithBoundary(final SArray chars) {
+    private String doStringWithBoundary(final VirtualFrame frame, final SArray chars) {
+      CompilerDirectives.transferToInterpreter();
       Object[] storage = chars.getObjectStorage();
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
