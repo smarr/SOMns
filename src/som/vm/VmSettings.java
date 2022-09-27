@@ -49,7 +49,7 @@ public class VmSettings implements Settings {
   public static final boolean ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
   public static final boolean ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE;
   public static final boolean ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE;
-    
+
   public static final String BASE_DIRECTORY;
 
   public static final boolean USE_PINNING;
@@ -85,9 +85,11 @@ public class VmSettings implements Settings {
     RECEIVER_SIDE_REPLAY = REPLAY && receiverSide;
 
     ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
-    ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE = getBool("som.actorAsyncStackTraceMethodCache", false);
-    ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE = getBool("som.actorAsyncStackTraceInlineCache", false);
-      
+    ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE =
+        getBool("som.actorAsyncStackTraceMethodCache", false);
+    ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE =
+        getBool("som.actorAsyncStackTraceInlineCache", false);
+
     TEST_SNAPSHOTS = getBool("som.snapshotTest", false);
     TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
     SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;
