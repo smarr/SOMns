@@ -23,7 +23,7 @@ public abstract class EagerResolvePromiseNode extends BinaryExpressionNode
   @SuppressWarnings("unchecked")
   public EagerResolvePromiseNode initialize(final SourceSection sourceSection) {
     super.initialize(sourceSection);
-    resolve = ResolvePromiseNodeFactory.create(null, null, null, null);
+    resolve = ResolvePromiseNodeFactory.create(null, null, null, null, null);
     resolve.initialize(sourceSection);
     return this;
   }
@@ -37,6 +37,8 @@ public abstract class EagerResolvePromiseNode extends BinaryExpressionNode
   @Specialization
   public SResolver resolve(final VirtualFrame frame, final SResolver resolver,
       final Object value) {
-    return (SResolver) resolve.executeEvaluated(frame, resolver, value, false, false);
+    Object maybeEntry = null; // TODO: figure out what to pass on here
+    return (SResolver) resolve.executeEvaluated(frame, resolver, value, maybeEntry,
+        false, false);
   }
 }

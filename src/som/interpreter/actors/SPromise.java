@@ -313,8 +313,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final boolean assertNotCompleted() {
-    assert !isCompleted()
-        : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
+    assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
     assert value == null : "If it isn't resolved yet, it shouldn't have a value";
     return true;
   }
@@ -417,6 +416,7 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     public void handleReplayResolution(final boolean haltOnResolution, final Actor resolver,
         final Resolution type, final ValueProfile whenResolvedProfile) {
+      Object maybeEntry = null; // TODO: figure out what to pass on here
 
       assert !handled;
       handled = true;
@@ -466,7 +466,7 @@ public class SPromise extends SObjectWithClass {
       if (todo != null) {
         while (!todo.isEmpty()) {
           PromiseMessage pm = todo.poll();
-          pm.resolve(this.value, owner, (Actor) current);
+          pm.resolve(this.value, owner, (Actor) current, maybeEntry);
 
           npr = current.getNextReplayEvent();
           assert npr.type == TraceRecord.MESSAGE : "was " + npr.type + " in "
@@ -537,6 +537,8 @@ public class SPromise extends SObjectWithClass {
 
     @TruffleBoundary
     private void tryPerformDelayedResolution() {
+      Object maybeEntry = null; // TODO: figure out what to pass on here
+
       if (delayed && resolutionversion == version) {
         Activity current = TracingActivityThread.currentThread().getActivity();
         // restore events needed for resolution
@@ -565,13 +567,13 @@ public class SPromise extends SObjectWithClass {
         if (toSend != null) {
           while (!toSend.isEmpty()) {
             PromiseMessage pm = toSend.remove();
-            pm.resolve(this.value, owner, resolver);
+            pm.resolve(this.value, owner, resolver, maybeEntry);
 
             npr = current.getNextReplayEvent();
             assert npr.type == TraceRecord.MESSAGE;
             pm.setReplayVersion(npr.eventNo);
             this.scheduleCallbacksOnResolution(this.value, pm, resolver,
-                SomLanguage.getCurrent().getVM().getActorPool(),
+                SomLanguage.getCurrent().getVM().getActorPool(), maybeEntry,
                 haltOnResolution);
           }
         }
@@ -602,6 +604,7 @@ public class SPromise extends SObjectWithClass {
 
     @TruffleBoundary
     private void sendDelayedMessages() {
+      Object maybeEntry = null; // TODO: figure out what the pass on here
       if (delayedMessages != null) {
         Activity current = TracingActivityThread.currentThread().getActivity();
         for (Entry<PromiseMessage, LinkedList<ReplayRecord>> e : delayedMessages.entrySet()) {
@@ -609,7 +612,7 @@ public class SPromise extends SObjectWithClass {
           LinkedList<ReplayRecord> events = e.getValue();
           current.getReplayEventBuffer().addAll(0, events);
           this.scheduleCallbacksOnResolution(value, pm, (Actor) current,
-              SomLanguage.getCurrent().getVM().getActorPool(), haltOnResolution);
+              SomLanguage.getCurrent().getVM().getActorPool(), maybeEntry, haltOnResolution);
         }
       }
     }
@@ -673,6 +676,7 @@ public class SPromise extends SObjectWithClass {
 
     private void resolveChainedPromisesReplay(final Resolution type,
         final ValueProfile whenResolvedProfile) {
+      Object maybeEntry = null; // TODO: figure out what to pass on here
 
       if (replayChainedPromises != null) {
         while (!replayChainedPromises.isEmpty()) {
@@ -680,7 +684,8 @@ public class SPromise extends SObjectWithClass {
           Object wrapped = WrapReferenceNode.wrapForUse(rp.owner, value, resolver, null);
 
           SResolver.resolveAndTriggerListenersUnsynced(type, value, wrapped, rp, resolver,
-              SomLanguage.getCurrent().getVM().getActorPool(), haltOnResolution,
+              SomLanguage.getCurrent().getVM().getActorPool(), maybeEntry,
+              haltOnResolution,
               whenResolvedProfile, null, null);
         }
       }
@@ -810,7 +815,8 @@ public class SPromise extends SObjectWithClass {
         for (SPromise p : chainedPromiseExt) {
           Object wrapped = WrapReferenceNode.wrapForUse(p.owner, result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
-              actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, record, recordStop);
+              actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, record,
+              recordStop);
         }
       }
     }
@@ -875,7 +881,8 @@ public class SPromise extends SObjectWithClass {
           scheduleAllOnErrorUnsync(p, result, current, actorPool, maybeEntry,
               haltOnResolution);
         }
-        resolveChainedPromisesUnsync(type, p, result, current, actorPool, maybeEntry, haltOnResolution,
+        resolveChainedPromisesUnsync(type, p, result, current, actorPool, maybeEntry,
+            haltOnResolution,
             whenResolvedProfile, tracePromiseResolution2, tracePromiseResolutionEnd2);
 
         if (VmSettings.SENDER_SIDE_TRACING) {
@@ -903,7 +910,8 @@ public class SPromise extends SObjectWithClass {
         }
 
         promise.scheduleCallbacksOnResolution(result,
-            whenResolvedProfile.profile(whenResolved), current, actorPool, maybeEntry, haltOnResolution);
+            whenResolvedProfile.profile(whenResolved), current, actorPool, maybeEntry,
+            haltOnResolution);
         scheduleExtensions(promise, whenResolvedExt, result, current, actorPool, maybeEntry,
             haltOnResolution);
       }
@@ -947,7 +955,8 @@ public class SPromise extends SObjectWithClass {
 
         promise.scheduleCallbacksOnResolution(result, onError, current, actorPool, maybeEntry,
             haltOnResolution);
-        scheduleExtensions(promise, onErrorExt, result, current, actorPool, maybeEntry, haltOnResolution);
+        scheduleExtensions(promise, onErrorExt, result, current, actorPool, maybeEntry,
+            haltOnResolution);
       }
     }
   }
