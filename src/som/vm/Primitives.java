@@ -15,7 +15,6 @@ import bd.primitives.PrimitiveLoader;
 import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
-import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EagerResolvePromiseNodeFactory;
@@ -126,15 +125,13 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
       final Specializer<VM, ExpressionNode, SSymbol> specializer, final SomLanguage lang) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
-    assert signature.getNumberOfSignatureArguments() > 1
-        : "Primitives should have the vmMirror as receiver, "
-            + "and then at least one object they are applied to";
+    assert signature.getNumberOfSignatureArguments() > 1 : "Primitives should have the vmMirror as receiver, "
+        + "and then at least one object they are applied to";
 
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
     Source s = SomLanguage.getSyntheticSource("primitive", specializer.getName());
-    MethodBuilder prim = new MethodBuilder(true, lang, null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     SourceSection source = s.createSection(1);
@@ -149,7 +146,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     String name = "vmMirror>>" + signature.toString();
 
     Primitive primMethodNode = new Primitive(name, primNode,
-        prim.getScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), false, lang);
     return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);

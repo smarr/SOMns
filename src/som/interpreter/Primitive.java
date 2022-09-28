@@ -20,10 +20,9 @@ import som.vmobjects.SInvokable;
 public final class Primitive extends Invokable {
 
   public Primitive(final String name, final ExpressionNode primitive,
-      final FrameDescriptor frameDescriptor,
       final ExpressionNode uninitialized, final boolean isAtomic,
       final SomLanguage lang) {
-    super(name, null, frameDescriptor, primitive, uninitialized, isAtomic, lang);
+    super(name, null, new FrameDescriptor(), primitive, uninitialized, isAtomic, lang);
   }
 
   @Override
@@ -36,9 +35,8 @@ public final class Primitive extends Invokable {
 
   @Override
   public Node deepCopy() {
-    assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
-        getFrameDescriptor(), uninitializedBody, isAtomic,
+        uninitializedBody, isAtomic,
         SomLanguage.getLanguage(this));
   }
 
@@ -48,7 +46,7 @@ public final class Primitive extends Invokable {
     ExpressionNode atomic = NodeUtil.cloneNode(uninitializedBody);
     ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
 
-    return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true,
+    return new Primitive(name, atomic, uninitAtomic, true,
         SomLanguage.getLanguage(this));
   }
 
