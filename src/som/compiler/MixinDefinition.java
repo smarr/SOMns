@@ -533,7 +533,7 @@ public final class MixinDefinition implements SomInteropObject {
   public SClass instantiateModuleClass() {
     VM.callerNeedsToBeOptimized(
         "only meant for code loading, which is supposed to be on the slowpath");
-    CallTarget callTarget = superclassMixinResolution.createCallTarget();
+    CallTarget callTarget = superclassMixinResolution.getCallTarget();
     SClass superClass = (SClass) callTarget.call(Nil.nilObject);
     SClass classObject = instantiateClass(Nil.nilObject, superClass);
     return classObject;
@@ -752,7 +752,7 @@ public final class MixinDefinition implements SomInteropObject {
         }
         // ok, now it is for sure not initialized yet, instantiate class
         Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                                                    .createCallTarget().call(rcvr);
+                                                    .getCallTarget().call(rcvr);
         SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;

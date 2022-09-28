@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -58,7 +57,7 @@ public class Actor implements Activity {
 
   public static void initializeActorSystem(final SomLanguage lang) {
     ExecutorRootNode root = new ExecutorRootNode(lang);
-    executorRoot = Truffle.getRuntime().createCallTarget(root);
+    executorRoot = root.getCallTarget();
   }
 
   public static Actor createActor(final VM vm) {
@@ -207,8 +206,7 @@ public class Actor implements Activity {
 
     @Override
     public void run() {
-      assert executorRoot != null
-          : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
       executorRoot.call(this);
     }
 

@@ -68,7 +68,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     this.accessModifier = accessModifier;
 
     this.invokable = invokable;
-    this.callTarget = invokable.createCallTarget();
+    this.callTarget = invokable.getCallTarget();
     this.embeddedBlocks = embeddedBlocks;
   }
 
@@ -116,7 +116,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       synchronized (this) {
         if (atomicCallTarget == null) {
           Invokable atomicIvk = invokable.createAtomic();
-          atomicCallTarget = atomicIvk.createCallTarget();
+          atomicCallTarget = atomicIvk.getCallTarget();
         }
       }
     }

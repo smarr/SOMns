@@ -118,7 +118,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
     CompilerAsserts.neverPartOfCompilation();
     Invokable invokable = mixinDef.getSuperclassAndMixinResolutionInvokable();
     superclassAndMixinResolver = insert(Truffle.getRuntime().createDirectCallNode(
-        invokable.createCallTarget()));
+        invokable.getCallTarget()));
   }
 
   private SClass instantiateClassObject(final SObject rcvr) {

@@ -132,7 +132,7 @@ public final class PromisePrims {
   public static RootCallTarget createReceived(final SBlock callback) {
     RootCallTarget target = callback.getMethod().getCallTarget();
     ReceivedCallback node = new ReceivedCallback(target);
-    return Truffle.getRuntime().createCallTarget(node);
+    return node.getCallTarget();
   }
 
   @GenerateNodeFactory
