@@ -15,7 +15,6 @@ import bd.primitives.PrimitiveLoader;
 import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
-import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EagerResolvePromiseNodeFactory;
@@ -134,7 +133,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
     Source s = SomLanguage.getSyntheticSource("primitive", specializer.getName());
-    MethodBuilder prim = new MethodBuilder(true, lang, null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     SourceSection source = s.createSection(1);
@@ -149,7 +147,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     String name = "vmMirror>>" + signature.toString();
 
     Primitive primMethodNode = new Primitive(name, primNode,
-        prim.getScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), false, lang);
     return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);

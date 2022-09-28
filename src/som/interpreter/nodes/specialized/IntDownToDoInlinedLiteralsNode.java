@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -31,8 +30,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   // original node around
   private final ExpressionNode bodyActualNode;
 
-  private final FrameSlot loopIndex;
-  private final Local     loopIndexVar;
+  private final int   loopIndex;
+  private final Local loopIndexVar;
 
   public abstract ExpressionNode getFrom();
 
@@ -42,12 +41,12 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   public IntDownToDoInlinedLiteralsNode(final ExpressionNode originalBody,
       final ExpressionNode body, final Local loopIndex) {
     this.body = body;
-    this.loopIndex = loopIndex.getSlot();
+    this.loopIndex = loopIndex.getSlotIndex();
     this.loopIndexVar = loopIndex;
     this.bodyActualNode = originalBody;
 
     // and, we can already tell the loop index that it is going to be long
-    this.loopIndex.setKind(FrameSlotKind.Long);
+    // this.loopIndexVar.getFrameDescriptor().setSlotKind(this.loopIndex, FrameSlotKind.Long);
     body.markAsLoopBody();
   }
 
@@ -89,6 +88,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   protected final void doLooping(final VirtualFrame frame, final long from, final long to) {
+    this.loopIndexVar.getFrameDescriptor().setSlotKind(this.loopIndex, FrameSlotKind.Long);
+
     if (from >= to) {
       frame.setLong(loopIndex, from);
       body.executeGeneric(frame);

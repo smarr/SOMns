@@ -9,6 +9,8 @@ import org.graalvm.collections.EconomicMap;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.Scope;
@@ -16,7 +18,9 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
 import som.compiler.Variable.Internal;
+import som.compiler.Variable.Local;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
 
@@ -174,7 +178,7 @@ public abstract class LexicalScope {
    */
   public static final class MethodScope extends LexicalScope
       implements Scope<MethodScope, Method> {
-    private final FrameDescriptor frameDescriptor;
+    @CompilationFinal private FrameDescriptor frameDescriptor;
 
     @CompilationFinal(dimensions = 1) private MethodScope[] embeddedScopes;
 
@@ -183,13 +187,13 @@ public abstract class LexicalScope {
      */
     @CompilationFinal(dimensions = 1) private Variable[] variables;
 
-    @CompilationFinal private boolean finalized;
+    @CompilationFinal int numberOfLocals;
 
     @CompilationFinal private Method method;
 
-    public MethodScope(final FrameDescriptor frameDescriptor, final LexicalScope outerScope) {
+    public MethodScope(final LexicalScope outerScope) {
       super(outerScope);
-      this.frameDescriptor = frameDescriptor;
+      numberOfLocals = -1;
     }
 
     public void setVariables(final Variable[] variables) {
@@ -205,6 +209,8 @@ public abstract class LexicalScope {
           this.variables[i] = variables[i];
         }
         this.variables[variables.length] = internal;
+
+        assert noVarUsesSameSlot(this.variables);
       }
     }
 
@@ -223,9 +229,34 @@ public abstract class LexicalScope {
         return;
       }
 
+      assert noVarUsesSameSlot(var, variables);
+
       int length = variables.length;
       variables = Arrays.copyOf(variables, length + 1);
       variables[length] = var;
+    }
+
+    private static boolean noVarUsesSameSlot(final Variable[] vars) {
+      for (Variable v : vars) {
+        assert noVarUsesSameSlot(v, vars);
+      }
+      return true;
+    }
+
+    private static boolean noVarUsesSameSlot(final Variable var, final Variable[] vars) {
+      if (var instanceof Local) {
+        Local l = (Local) var;
+        int i = l.getSlotIndex();
+
+        for (Variable v : vars) {
+          if (v != var && v instanceof Local) {
+            assert ((Local) v).getSlotIndex() != i;
+            return true;
+          }
+        }
+      }
+
+      return true;
     }
 
     public void addEmbeddedScope(final MethodScope embeddedScope) {
@@ -288,13 +319,27 @@ public abstract class LexicalScope {
       return null;
     }
 
-    public void finalizeScope() {
-      assert !isFinalized();
-      finalized = true;
+    public void finalizeScope(final int numLocals) {
+      assert frameDescriptor == null;
+
+      Builder builder = FrameDescriptor.newBuilder(numLocals);
+      builder.defaultValue(Nil.nilObject);
+      builder.addSlots(numLocals, FrameSlotKind.Illegal);
+      frameDescriptor = builder.build();
+
+      numberOfLocals = numLocals;
+
+      if (variables == null) {
+        return;
+      }
+
+      for (Variable v : variables) {
+        v.init(frameDescriptor);
+      }
     }
 
     public boolean isFinalized() {
-      return finalized;
+      return frameDescriptor != null;
     }
 
     @Override
@@ -309,14 +354,12 @@ public abstract class LexicalScope {
     }
 
     private MethodScope constructSplitScope(final LexicalScope newOuter) {
-      FrameDescriptor desc = new FrameDescriptor(frameDescriptor.getDefaultValue());
-
       Variable[] newVars = new Variable[variables.length];
       for (int i = 0; i < variables.length; i += 1) {
-        newVars[i] = variables[i].split(desc);
+        newVars[i] = variables[i].split();
       }
 
-      MethodScope split = new MethodScope(desc, newOuter);
+      MethodScope split = new MethodScope(newOuter);
 
       if (embeddedScopes != null) {
         for (MethodScope s : embeddedScopes) {
@@ -324,7 +367,7 @@ public abstract class LexicalScope {
         }
       }
       split.setVariables(newVars);
-      split.finalizeScope();
+      split.finalizeScope(numberOfLocals);
       split.setMethod(method);
 
       return split;

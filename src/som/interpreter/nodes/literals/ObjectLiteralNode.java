@@ -34,7 +34,7 @@ public class ObjectLiteralNode extends LiteralNode {
       final ExpressionNode outerRead, final ExpressionNode newMessage) {
     this.mixinDef = mixinDefiniton;
     this.superClassResolver =
-        mixinDefiniton.getSuperclassAndMixinResolutionInvokable().createCallTarget();
+        mixinDefiniton.getSuperclassAndMixinResolutionInvokable().getCallTarget();
 
     this.outerRead = outerRead;
     this.newMessage = (AbstractMessageSendNode) newMessage;

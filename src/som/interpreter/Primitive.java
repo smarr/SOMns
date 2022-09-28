@@ -20,10 +20,9 @@ import som.vmobjects.SInvokable;
 public final class Primitive extends Invokable {
 
   public Primitive(final String name, final ExpressionNode primitive,
-      final FrameDescriptor frameDescriptor,
       final ExpressionNode uninitialized, final boolean isAtomic,
       final SomLanguage lang) {
-    super(name, null, frameDescriptor, primitive, uninitialized, isAtomic, lang);
+    super(name, null, new FrameDescriptor(), primitive, uninitialized, isAtomic, lang);
   }
 
   @Override
@@ -36,9 +35,8 @@ public final class Primitive extends Invokable {
 
   @Override
   public Node deepCopy() {
-    assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
-        getFrameDescriptor(), uninitializedBody, isAtomic,
+        uninitializedBody, isAtomic,
         SomLanguage.getLanguage(this));
   }
 
@@ -48,7 +46,7 @@ public final class Primitive extends Invokable {
     ExpressionNode atomic = NodeUtil.cloneNode(uninitializedBody);
     ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
 
-    return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true,
+    return new Primitive(name, atomic, uninitAtomic, true,
         SomLanguage.getLanguage(this));
   }
 
@@ -79,33 +77,27 @@ public final class Primitive extends Invokable {
 
   private static Method getNextMethodOnStack() {
     return Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Method>() {
+
       @Override
       public Method visitFrame(final FrameInstance frameInstance) {
         RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
         Invokable m = (Invokable) ct.getRootNode();
+
+        // the caller is a primitive, that doesn't help, we need to skip it and
+        // find a proper method
         if (m instanceof Primitive) {
           return null;
         } else {
           return (Method) m;
         }
       }
-    });
+    }, 1); // skip the first frame on stack
   }
 
   public static void propagateLoopCount(final long count) {
     CompilerAsserts.neverPartOfCompilation("Primitive.pLC(.)");
 
-    // we need to skip the primitive and get to the method that called the primitive
-    FrameInstance caller = Truffle.getRuntime().getCallerFrame();
-
-    RootCallTarget ct = (RootCallTarget) caller.getCallTarget(); // caller method
-    Invokable m = (Invokable) ct.getRootNode();
-
-    if (m instanceof Primitive) {
-      // the caller is a primitive, that doesn't help, we need to skip it and
-      // find a proper method
-      m = getNextMethodOnStack();
-    }
+    Invokable m = getNextMethodOnStack();
 
     if (m != null && !(m instanceof Primitive)) {
       m.propagateLoopCountThroughoutMethodScope(count);

@@ -32,8 +32,6 @@ import java.util.List;
 
 import org.graalvm.collections.EconomicMap;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.ScopeAdaptationVisitor;
@@ -125,7 +123,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
   @Override
   protected MethodScope createScope(final LexicalScope scope) {
     assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
-    return new MethodScope(new FrameDescriptor(Nil.nilObject), scope);
+    return new MethodScope(scope);
   }
 
   public static class MethodDefinitionError extends SemanticDefinitionError {
@@ -161,7 +159,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
    */
   public void mergeIntoScope(final MethodScope scope, final SInvokable outer) {
     for (Variable v : scope.getVariables()) {
-      Local l = v.splitToMergeIntoOuterScope(this.scope.getFrameDescriptor());
+      int newSlotIdx = locals.size();
+      Local l = v.splitToMergeIntoOuterScope(newSlotIdx);
       if (l != null) { // can happen for instance for the block self, which we omit
         SSymbol name = l.getQualifiedName();
         assert !locals.containsKey(name);
@@ -230,10 +229,9 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     if (frameOnStackVar == null) {
       assert needsToCatchNonLocalReturn;
 
-      frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
-      frameOnStackVar.init(
-          scope.getFrameDescriptor().addFrameSlot(frameOnStackVar, FrameSlotKind.Object),
-          scope.getFrameDescriptor());
+      int slotIndex = locals.size();
+      frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME, slotIndex);
+      locals.put(FRAME_ON_STACK_SLOT_NAME, frameOnStackVar);
       scope.addVariable(frameOnStackVar);
     }
     return frameOnStackVar;
@@ -281,7 +279,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = scope.split();
-    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false,
+    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, scope, 0, false,
         language);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
@@ -335,7 +333,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
   }
 
   public void finalizeMethodScope() {
-    scope.finalizeScope();
+    scope.finalizeScope(locals.size());
   }
 
   public Method assembleInvokable(final ExpressionNode body,
@@ -402,13 +400,14 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
           + ". Can't define local variable with same name.", source);
     }
 
+    int slotIndex = locals.size();
+
     Local l;
     if (immutable) {
-      l = new ImmutableLocal(name, source);
+      l = new ImmutableLocal(name, source, slotIndex);
     } else {
-      l = new MutableLocal(name, source);
+      l = new MutableLocal(name, source, slotIndex);
     }
-    l.init(scope.getFrameDescriptor().addFrameSlot(l), scope.getFrameDescriptor());
     locals.put(name, l);
 
     if (structuralProbe != null) {

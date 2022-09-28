@@ -90,7 +90,8 @@ public final class Method extends Invokable {
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
     return ScopeAdaptationVisitor.adapt(
-        uninitializedBody, builder.getScope(), 0, true, SomLanguage.getLanguage(this));
+        uninitializedBody, builder.getScope(), this.methodScope, 0, true,
+        SomLanguage.getLanguage(this));
   }
 
   @Override
@@ -106,7 +107,8 @@ public final class Method extends Invokable {
       final boolean someOuterScopeIsMerged) {
     SomLanguage lang = SomLanguage.getLanguage(this);
     ExpressionNode adaptedBody = ScopeAdaptationVisitor.adapt(
-        uninitializedBody, adaptedScope, appliesTo, someOuterScopeIsMerged, lang);
+        uninitializedBody, adaptedScope, methodScope,
+        appliesTo, someOuterScopeIsMerged, lang);
 
     ExpressionNode uninit;
     if (cloneAdaptedAsUninitialized) {
@@ -137,7 +139,8 @@ public final class Method extends Invokable {
 
     MethodScope splitScope = methodScope.split();
     ExpressionNode body =
-        ScopeAdaptationVisitor.adapt(uninitializedBody, splitScope, 0, true, lang);
+        ScopeAdaptationVisitor.adapt(uninitializedBody, splitScope, methodScope, 0, true,
+            lang);
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,

@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -86,7 +85,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
     ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector, lang);
 
-    return Truffle.getRuntime().createCallTarget(receivedMsg);
+    return receivedMsg.getCallTarget();
   }
 
   public static RootCallTarget createOnReceiveCallTargetForVMMain(final SSymbol selector,
@@ -96,7 +95,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
     ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future, lang);
 
-    return Truffle.getRuntime().createCallTarget(receivedMsg);
+    return receivedMsg.getCallTarget();
   }
 
   private static WrapReferenceNode[] createArgWrapper(final int numArgs) {

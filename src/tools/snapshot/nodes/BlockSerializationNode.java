@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.compiler.Variable.Internal;
@@ -49,7 +48,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       Object[] args = mf.getArguments();
 
       int start = sb.addObject(block, classFact,
-          SINVOKABLE_SIZE + ((args.length + fd.getSlots().size()) * Long.BYTES) + 2);
+          SINVOKABLE_SIZE + ((args.length + fd.getNumberOfSlots()) * Long.BYTES) + 2);
       int base = start;
 
       SInvokable meth = block.getMethod();
@@ -68,15 +67,16 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
       int j = 0;
 
-      sb.putByteAt(base, (byte) fd.getSlots().size());
+      sb.putByteAt(base, (byte) fd.getNumberOfSlots());
       base++;
-      for (FrameSlot slot : fd.getSlots()) {
+
+      for (int slotIdx = 0; slotIdx < fd.getNumberOfSlots(); slotIdx += 1) {
         // assume this is ordered by index
 
         // TODO optimization: MaterializedFrameSerialization Nodes that are associated with the
         // Invokables Frame Descriptor. Possibly use Local Var Read Nodes.
-        Object value = mf.getValue(slot);
-        switch (fd.getFrameSlotKind(slot)) {
+        Object value = mf.getValue(slotIdx);
+        switch (fd.getSlotKind(slotIdx)) {
           case Boolean:
             Classes.booleanClass.serialize(value, sb);
             break;
@@ -113,7 +113,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
       base += j * Long.BYTES;
       assert base == start + SINVOKABLE_SIZE
-          + ((args.length + fd.getSlots().size()) * Long.BYTES) + 2;
+          + ((args.length + fd.getNumberOfSlots()) * Long.BYTES) + 2;
     }
   }
 
@@ -143,40 +143,38 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
     int numSlots = bb.get();
     if (numSlots > 0) {
-      assert numSlots == fd.getSlots().size();
+      assert numSlots == fd.getNumberOfSlots();
 
       for (int i = 0; i < numSlots; i++) {
-        FrameSlot slot = fd.getSlots().get(i);
-
         Object o = bb.getReference();
 
         if (DeserializationBuffer.needsFixup(o)) {
-          bb.installFixup(new FrameSlotFixup(frame, slot));
+          bb.installFixup(new FrameSlotFixup(frame, i));
         } else {
 
-          switch (fd.getFrameSlotKind(slot)) {
+          switch (fd.getSlotKind(i)) {
             case Boolean:
-              frame.setBoolean(slot, (boolean) o);
+              frame.setBoolean(i, (boolean) o);
               break;
             case Double:
-              frame.setDouble(slot, (double) o);
+              frame.setDouble(i, (double) o);
               break;
             case Long:
-              frame.setLong(slot, (long) o);
+              frame.setLong(i, (long) o);
               break;
             case Object:
-              if (slot.getIdentifier() instanceof Internal) {
+              if (fd.getSlotInfo(i) instanceof Internal) {
                 FrameOnStackMarker fosm = new FrameOnStackMarker();
                 if (!(boolean) o) {
                   fosm.frameNoLongerOnStack();
                 }
                 o = fosm;
               }
-              frame.setObject(slot, o);
+              frame.setObject(i, o);
               break;
             case Illegal:
               // uninitialized variable, uses default
-              frame.setObject(slot, o);
+              frame.setObject(i, o);
               break;
             default:
               throw new IllegalArgumentException("Unexpected SlotKind");
@@ -204,17 +202,18 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
   }
 
   public static class FrameSlotFixup extends FixupInformation {
-    FrameSlot         slot;
+    int slotIdx;
+
     MaterializedFrame frame;
 
-    public FrameSlotFixup(final MaterializedFrame frame, final FrameSlot slot) {
+    public FrameSlotFixup(final MaterializedFrame frame, final int slotIdx) {
       this.frame = frame;
-      this.slot = slot;
+      this.slotIdx = slotIdx;
     }
 
     @Override
     public void fixUp(final Object o) {
-      frame.setObject(slot, o);
+      frame.setObject(slotIdx, o);
     }
   }
 }

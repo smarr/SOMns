@@ -354,12 +354,12 @@ public final class VM {
 
   public void enterContext() {
     assert context != null : "setupInstruments(env) must have been called first";
-    context.enter();
+    context.enter(null);
   }
 
   public void leaveContext() {
     assert context != null : "setupInstruments(env) must have been called first";
-    context.leave(null);
+    context.leave(null, null);
   }
 
   /**

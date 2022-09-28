@@ -5,8 +5,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.NodeState;
@@ -57,6 +55,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     this.source = source;
   }
 
+  public void init(final FrameDescriptor frameDescriptor) {}
+
   /** Gets the name including lexical location. */
   public final SSymbol getQualifiedName() {
     return Symbols.symbolFor(name.getString() + SourceCoordinate.getLocationQualifier(source));
@@ -95,9 +95,9 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     return false;
   }
 
-  public abstract Variable split(FrameDescriptor descriptor);
+  public abstract Variable split();
 
-  public abstract Local splitToMergeIntoOuterScope(FrameDescriptor descriptor);
+  public abstract Local splitToMergeIntoOuterScope(int newSlotIndex);
 
   /** Access method for the debugger and tools. Not to be used in language. */
   public abstract Object read(Frame frame);
@@ -151,19 +151,17 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     }
 
     @Override
-    public Variable split(final FrameDescriptor descriptor) {
+    public Variable split() {
       return this;
     }
 
     @Override
-    public Local splitToMergeIntoOuterScope(final FrameDescriptor descriptor) {
+    public Local splitToMergeIntoOuterScope(final int newSlotIndex) {
       if (isSelf()) {
         return null;
       }
 
-      Local l = new ImmutableLocal(name, source);
-      l.init(descriptor.addFrameSlot(l), descriptor);
-      return l;
+      return new ImmutableLocal(name, source, newSlotIndex);
     }
 
     @Override
@@ -189,15 +187,17 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
    * Locals are stored in {@link FrameSlot}s inside a {@link Frame}.
    */
   public abstract static class Local extends Variable {
-    @CompilationFinal private FrameSlot       slot;
+    protected final int slotIndex;
+
     @CompilationFinal private FrameDescriptor frameDescriptor;
 
-    Local(final SSymbol name, final SourceSection source) {
+    Local(final SSymbol name, final SourceSection source, final int slotIndex) {
       super(name, source);
+      this.slotIndex = slotIndex;
     }
 
-    public void init(final FrameSlot slot, final FrameDescriptor descriptor) {
-      this.slot = slot;
+    @Override
+    public void init(final FrameDescriptor descriptor) {
       this.frameDescriptor = descriptor;
     }
 
@@ -214,19 +214,17 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       return node;
     }
 
-    public FrameSlot getSlot() {
-      return slot;
+    public int getSlotIndex() {
+      return slotIndex;
     }
 
-    protected abstract Local create();
+    protected abstract Local create(int slotIndex);
 
     public abstract boolean isMutable();
 
     @Override
-    public Local split(final FrameDescriptor descriptor) {
-      Local newLocal = create();
-      newLocal.init(descriptor.addFrameSlot(newLocal), descriptor);
-      return newLocal;
+    public Local split() {
+      return create(slotIndex);
     }
 
     @Override
@@ -245,29 +243,30 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     }
 
     @Override
-    public Local splitToMergeIntoOuterScope(final FrameDescriptor descriptor) {
-      return split(descriptor);
+    public Local splitToMergeIntoOuterScope(final int newSlotIndex) {
+      return create(newSlotIndex);
     }
 
     @Override
     public Object read(final Frame frame) {
       VM.callerNeedsToBeOptimized("Not to be used outside of tools");
-      return frame.getValue(slot);
+      return frame.getValue(slotIndex);
     }
 
     public FrameDescriptor getFrameDescriptor() {
+      assert frameDescriptor != null : "Local was not initialized with frame descriptor.";
       return frameDescriptor;
     }
   }
 
   public static final class MutableLocal extends Local {
-    MutableLocal(final SSymbol name, final SourceSection source) {
-      super(name, source);
+    MutableLocal(final SSymbol name, final SourceSection source, final int slotIndex) {
+      super(name, source, slotIndex);
     }
 
     @Override
-    public Local create() {
-      return new MutableLocal(name, source);
+    public Local create(final int slotIndex) {
+      return new MutableLocal(name, source, slotIndex);
     }
 
     @Override
@@ -277,13 +276,13 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   }
 
   public static final class ImmutableLocal extends Local {
-    ImmutableLocal(final SSymbol name, final SourceSection source) {
-      super(name, source);
+    ImmutableLocal(final SSymbol name, final SourceSection source, final int slotIndex) {
+      super(name, source, slotIndex);
     }
 
     @Override
-    public Local create() {
-      return new ImmutableLocal(name, source);
+    public Local create(final int slotIndex) {
+      return new ImmutableLocal(name, source, slotIndex);
     }
 
     @Override
@@ -297,34 +296,32 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
    * Does not hold language-level values, and thus, is ignored in the debugger.
    * `Internals` are stored in {@link FrameSlot}s.
    */
-  public static final class Internal extends Variable {
-    @CompilationFinal private FrameSlot       slot;
-    @CompilationFinal private FrameDescriptor frameDescriptor;
+  public static final class Internal extends Local {
 
-    public Internal(final SSymbol name) {
-      super(name, null);
+    public Internal(final SSymbol name, final int slotIndex) {
+      super(name, null, slotIndex);
     }
 
-    public void init(final FrameSlot slot, final FrameDescriptor descriptor) {
-      this.slot = slot;
-      this.frameDescriptor = descriptor;
+    @Override
+    public boolean isMutable() {
+      return false;
     }
 
-    public FrameSlot getSlot() {
-      return slot;
+    @Override
+    public int getSlotIndex() {
+      return slotIndex;
     }
 
     @Override
     // TODO: we need to sort this out with issue #240, and decide what we want here
-    public Variable split(final FrameDescriptor descriptor) {
-      Internal newInternal = new Internal(name);
-      assert frameDescriptor.getFrameSlotKind(
-          slot) == FrameSlotKind.Object
-          : "We only have the on stack marker currently, so, we expect those not to specialize";
-      newInternal.init(
-          descriptor.addFrameSlot(newInternal, frameDescriptor.getFrameSlotKind(slot)),
-          descriptor);
+    public Local split() {
+      Internal newInternal = new Internal(name, slotIndex);
       return newInternal;
+    }
+
+    @Override
+    public Local create(final int slotIndex) {
+      return new Internal(name, slotIndex);
     }
 
     @Override
@@ -333,7 +330,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     }
 
     @Override
-    public Local splitToMergeIntoOuterScope(final FrameDescriptor descriptor) {
+    public Local splitToMergeIntoOuterScope(final int newSlotIndex) {
       throw new UnsupportedOperationException();
     }
 
@@ -346,10 +343,6 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     @Override
     public boolean isInternal() {
       return true;
-    }
-
-    public FrameDescriptor getFrameDescriptor() {
-      return frameDescriptor;
     }
   }
 }

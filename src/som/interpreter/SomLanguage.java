@@ -12,7 +12,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Option;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
@@ -283,19 +282,19 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected CallTarget parse(final ParsingRequest request) throws IOException {
     Source code = request.getSource();
     if (code.getCharacters().equals(START_SOURCE) && code.getName().equals(START_SOURCE)) {
-      return Truffle.getRuntime().createCallTarget(new StartInterpretation(this));
+      return new StartInterpretation(this).getCallTarget();
     } else if ((code.getCharacters().equals(INIT_SOURCE)
         && code.getName().equals(INIT_SOURCE))) {
-      return Truffle.getRuntime().createCallTarget(new InitializeContext(this));
+      return new InitializeContext(this).getCallTarget();
     } else if ((code.getCharacters().equals(SHUTDOWN_SOURCE))
         && code.getName().equals(SHUTDOWN_SOURCE)) {
-      return Truffle.getRuntime().createCallTarget(new ShutdownContext(this));
+      return new ShutdownContext(this).getCallTarget();
     }
 
     try {
       MixinDefinition moduleDef = vm.loadModule(code);
       ParseResult result = new ParseResult(this, moduleDef.instantiateModuleClass());
-      return Truffle.getRuntime().createCallTarget(result);
+      return result.getCallTarget();
     } catch (ThreadDeath t) {
       throw new IOException(t);
     }

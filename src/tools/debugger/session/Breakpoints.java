@@ -123,7 +123,7 @@ public class Breakpoints {
     @Override
     public boolean evaluate() {
       RootCallTarget ct =
-          (RootCallTarget) Truffle.getRuntime().getCallerFrame().getCallTarget();
+          (RootCallTarget) Truffle.getRuntime().iterateFrames(f -> f.getCallTarget(), 1);
       return (ct.getRootNode() instanceof ReceivedRootNode);
     }
   }

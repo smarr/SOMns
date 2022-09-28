@@ -27,7 +27,7 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
-import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
@@ -105,8 +105,10 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
 
     if (this.getClass().desiredAssertionStatus()) {
       for (Field f : getAllFields(getClass())) {
-        assert f.getType() != FrameSlot.class;
-        if (f.getType() == FrameSlot.class) {
+        // This used to check for the use of FrameSlot,
+        // but it's gone now from Truffle, so use FrameDescriptor as a proxy
+        assert f.getType() != FrameDescriptor.class;
+        if (f.getType() == FrameDescriptor.class) {
           return false;
         }
       }
