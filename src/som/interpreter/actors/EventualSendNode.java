@@ -208,7 +208,8 @@ public class EventualSendNode extends ExprWithTagsNode {
         args[i] = wrapArgs[i].execute(args[i], target, owner);
       }
 
-      assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
+      assert !(args[0] instanceof SFarReference)
+          : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
       DirectMessage msg = new DirectMessage(target, selector, args,
@@ -232,7 +233,8 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
         final SResolver resolver, final RegisterWhenResolved registerNode) {
-      assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
+      assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn()
+          : "think this should be true because the promise is an Object and owned by this specific actor";
 
       PromiseSendMessage msg = new PromiseSendMessage(selector, args,
           rcvr.getOwner(), resolver, onReceive,

@@ -377,7 +377,8 @@ public final class VM {
     }
 
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      assert options.webDebuggerEnabled : "If debugging is enabled, we currently expect the web debugger to be used.";
+      assert options.webDebuggerEnabled
+          : "If debugging is enabled, we currently expect the web debugger to be used.";
       Debugger debugger = Debugger.find(env);
 
       webDebugger = WebDebugger.find(env);
@@ -404,7 +405,8 @@ public final class VM {
     }
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      assert !options.siCandidateIdentifierEnabled : "Currently, CandidateIdentifer and Snapshots are not compatible";
+      assert !options.siCandidateIdentifierEnabled
+          : "Currently, CandidateIdentifer and Snapshots are not compatible";
       structuralProbe = SnapshotBackend.getProbe();
     }
   }
