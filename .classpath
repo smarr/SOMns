@@ -13,6 +13,7 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="libs/Java-WebSocket-1.5.1.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.dsl"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.interop"/>
