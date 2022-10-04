@@ -48,9 +48,9 @@ public abstract class InstantiationNode extends Node {
   }
 
   public static SClass signalExceptionsIfFaultFoundElseReturnClassObject(
-          final VirtualFrame frame, final SObjectWithClass outerObj, final ClassFactory factory,
-          final SClass classObj, final ExceptionSignalingNode notAValue,
-          final ExceptionSignalingNode cannotBeValue) {
+      final VirtualFrame frame, final SObjectWithClass outerObj, final ClassFactory factory,
+      final SClass classObj, final ExceptionSignalingNode notAValue,
+      final ExceptionSignalingNode cannotBeValue) {
     factory.initializeClass(classObj);
 
     if (factory.isDeclaredAsValue() && factory.isTransferObject()) {
@@ -72,7 +72,8 @@ public abstract class InstantiationNode extends Node {
       super(mixinDefinition);
     }
 
-    public abstract SClass execute(VirtualFrame frame, SObjectWithClass outerObj, Object superclassAndMixins);
+    public abstract SClass execute(VirtualFrame frame, SObjectWithClass outerObj,
+        Object superclassAndMixins);
 
     @Specialization(guards = {"sameSuperAndMixins(superclassAndMixins, cachedSuperMixins)"})
     public SClass instantiateClass(final VirtualFrame frame, final SObjectWithClass outerObj,
@@ -86,12 +87,14 @@ public abstract class InstantiationNode extends Node {
         final ClassFactory factory, final ExceptionSignalingNode notAValue,
         final ExceptionSignalingNode cannotBeValues) {
       SClass classObj = new SClass(outerObj, instantiateMetaclassClass(factory, outerObj));
-      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory, classObj,
+      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory,
+          classObj,
           notAValue, cannotBeValues);
     }
 
     @Specialization(replaces = "instantiateClass")
-    public SClass instantiateClassWithNewClassFactory(final VirtualFrame frame, final SObjectWithClass outerObj,
+    public SClass instantiateClassWithNewClassFactory(final VirtualFrame frame,
+        final SObjectWithClass outerObj,
         final Object superclassAndMixins) {
       return instantiateClass(frame, outerObj, superclassAndMixins, null,
           createClassFactory(superclassAndMixins));
@@ -128,7 +131,8 @@ public abstract class InstantiationNode extends Node {
         final InstantiationNode inst) {
       SClass classObj =
           new SClass(outerObj, instantiateMetaclassClass(factory, outerObj), frame);
-      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory, classObj,
+      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory,
+          classObj,
           inst.notAValue, inst.cannotBeValues);
     }
 

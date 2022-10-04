@@ -38,7 +38,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     this.actorPool = actorPool;
   }
 
-  public abstract void execute(VirtualFrame frame, SPromise promise, PromiseMessage msg, Actor current);
+  public abstract void execute(VirtualFrame frame, SPromise promise, PromiseMessage msg,
+      Actor current);
 
   @Specialization
   public final void schedule(final VirtualFrame frame, final SPromise promise,
@@ -53,15 +54,16 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       // Get info about the resolution context from the promise
       // we want to know where it was resolved, where the value is coming from
       ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
-              ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_SCHEDULE_PROMISE;
-//      onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+ msg.getSender().getId());
+          ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_SCHEDULE_PROMISE;
+      // onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+
+      // msg.getSender().getId());
       ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-              SArguments.getShadowStackEntry(frame),
-              getParent().getParent(), onReceiveLocation, "");
+          SArguments.getShadowStackEntry(frame),
+          getParent().getParent(), onReceiveLocation, "");
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
       SArguments.setShadowStackEntry(msg.args, resolutionEntry);
     }
-      
+
     if (VmSettings.SENDER_SIDE_REPLAY) {
       ReplayRecord npr = current.getNextReplayEvent();
       assert npr.type == TraceRecord.MESSAGE;
@@ -83,8 +85,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     Object receiver = rcvrWrapper.execute(promise.getValueUnsync(),
         finalTarget, current);
-    assert !(receiver instanceof SPromise)
-        : "TODO: handle this case as well?? Is it possible? didn't think about it";
+    assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     // TODO: might want to handle that in a specialization
     if (receiver instanceof SFarReference) {
@@ -94,12 +95,12 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       receiver = ((SFarReference) receiver).getValue();
     }
 
-    // TODO: we already have a shadow stack entry here, Don't think we need to do anything about it
+    // TODO: we already have a shadow stack entry here, Don't think we need to do anything
+    // about it
 
     msg.args[PromiseMessage.PROMISE_RCVR_IDX] = receiver;
 
-    assert !(receiver instanceof SFarReference)
-        : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+    assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
     wrapArguments(msg, finalTarget, argWrapper);
@@ -123,7 +124,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       final WrapReferenceNode argWrapper) {
     // TODO: break that out into nodes
     for (int i =
-         1; i < numArgs.profile(SArguments.getLengthWithoutShadowStack(msg.args)); i++) {
+        1; i < numArgs.profile(SArguments.getLengthWithoutShadowStack(msg.args)); i++) {
       msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
     }
   }

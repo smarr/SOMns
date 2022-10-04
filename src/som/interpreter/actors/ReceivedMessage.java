@@ -47,18 +47,21 @@ public class ReceivedMessage extends ReceivedRootNode {
       ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
 
-      ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation = ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_RECEIVE_MESSAGE;
-//     String resolutionValue = (msg.getTarget().getId() + " sent by actor "+ msg.getSender().getId());
+      ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
+          ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_RECEIVE_MESSAGE;
+      // String resolutionValue = (msg.getTarget().getId() + " sent by actor "+
+      // msg.getSender().getId());
       resolutionEntry =
-              ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive, onReceiveLocation, "");
+          ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive,
+              onReceiveLocation, "");
     }
 
     try {
       assert msg.args[msg.args.length - 1] == null
-              || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+          || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
       Object result = onReceive.executeEvaluated(frame, msg.args);
       resolvePromise(frame, msg.resolver, result,
-              resolutionEntry, haltOnResolver, haltOnResolution);
+          resolutionEntry, haltOnResolver, haltOnResolution);
     } catch (SomException exception) {
       errorPromise(frame, msg.resolver, exception.getSomObject(), resolutionEntry,
           haltOnResolver, haltOnResolution);
@@ -109,7 +112,7 @@ public class ReceivedMessage extends ReceivedRootNode {
 
     public ReceivedCallback(final SInvokable onReceive) {
       super(SomLanguage.getLanguage(onReceive.getInvokable()),
-              onReceive.getSourceSection(), null);
+          onReceive.getSourceSection(), null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive.getCallTarget());
       this.onReceiveMethod = onReceive.getInvokable();
     }
@@ -127,10 +130,12 @@ public class ReceivedMessage extends ReceivedRootNode {
         ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
         assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
         ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
-                ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_BLOCK;
-//      String resolutionValue = (msg.getTarget().getId() + " send by actor "+ msg.getSender().getId());
+            ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_BLOCK;
+        // String resolutionValue = (msg.getTarget().getId() + " send by actor "+
+        // msg.getSender().getId());
         resolutionEntry =
-                ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode(), onReceiveLocation, "");
+            ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode(),
+                onReceiveLocation, "");
 
         SArguments.setShadowStackEntry(msg.getArgs(), resolutionEntry);
       }

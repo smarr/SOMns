@@ -41,7 +41,8 @@ public abstract class RegisterOnPromiseNode {
       }
     }
 
-    public void register(final VirtualFrame frame, final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -85,45 +86,53 @@ public abstract class RegisterOnPromiseNode {
           if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
             // get info about the resolution context from the promise,
             // we want to know where it was resolved, where the value is coming from
-            for (Object obj: msg.args) {
-              boolean promiseComplete = (obj instanceof SPromise) && ((SPromise) promise).isCompleted();
-//              boolean promiseChained = (obj instanceof SPromise) && !((SPromise) promise).isCompleted();
+            for (Object obj : msg.args) {
+              boolean promiseComplete =
+                  (obj instanceof SPromise) && ((SPromise) promise).isCompleted();
+              // boolean promiseChained = (obj instanceof SPromise) && !((SPromise)
+              // promise).isCompleted();
               if (obj instanceof SBlock || promiseComplete) {
                 ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
-                        ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED;
-//                onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+ msg.getSender().getId());
-                //for whenResolved blocks or if promise is resolved, then create EntryForPromiseResolution
+                    ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED;
+                // onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+
+                // msg.getSender().getId());
+                // for whenResolved blocks or if promise is resolved, then create
+                // EntryForPromiseResolution
                 ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-                        SArguments.getShadowStackEntry(frame),
-                        getParent().getParent(), onReceiveLocation, "");
-                assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+                    SArguments.getShadowStackEntry(frame),
+                    getParent().getParent(), onReceiveLocation, "");
+                assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+                    || resolutionEntry != null;
                 SArguments.setShadowStackEntry(msg.args, resolutionEntry);
               }
-//              else if (promiseChained) {
-//                ShadowStackEntry entry = (ShadowStackEntry) msg.args[msg.args.length - 1];
-//                assert entry != null && entry instanceof ShadowStackEntry.EntryAtMessageSend;
-//                ShadowStackEntry shadowStackEntry = SArguments.getShadowStackEntry(frame);
-//
-////                entry.setPreviousShadowStackEntry(shadowStackEntry);
-//
-//                System.out.println("-register msg args: "+entry.getSourceSection());
-//                System.out.println("shadow: "+shadowStackEntry.getSourceSection());
+              // else if (promiseChained) {
+              // ShadowStackEntry entry = (ShadowStackEntry) msg.args[msg.args.length - 1];
+              // assert entry != null && entry instanceof ShadowStackEntry.EntryAtMessageSend;
+              // ShadowStackEntry shadowStackEntry = SArguments.getShadowStackEntry(frame);
+              //
+              //// entry.setPreviousShadowStackEntry(shadowStackEntry);
+              //
+              // System.out.println("-register msg args: "+entry.getSourceSection());
+              // System.out.println("shadow: "+shadowStackEntry.getSourceSection());
 
-//                  assert maybeEntry != null && maybeEntry instanceof ShadowStackEntry.EntryForPromiseResolution;
-//                  assert args[args.length - 1] instanceof ShadowStackEntry.EntryAtMessageSend;
-//                  ShadowStackEntry.EntryAtMessageSend current = (ShadowStackEntry.EntryAtMessageSend) args[args.length - 1];
-//                  SArguments.addEntryForPromiseResolution(current, (ShadowStackEntry.EntryForPromiseResolution) maybeEntry);
+              // assert maybeEntry != null && maybeEntry instanceof
+              // ShadowStackEntry.EntryForPromiseResolution;
+              // assert args[args.length - 1] instanceof ShadowStackEntry.EntryAtMessageSend;
+              // ShadowStackEntry.EntryAtMessageSend current =
+              // (ShadowStackEntry.EntryAtMessageSend) args[args.length - 1];
+              // SArguments.addEntryForPromiseResolution(current,
+              // (ShadowStackEntry.EntryForPromiseResolution) maybeEntry);
 
-//              }
+              // }
             }
           }
-            
+
           if (VmSettings.SENDER_SIDE_REPLAY) {
             ReplayRecord npr = current.getNextReplayEvent();
             assert npr.type == TraceRecord.MESSAGE;
             msg.messageId = npr.eventNo;
           }
-            
+
           if (VmSettings.SENDER_SIDE_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);
@@ -177,7 +186,8 @@ public abstract class RegisterOnPromiseNode {
       }
     }
 
-    public void register(final VirtualFrame frame, final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -205,12 +215,14 @@ public abstract class RegisterOnPromiseNode {
             // TODO: I think, we need the info about the resolution context from the promise
             // we want to know where it was resolved, where the value is coming from
             ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-                    SArguments.getShadowStackEntry(frame),
-                    getParent().getParent(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_ERROR, "");
+                SArguments.getShadowStackEntry(frame),
+                getParent().getParent(),
+                ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_ERROR,
+                "");
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
             SArguments.setShadowStackEntry(msg.args, resolutionEntry);
           }
-            
+
           if (VmSettings.SENDER_SIDE_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);

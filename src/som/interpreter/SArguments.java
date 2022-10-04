@@ -64,12 +64,12 @@ public final class SArguments {
    * #doesNotUnderstand (#dnu)
    */
   public static SImmutableArray getArgumentsWithoutReceiver(final Object[] arguments) {
-//    if (arguments.length == 1) {
-//      return new SImmutableArray(0, Classes.valueArrayClass);
-//    }
-//
-//    Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
-//    return new SImmutableArray(argsArr, Classes.valueArrayClass);
+    // if (arguments.length == 1) {
+    // return new SImmutableArray(0, Classes.valueArrayClass);
+    // }
+    //
+    // Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
+    // return new SImmutableArray(argsArr, Classes.valueArrayClass);
 
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       if (arguments.length == 2) {
@@ -97,7 +97,7 @@ public final class SArguments {
     int rcvrIdx = 0; // the code and magic numbers below are based on the following assumption
     assert RCVR_IDX == rcvrIdx;
     assert arguments.length >= 1; // <- that's the receiver
-//    Object[] argsArr = new Object[arguments.length - 1];
+    // Object[] argsArr = new Object[arguments.length - 1];
 
     int argsSize = arguments.length - 1;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
@@ -109,21 +109,21 @@ public final class SArguments {
     return argsArr;
   }
 
-//  public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
-//      final SArray args, final SizeAndLengthPrim size, final AtPrim at) {
-//    Object[] result = new Object[(int) (size.executeEvaluated(args) + 1)];
-//    result[0] = receiver;
-//    for (int i = 1; i < result.length; i++) {
-//      result[i] = at.executeEvaluated(null, args, (long) i);
-//    }
-//    return result;
-//  }
+  // public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
+  // final SArray args, final SizeAndLengthPrim size, final AtPrim at) {
+  // Object[] result = new Object[(int) (size.executeEvaluated(args) + 1)];
+  // result[0] = receiver;
+  // for (int i = 1; i < result.length; i++) {
+  // result[i] = at.executeEvaluated(null, args, (long) i);
+  // }
+  // return result;
+  // }
 
   public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
-                                                       final SArray args, final SizeAndLengthPrim size, final AtPrim at,
-                                                       final ExpressionNode expression,
-                                                       final ShadowStackEntryLoad entryLoad,
-                                                       final VirtualFrame frame) {
+      final SArray args, final SizeAndLengthPrim size, final AtPrim at,
+      final ExpressionNode expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame) {
     int argSize = (int) (size.executeEvaluated(args) + 1);
     int defaultArgSize = argSize;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
@@ -143,9 +143,9 @@ public final class SArguments {
   }
 
   public static Object[] getPlainXArgumentsWithReceiver(final ExpressionNode expression,
-                                                        final ShadowStackEntryLoad entryLoad,
-                                                        final VirtualFrame frame,
-                                                        final Object... rcvrAndArgs) {
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame,
+      final Object... rcvrAndArgs) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       Object[] arguments = new Object[rcvrAndArgs.length + 1];
       for (int i = 0; i < rcvrAndArgs.length; i++) {
@@ -179,10 +179,10 @@ public final class SArguments {
   }
 
   public static void setShadowStackEntryWithCache(final Object[] arguments,
-                                                  final Node expression,
-                                                  final ShadowStackEntryLoad entryLoad,
-                                                  final VirtualFrame frame,
-                                                  final boolean async) {
+      final Node expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame,
+      final boolean async) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       entryLoad.loadShadowStackEntry(arguments, expression, frame, async);
     }
@@ -193,7 +193,7 @@ public final class SArguments {
   }
 
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
-                                                             final Node expr, final boolean async) {
+      final Node expr, final boolean async) {
     CompilerAsserts.partialEvaluationConstant(async);
     if (async) {
       return ShadowStackEntry.createAtAsyncSend(previous, expr);
@@ -228,21 +228,28 @@ public final class SArguments {
     }
   }
 
-  //set the resolution of the promise for the registered callback or message sent to a promise
-  public static void saveCausalEntryForPromise(Object previousPromiseStack, Object currentPromiseStack) {
-      assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
-      assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
-      ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry((ShadowStackEntry) previousPromiseStack);
+  // set the resolution of the promise for the registered callback or message sent to a promise
+  public static void saveCausalEntryForPromise(Object previousPromiseStack,
+      Object currentPromiseStack) {
+    assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
+    assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
+    ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry(
+        (ShadowStackEntry) previousPromiseStack);
   }
 
   private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = new HashMap<>();
 
-  public static void saveCausalEntryForPromiseGroup(Object previousPromiseStack, Object callbackPromiseStack, long actorId) {
-    if (previousPromiseInGroupByActor != null && previousPromiseInGroupByActor.containsKey(actorId)) {
-      ShadowStackEntry firstPromise = previousPromiseInGroupByActor.get(actorId).getPreviousShadowStackEntry();
+  public static void saveCausalEntryForPromiseGroup(Object previousPromiseStack,
+      Object callbackPromiseStack, long actorId) {
+    if (previousPromiseInGroupByActor != null
+        && previousPromiseInGroupByActor.containsKey(actorId)) {
+      ShadowStackEntry firstPromise =
+          previousPromiseInGroupByActor.get(actorId).getPreviousShadowStackEntry();
 
-      //group frames of the previous promise with the frames of the new promise, and then set the grouped stack entries for the callback
-      ShadowStackEntry groupedFrames = groupFrames(firstPromise, (ShadowStackEntry) previousPromiseStack);
+      // group frames of the previous promise with the frames of the new promise, and then set
+      // the grouped stack entries for the callback
+      ShadowStackEntry groupedFrames =
+          groupFrames(firstPromise, (ShadowStackEntry) previousPromiseStack);
       saveCausalEntryForPromise(groupedFrames, callbackPromiseStack);
 
     } else {
@@ -251,17 +258,20 @@ public final class SArguments {
     }
   }
 
-  //group non repeated frames
-  private static ShadowStackEntry groupFrames(ShadowStackEntry firstPromiseStack, ShadowStackEntry secondPromiseStack) {
+  // group non repeated frames
+  private static ShadowStackEntry groupFrames(ShadowStackEntry firstPromiseStack,
+      ShadowStackEntry secondPromiseStack) {
     List<ShadowStackEntry> listSecond = getAllEntries(secondPromiseStack, new ArrayList<>());
     List<ShadowStackEntry> listFirst = getAllEntries(firstPromiseStack, new ArrayList<>());
 
-    ShadowStackEntry group = setNewEntryAtEqualSourceSection(firstPromiseStack, listFirst, listSecond);
+    ShadowStackEntry group =
+        setNewEntryAtEqualSourceSection(firstPromiseStack, listFirst, listSecond);
 
     return group;
   }
 
-  private static List<ShadowStackEntry> getAllEntries(ShadowStackEntry stackEntry, List<ShadowStackEntry> list) {
+  private static List<ShadowStackEntry> getAllEntries(ShadowStackEntry stackEntry,
+      List<ShadowStackEntry> list) {
     if (stackEntry == null) {
       return list;
     } else {
@@ -271,18 +281,25 @@ public final class SArguments {
     return list;
   }
 
-  //equal source section corresponds to the turn node, from there on the stack frames are the same for both promises stacks
-  private static ShadowStackEntry setNewEntryAtEqualSourceSection(ShadowStackEntry stackEntryToAdd, List<ShadowStackEntry> listFirst, List<ShadowStackEntry> listSecond ) {
-    for (ShadowStackEntry entrySecond: listSecond) {
-      for (ShadowStackEntry entryFirst: listFirst) {
-        boolean entryFirstNotNull = entryFirst.getPreviousShadowStackEntry()!= null && entryFirst.getPreviousShadowStackEntry().getExpression()!= null;
-        boolean entrySecondNotNull = entrySecond.getPreviousShadowStackEntry()!= null && entrySecond.getPreviousShadowStackEntry().getExpression()!= null;
-        if (entryFirstNotNull && entrySecondNotNull && entrySecond.getPreviousShadowStackEntry().getSourceSection().equals(entryFirst.getPreviousShadowStackEntry().getSourceSection())) {
+  // equal source section corresponds to the turn node, from there on the stack frames are the
+  // same for both promises stacks
+  private static ShadowStackEntry setNewEntryAtEqualSourceSection(
+      ShadowStackEntry stackEntryToAdd, List<ShadowStackEntry> listFirst,
+      List<ShadowStackEntry> listSecond) {
+    for (ShadowStackEntry entrySecond : listSecond) {
+      for (ShadowStackEntry entryFirst : listFirst) {
+        boolean entryFirstNotNull = entryFirst.getPreviousShadowStackEntry() != null
+            && entryFirst.getPreviousShadowStackEntry().getExpression() != null;
+        boolean entrySecondNotNull = entrySecond.getPreviousShadowStackEntry() != null
+            && entrySecond.getPreviousShadowStackEntry().getExpression() != null;
+        if (entryFirstNotNull && entrySecondNotNull
+            && entrySecond.getPreviousShadowStackEntry().getSourceSection().equals(
+                entryFirst.getPreviousShadowStackEntry().getSourceSection())) {
           entrySecond.setPreviousShadowStackEntry(stackEntryToAdd);
-          return listSecond.get(0); //return top entry with the update
+          return listSecond.get(0); // return top entry with the update
         }
       }
     }
-    return listSecond.get(0);//return top entry
+    return listSecond.get(0);// return top entry
   }
 }

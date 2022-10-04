@@ -49,7 +49,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     // are just not present in benchmarks
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       SArguments.setShadowStackEntryWithCache(arguments, this,
-              shadowStackEntryLoad, frame, false);
+          shadowStackEntryLoad, frame, false);
     }
 
     if (method != null) {

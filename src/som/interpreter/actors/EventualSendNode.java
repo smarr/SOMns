@@ -54,7 +54,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       DynamicMetrics.createLong("Num.Promises.Avoided");
 
   @Child protected ArgumentEvaluationNode arguments;
-  @Child protected SendNode                send;
+  @Child protected SendNode               send;
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
       final ArgumentEvaluationNode arguments, final SourceSection source,
@@ -213,8 +213,7 @@ public class EventualSendNode extends ExprWithTagsNode {
         args[i] = wrapArgs[i].execute(args[i], target, owner);
       }
 
-      assert !(args[0] instanceof SFarReference)
-          : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
+      assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
       DirectMessage msg = new DirectMessage(target, selector, args,
@@ -230,15 +229,16 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            target.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
+            target.getId(), msg.getSelector(), msg.getTarget().getId(),
+            msg.getTargetSourceSection());
       }
 
       target.send(msg, actorPool);
     }
 
     protected void sendPromiseMessage(final VirtualFrame frame, final Object[] args,
-                                                                       final SPromise rcvr, final SResolver resolver,
-                                                                       final RegisterWhenResolved registerNode) {
+        final SPromise rcvr, final SResolver resolver,
+        final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
       PromiseSendMessage msg = new PromiseSendMessage(selector, args,
@@ -254,7 +254,8 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
-            rcvr.getPromiseId(), msg.getSelector(), target != null ? target.getId() : -1, msg.getTargetSourceSection());
+            rcvr.getPromiseId(), msg.getSelector(), target != null ? target.getId() : -1,
+            msg.getTargetSourceSection());
       }
 
       registerNode.register(frame, rcvr, msg, rcvr.getOwner());
@@ -288,7 +289,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     @Specialization(guards = {"isResultUsed()", "isPromiseRcvr(args)"})
     public final SPromise toPromiseWithResultPromise(final VirtualFrame frame,
-                                                     final Object[] args,
+        final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
 
@@ -316,7 +317,8 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            current.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
+            current.getId(), msg.getSelector(), msg.getTarget().getId(),
+            msg.getTargetSourceSection());
       }
 
       if (VmSettings.SENDER_SIDE_REPLAY) {
@@ -344,7 +346,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"!isResultUsed()", "isPromiseRcvr(args)"})
-    public final Object toPromiseWithoutResultPromise(final VirtualFrame frame, final Object[] args,
+    public final Object toPromiseWithoutResultPromise(final VirtualFrame frame,
+        final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       sendPromiseMessage(frame, args, (SPromise) args[0], null, registerNode);
 
@@ -367,7 +370,8 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            current.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
+            current.getId(), msg.getSelector(), msg.getTarget().getId(),
+            msg.getTargetSourceSection());
       }
 
       if (VmSettings.SENDER_SIDE_REPLAY) {

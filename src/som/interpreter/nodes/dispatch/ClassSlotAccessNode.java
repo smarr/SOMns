@@ -112,7 +112,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
    * Caller needs to hold lock on {@code this}.
    */
   private SClass instantiateAndWriteUnsynced(final VirtualFrame frame, final SObject rcvr,
-                                             final Object maybeEntry) {
+      final Object maybeEntry) {
     SClass classObject = instantiateClassObject(frame, rcvr, maybeEntry);
 
     try {
@@ -138,7 +138,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   }
 
   private SClass instantiateClassObject(final VirtualFrame frame, final SObject rcvr,
-                                        final Object maybeEntry) {
+      final Object maybeEntry) {
     if (superclassAndMixinResolver == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
@@ -157,8 +157,8 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         actualEntry = SArguments.instantiateTopShadowStackEntry(this);
       }
       superclassAndMixins =
-              superclassAndMixinResolver.call(
-                      new Object[] {rcvr, actualEntry});
+          superclassAndMixinResolver.call(
+              new Object[] {rcvr, actualEntry});
     } else {
       superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
     }

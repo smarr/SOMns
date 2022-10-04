@@ -42,7 +42,7 @@ public final class Launcher {
       exitCode = result.as(Integer.class);
     } finally {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        //Stop execution for all suspended actors if any
+        // Stop execution for all suspended actors if any
         TracingActors.TracingActor.stopActorsIfSuspended();
       }
 
@@ -65,7 +65,7 @@ public final class Launcher {
     // to produce the list of messages on the erroneous path.
     // Could be done at the beginning of assisted debugging.
 
-    //Note2: added VmSettings.ASSISTED_DEBUGGING flag because at the moment the parser
+    // Note2: added VmSettings.ASSISTED_DEBUGGING flag because at the moment the parser
     // does not works correctly with this implementation.
     // TODO check the assertion error KomposTraceParser 220
     if (VmSettings.KOMPOS_TRACING && VmSettings.ASSISTED_DEBUGGING) {

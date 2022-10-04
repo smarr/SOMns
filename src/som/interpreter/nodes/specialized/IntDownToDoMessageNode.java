@@ -23,9 +23,9 @@ public abstract class IntDownToDoMessageNode extends IntToDoMessageNode {
   @Override
   @Specialization(guards = "block.getMethod() == blockMethod")
   public final long doIntToDo(final VirtualFrame frame, final long receiver,
-                              final long limit, final SBlock block,
-                              @Cached("block.getMethod()") final SInvokable blockMethod,
-                              @Cached("create(blockMethod)") final DirectCallNode valueSend) {
+      final long limit, final SBlock block,
+      @Cached("block.getMethod()") final SInvokable blockMethod,
+      @Cached("create(blockMethod)") final DirectCallNode valueSend) {
     return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
         limit, -1, block, shadowStackEntryLoad);
   }

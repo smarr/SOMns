@@ -287,13 +287,14 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer buffer) {
-//    log("[DEBUGGER] Trace buffers sent: "+buffer);
+    // log("[DEBUGGER] Trace buffers sent: "+buffer);
     traceSocket.send(buffer);
   }
 
   public void sendProgramInfo() {
-      //when the server has really started, i.e. the client has connected, then do the send
-      messageSocketInitialized.thenRun(() -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
+    // when the server has really started, i.e. the client has connected, then do the send
+    messageSocketInitialized.thenRun(
+        () -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
   }
 
   public void sendPauseActorResponse(long pausedActorId) {
@@ -331,17 +332,18 @@ public class FrontendConnector {
 
     clientConnected.complete(conn);
 
-    //when the server has really started, i.e. the client has connected, then do the send
+    // when the server has really started, i.e. the client has connected, then do the send
     messageSocketInitialized.thenRun(() -> sendInitResponse());
   }
 
   private void sendInitResponse() {
-//    log("[DEBUGGER] Message socket initialized "+messageSocketInitialized.isDone());
+    // log("[DEBUGGER] Message socket initialized "+messageSocketInitialized.isDone());
 
     send(InitializationResponse.create(EntityType.values(),
-            ActivityType.values(), PassiveEntityType.values(),
-            DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
-            BreakpointType.values(), SteppingType.values(), Implementation.values(), MessageReception.values()));
+        ActivityType.values(), PassiveEntityType.values(),
+        DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
+        BreakpointType.values(), SteppingType.values(), Implementation.values(),
+        MessageReception.values()));
   }
 
   private void closeAllSockets() {

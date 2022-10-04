@@ -106,7 +106,7 @@ public abstract class BlockPrims {
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
-              shadowStackEntryLoad, frame, receiver));
+          shadowStackEntryLoad, frame, receiver));
     }
 
     @Specialization(replaces = "doCachedBlock")
@@ -114,8 +114,8 @@ public abstract class BlockPrims {
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(frame, receiver, 1, argumentError);
       return receiver.getMethod().invoke(call,
-              SArguments.getPlainXArgumentsWithReceiver(this,
-                      shadowStackEntryLoad, frame, receiver));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver));
     }
 
     @Override
@@ -132,7 +132,8 @@ public abstract class BlockPrims {
     }
   }
 
-  private static void checkArguments(final VirtualFrame frame, final SBlock receiver, final int expectedNumArgs,
+  private static void checkArguments(final VirtualFrame frame, final SBlock receiver,
+      final int expectedNumArgs,
       final ExceptionSignalingNode argumentError) {
     int numArgs = receiver.getMethod().getNumberOfArguments();
     if (numArgs != expectedNumArgs) {
@@ -154,7 +155,8 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -179,20 +181,22 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 2"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver, final Object arg,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
-              shadowStackEntryLoad, frame, receiver, arg));
+          shadowStackEntryLoad, frame, receiver, arg));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver, final Object arg,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final Object arg,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(frame, receiver, 2, argumentError);
       return receiver.getMethod().invoke(call,
-              SArguments.getPlainXArgumentsWithReceiver(this,
-                      shadowStackEntryLoad, frame, receiver, arg));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver, arg));
     }
 
     @Override
@@ -217,8 +221,8 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
-
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -243,21 +247,23 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 3"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver, final Object arg1,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg1,
         final Object arg2,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
-              shadowStackEntryLoad, frame, receiver, arg1, arg2));
+          shadowStackEntryLoad, frame, receiver, arg1, arg2));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver, final Object arg1, final Object arg2,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final Object arg1, final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(frame, receiver, 3, argumentError);
       return receiver.getMethod().invoke(call,
-              SArguments.getPlainXArgumentsWithReceiver(this,
-                      shadowStackEntryLoad, frame, receiver, arg1, arg2));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver, arg1, arg2));
     }
 
     @Override
@@ -282,10 +288,13 @@ public abstract class BlockPrims {
   public abstract static class ValueArgsPrim extends BinaryExpressionNode
       implements DispatchProfile, ValuePrimNode {
 
-    protected @Child SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(null);
-    protected @Child AtPrim            at   = AtPrimFactory.create(null, null);
+    protected @Child SizeAndLengthPrim      size                 =
+        SizeAndLengthPrimFactory.create(null);
+    protected @Child AtPrim                 at                   =
+        AtPrimFactory.create(null, null);
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -315,21 +324,23 @@ public abstract class BlockPrims {
         guards = {"cached == receiver.getMethod()",
             "numArgs == cached.getNumberOfArguments()"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver, final SArray args,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final SArray args,
         @Cached("getNumArgs(args)") final long numArgs,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
-              shadowStackEntryLoad, frame));
+          shadowStackEntryLoad, frame));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver, final SArray args,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final SArray args,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(frame, receiver, (int) getNumArgs(args), argumentError);
       return receiver.getMethod().invoke(
-              call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
-                      shadowStackEntryLoad, frame));
+          call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
+              shadowStackEntryLoad, frame));
     }
 
     @Override

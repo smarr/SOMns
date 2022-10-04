@@ -60,8 +60,9 @@ public final class SNodeFactory {
       final SomLanguage lang) {
     if (eventualSend) {
       return new EventualSendNode(msg, exprs.length,
-         // new InternalObjectArrayNode(exprs).initialize(source), source, sendOperator, lang);
-              new ArgumentEvaluationNode(exprs).initialize(source), source, sendOperator, lang);
+          // new InternalObjectArrayNode(exprs).initialize(source), source, sendOperator,
+          // lang);
+          new ArgumentEvaluationNode(exprs).initialize(source), source, sendOperator, lang);
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source, lang.getVM());
     }

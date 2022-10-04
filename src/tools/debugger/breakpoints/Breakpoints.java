@@ -60,12 +60,13 @@ public class Breakpoints {
   public synchronized void addOrUpdate(final LineBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      WebDebugger.log("[DEBUGGER] LineBreakpoint: " + bId + " Enabled: "+bId.isEnabled());
+      WebDebugger.log("[DEBUGGER] LineBreakpoint: " + bId + " Enabled: " + bId.isEnabled());
       bp = Breakpoint.newBuilder(bId.getURI()).lineIs(bId.getLine()).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
     } else {
-      WebDebugger.log("[DEBUGGER] Update LineBreakpoint: " + bId + " Enabled: "+bId.isEnabled());
+      WebDebugger.log(
+          "[DEBUGGER] Update LineBreakpoint: " + bId + " Enabled: " + bId.isEnabled());
     }
     bp.setEnabled(bId.isEnabled());
   }
@@ -76,10 +77,11 @@ public class Breakpoints {
     if (existingBP == null) {
       existingBP = new BreakpointEnabling(bId);
       breakpoints.put(loc, existingBP);
-      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId +" Enabled: "+bId.isEnabled());
+      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId + " Enabled: " + bId.isEnabled());
     } else {
       existingBP.setEnabled(bId.isEnabled());
-      WebDebugger.log("[DEBUGGER] Update SectionBreakpoint: " + bId + " Enabled: "+bId.isEnabled());
+      WebDebugger.log(
+          "[DEBUGGER] Update SectionBreakpoint: " + bId + " Enabled: " + bId.isEnabled());
     }
   }
 

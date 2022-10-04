@@ -419,7 +419,8 @@ public final class ObjectSystem {
     setDummyClassFactory(Classes.methodClass,
         SInvokableSerializationNodeFactory.getInstance());
 
-    SClass kernelClass = kernelModule.instantiateClass(null, Nil.nilObject, Classes.objectClass);
+    SClass kernelClass =
+        kernelModule.instantiateClass(null, Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
     // create and initialize the vmMirror object
@@ -531,7 +532,7 @@ public final class ObjectSystem {
     Object platform;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       platform = platformModule.instantiateObject(platformClass, vmMirror,
-              SArguments.instantiateTopShadowStackEntry(null));
+          SArguments.instantiateTopShadowStackEntry(null));
     } else {
       platform = platformModule.instantiateObject(platformClass, vmMirror);
     }

@@ -69,6 +69,7 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializatio
 import com.oracle.truffle.api.frame.VirtualFrame;
 import som.interpreter.SArguments;
 
+
 /**
  * Produced by a {@link MixinBuilder}, contains all static information on a
  * mixin that is in the source. Is used to instantiate a {@link ClassFactory}
@@ -536,15 +537,15 @@ public final class MixinDefinition implements SomInteropObject {
     VM.callerNeedsToBeOptimized(
         "only meant for code loading, which is supposed to be on the slowpath");
     CallTarget callTarget = superclassMixinResolution.getCallTarget();
-//    SClass superClass = (SClass) callTarget.call(Nil.nilObject);
-//    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+    // SClass superClass = (SClass) callTarget.call(Nil.nilObject);
+    // SClass classObject = instantiateClass(Nil.nilObject, superClass);
     SClass superClass;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       // Since this is outside of the main stacks, we create a separate top shadow stack entry
       // to deal with async errors.
       superClass =
-              (SClass) callTarget.call(Nil.nilObject,
-                      SArguments.instantiateTopShadowStackEntry(null));
+          (SClass) callTarget.call(Nil.nilObject,
+              SArguments.instantiateTopShadowStackEntry(null));
     } else {
       superClass = (SClass) callTarget.call(Nil.nilObject, null);
     }

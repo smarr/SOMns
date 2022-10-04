@@ -12,45 +12,46 @@ import som.vm.VmSettings;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
+
 public interface BackCacheCallNode {
 
-    static void initializeUniqueCaller(final RootCallTarget methodCallTarget,
-                                       final BackCacheCallNode node) {
-        RootNode root = methodCallTarget.getRootNode();
-        if (root instanceof Method) {
-            ((Method) root).setNewCaller(node);
-        }
+  static void initializeUniqueCaller(final RootCallTarget methodCallTarget,
+      final BackCacheCallNode node) {
+    RootNode root = methodCallTarget.getRootNode();
+    if (root instanceof Method) {
+      ((Method) root).setNewCaller(node);
     }
+  }
 
-    static void setShadowStackEntry(final VirtualFrame frame,
-                                    final boolean uniqueCaller, final Object[] arguments,
-                                    final Node expression,
-                                    final ShadowStackEntryLoad shadowStackEntryLoad) {
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-            assert arguments[arguments.length - 1] == null;
-            assert (frame.getArguments()[frame.getArguments().length
-                    - 1] instanceof ShadowStackEntry);
-            assert frame.getArguments().length >= 2;
-        }
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE) {
-            if (uniqueCaller) {
-                SArguments.setShadowStackEntry(arguments, SArguments.getShadowStackEntry(frame));
-            } else {
-                SArguments.setShadowStackEntryWithCache(arguments, expression,
-                        shadowStackEntryLoad, frame, false);
-            }
-        } else if (VmSettings.ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE) {
-            SArguments.setShadowStackEntryWithCache(arguments, expression,
-                    shadowStackEntryLoad, frame, false);
-        }
-        assert arguments[arguments.length - 1] != null
-                || (frame.getArguments()[frame.getArguments().length - 1] == null)
-                || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+  static void setShadowStackEntry(final VirtualFrame frame,
+      final boolean uniqueCaller, final Object[] arguments,
+      final Node expression,
+      final ShadowStackEntryLoad shadowStackEntryLoad) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      assert arguments[arguments.length - 1] == null;
+      assert (frame.getArguments()[frame.getArguments().length
+          - 1] instanceof ShadowStackEntry);
+      assert frame.getArguments().length >= 2;
     }
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE) {
+      if (uniqueCaller) {
+        SArguments.setShadowStackEntry(arguments, SArguments.getShadowStackEntry(frame));
+      } else {
+        SArguments.setShadowStackEntryWithCache(arguments, expression,
+            shadowStackEntryLoad, frame, false);
+      }
+    } else if (VmSettings.ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE) {
+      SArguments.setShadowStackEntryWithCache(arguments, expression,
+          shadowStackEntryLoad, frame, false);
+    }
+    assert arguments[arguments.length - 1] != null
+        || (frame.getArguments()[frame.getArguments().length - 1] == null)
+        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+  }
 
-    void makeUniqueCaller();
+  void makeUniqueCaller();
 
-    void makeMultipleCaller();
+  void makeMultipleCaller();
 
-    Invokable getCachedMethod();
+  Invokable getCachedMethod();
 }

@@ -200,7 +200,7 @@ public enum SteppingType {
 
   @SerializedName("stepToEndTurn")
   STEP_TO_END_TURN("stepToEndTurn", "Step to End Turn",
-          Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
+      Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();

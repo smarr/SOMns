@@ -90,8 +90,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       return true;
     }
     assert source == null || !source.equals(
-        var.source)
-        : "Why are there multiple objects for this source section? might need to fix comparison above";
+        var.source) : "Why are there multiple objects for this source section? might need to fix comparison above";
     return false;
   }
 

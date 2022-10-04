@@ -97,8 +97,7 @@ public class Suspension {
 
   private int getLocalId(final long globalId) {
     assert TraceData.getActivityIdFromGlobalValId(
-        globalId) == activityId
-        : "should be an id for current activity, otherwise, something is wrong";
+        globalId) == activityId : "should be an id for current activity, otherwise, something is wrong";
     return TraceData.valIdFromGlobal(globalId);
   }
 
@@ -180,20 +179,21 @@ public class Suspension {
             if (resolver != null) {
               resolver.getPromise().enableHaltOnResolution();
             }
-          }
-          else if (activityThread.isStepping(
-                  SteppingType.STEP_TO_END_TURN)) {
+          } else if (activityThread.isStepping(
+              SteppingType.STEP_TO_END_TURN)) {
             assert activity instanceof Actor;
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
             String actorName = "";
             String turnName = "";
 
             Object[] args = turnMessage.getArgs();
-            if (args.length > 0 && args[0] instanceof SObjectWithClass) { //e.g. PromiseSendMessage, DirectMessage
+            if (args.length > 0 && args[0] instanceof SObjectWithClass) { // e.g.
+                                                                          // PromiseSendMessage,
+                                                                          // DirectMessage
               final SObjectWithClass actorObject = (SObjectWithClass) args[0];
               actorName = actorObject.getSOMClass().getName().getString();
             }
-            if (args.length > 0 && args[0] instanceof SBlock) { //e.g. PromiseCallbackMessage
+            if (args.length > 0 && args[0] instanceof SBlock) { // e.g. PromiseCallbackMessage
               SBlock block = (SBlock) args[0];
               turnName = block.getMethod().getInvokable().getName();
             }
@@ -202,22 +202,25 @@ public class Suspension {
               if (actorName.isEmpty()) {
                 turnName = turnMessage.getSelector().getString();
               } else {
-                turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+                turnName =
+                    actorName.concat(">>#").concat(turnMessage.getSelector().getString());
               }
             }
 
             Node suspendedNode = this.getEvent().getNode();
             ArrayList<StackFrame> stackFrames = this.getStackFrames();
             ArrayList<RootNode> rootNodeFrames = new ArrayList<>();
-            //get root nodes for the frames in the stack
-            for (StackFrame frame: stackFrames) {
+            // get root nodes for the frames in the stack
+            for (StackFrame frame : stackFrames) {
               rootNodeFrames.add(frame.getRootNode());
             }
 
-            this.getEvent().getSession().prepareStepEndTurn(Thread.currentThread(), suspendedNode, turnName, rootNodeFrames);
+            this.getEvent().getSession().prepareStepEndTurn(Thread.currentThread(),
+                suspendedNode, turnName, rootNodeFrames);
           }
         }
-      } catch (InterruptedException e) { /* Just continue waiting */ }
+      } catch (InterruptedException e) {
+        /* Just continue waiting */ }
     }
     synchronized (this) {
       suspendedEvent = null;

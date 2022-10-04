@@ -50,7 +50,7 @@ public class TracingActors {
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
       }
-      if(VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         debugger = vm.getWebDebugger();
       }
     }
@@ -61,9 +61,11 @@ public class TracingActors {
     }
 
     public static void saveMessageReceived(Actor actor, EventualMessage message) {
-      TracingActivityThread tracingActivityThread = TracingBackend.getTracingActivityThread(actor.getId());
+      TracingActivityThread tracingActivityThread =
+          TracingBackend.getTracingActivityThread(actor.getId());
       if (tracingActivityThread != null) {
-//        System.out.println("saveMessageReceived "+message.getMessageId() + " "+actor.getId());
+        // System.out.println("saveMessageReceived "+message.getMessageId() + "
+        // "+actor.getId());
         KomposTrace.actorMessageReception(message.getMessageId(), tracingActivityThread);
       }
     }
@@ -168,10 +170,11 @@ public class TracingActors {
      * Stop actor execution if they are paused to avoid open threads before system shutdown
      */
     public static void stopActorsIfSuspended() {
-      for (long actorId: allActors.keySet()) {
-        if (actorId > 0) { //do not stop Platform actor
+      for (long actorId : allActors.keySet()) {
+        if (actorId > 0) { // do not stop Platform actor
           Suspension suspension = debugger.getSuspension(actorId);
-          if (suspension != null && suspension.getEvent() != null && !suspension.getEvent().isDisposed()) {
+          if (suspension != null && suspension.getEvent() != null
+              && !suspension.getEvent().isDisposed()) {
             suspension.getEvent().prepareKill();
             suspension.resume();
           }
@@ -387,8 +390,7 @@ public class TracingActors {
         }
 
         assert toProcess.size()
-            + orderedMessages.size() == numReceivedMsgs
-            : "We shouldn't lose any messages here.";
+            + orderedMessages.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
         return toProcess;
       }
 

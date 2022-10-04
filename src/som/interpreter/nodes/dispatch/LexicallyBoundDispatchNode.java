@@ -25,7 +25,8 @@ import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
  * Private methods are special, they are linked unconditionally to the call site.
  * Thus, we don't need to check at the dispatch whether they apply or not.
  */
-public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode implements BackCacheCallNode {
+public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode
+    implements BackCacheCallNode {
 
   protected final Assumption          stillUniqueCaller;
   @Child private DirectCallNode       cachedMethod;
@@ -67,14 +68,14 @@ public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode im
   @Specialization(assumptions = "stillUniqueCaller", guards = "uniqueCaller")
   public Object uniqueCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
     BackCacheCallNode.setShadowStackEntry(frame,
-            true, arguments, this, shadowStackEntryLoad);
+        true, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 
   @Specialization(guards = "!uniqueCaller")
   public Object multipleCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
     BackCacheCallNode.setShadowStackEntry(frame,
-            false, arguments, this, shadowStackEntryLoad);
+        false, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 

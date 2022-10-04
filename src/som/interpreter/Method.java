@@ -74,8 +74,7 @@ public final class Method extends Invokable {
     }
 
     assert !getSourceSection().equals(
-        m.getSourceSection())
-        : "If that triggers, something with the source sections is wrong.";
+        m.getSourceSection()) : "If that triggers, something with the source sections is wrong.";
     return false;
   }
 
@@ -92,7 +91,6 @@ public final class Method extends Invokable {
   public BackCacheCallNode getUniqueCaller() {
     return uniqueCaller;
   }
-
 
   public SourceSection[] getDefinition() {
     return definition;

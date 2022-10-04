@@ -109,7 +109,7 @@ public final class PromisePrims {
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         args = new Object[] {SPromise.pairClass, promise, resolver, null};
         SArguments.setShadowStackEntryWithCache(args, this, shadowStackEntryLoad,
-                frame, false);
+            frame, false);
       } else {
         args = new Object[] {SPromise.pairClass, promise, resolver};
       }
@@ -176,11 +176,14 @@ public final class PromisePrims {
     }
 
     @Specialization(replaces = "whenResolved")
-    public final SPromise whenResolvedUncached(final VirtualFrame frame, final SPromise promise, final SBlock callback) {
-      return registerWhenResolved(frame, promise, callback, createReceived(callback), registerNode);
+    public final SPromise whenResolvedUncached(final VirtualFrame frame,
+        final SPromise promise, final SBlock callback) {
+      return registerWhenResolved(frame, promise, callback, createReceived(callback),
+          registerNode);
     }
 
-    protected final SPromise registerWhenResolved(final VirtualFrame frame, final SPromise rcvr,
+    protected final SPromise registerWhenResolved(final VirtualFrame frame,
+        final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterWhenResolved registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
@@ -197,11 +200,12 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
-            rcvr.getPromiseId(), pcm.getSelector(), rcvr.getOwner().getId(), pcm.getTargetSourceSection());
+            rcvr.getPromiseId(), pcm.getSelector(), rcvr.getOwner().getId(),
+            pcm.getTargetSourceSection());
       }
       registerNode.register(frame, rcvr, pcm, current);
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
-              || pcm.getArgs()[pcm.getArgs().length - 1] != null;
+          || pcm.getArgs()[pcm.getArgs().length - 1] != null;
 
       return promise;
     }
@@ -245,7 +249,8 @@ public final class PromisePrims {
     }
 
     @Specialization(replaces = "onError")
-    public final SPromise whenResolvedUncached(final VirtualFrame frame, final SPromise promise, final SBlock callback) {
+    public final SPromise whenResolvedUncached(final VirtualFrame frame,
+        final SPromise promise, final SBlock callback) {
       return registerOnError(frame, promise, callback, createReceived(callback), registerNode);
     }
 
@@ -266,11 +271,12 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
-            rcvr.getPromiseId(), msg.getSelector(), rcvr.getOwner().getId(), msg.getTargetSourceSection());
+            rcvr.getPromiseId(), msg.getSelector(), rcvr.getOwner().getId(),
+            msg.getTargetSourceSection());
       }
       registerNode.register(frame, rcvr, msg, current);
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
-              || msg.getArgs()[msg.getArgs().length - 1] != null;
+          || msg.getArgs()[msg.getArgs().length - 1] != null;
 
       return promise;
     }
@@ -319,13 +325,16 @@ public final class PromisePrims {
     }
 
     @Specialization(replaces = "whenResolvedOnError")
-    public final SPromise whenResolvedOnErrorUncached(final VirtualFrame frame, final SPromise promise,
+    public final SPromise whenResolvedOnErrorUncached(final VirtualFrame frame,
+        final SPromise promise,
         final SBlock resolved, final SBlock error) {
-      return registerWhenResolvedOrError(frame, promise, resolved, error, createReceived(resolved),
+      return registerWhenResolvedOrError(frame, promise, resolved, error,
+          createReceived(resolved),
           createReceived(error), registerWhenResolved, registerOnError);
     }
 
-    protected final SPromise registerWhenResolvedOrError(final VirtualFrame frame, final SPromise rcvr,
+    protected final SPromise registerWhenResolvedOrError(final VirtualFrame frame,
+        final SPromise rcvr,
         final SBlock resolved, final SBlock error,
         final RootCallTarget resolverTarget, final RootCallTarget errorTarget,
         final RegisterWhenResolved registerWhenResolved,
@@ -347,9 +356,11 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
-            rcvr.getPromiseId(), onResolved.getSelector(), onResolved.getTarget().getId(), onResolved.getTargetSourceSection());
+            rcvr.getPromiseId(), onResolved.getSelector(), onResolved.getTarget().getId(),
+            onResolved.getTargetSourceSection());
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
-            rcvr.getPromiseId(), onError.getSelector(), onError.getTarget().getId(), onResolved.getTargetSourceSection());
+            rcvr.getPromiseId(), onError.getSelector(), onError.getTarget().getId(),
+            onResolved.getTargetSourceSection());
       }
 
       synchronized (rcvr) {
@@ -357,9 +368,9 @@ public final class PromisePrims {
         registerOnError.register(frame, rcvr, onError, current);
       }
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
-              || onResolved.getArgs()[onResolved.getArgs().length - 1] != null;
+          || onResolved.getArgs()[onResolved.getArgs().length - 1] != null;
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
-              || onError.getArgs()[onError.getArgs().length - 1] != null;
+          || onError.getArgs()[onError.getArgs().length - 1] != null;
       return promise;
     }
 

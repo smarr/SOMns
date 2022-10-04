@@ -24,7 +24,7 @@ public final class StackTraceResponse extends Response {
   // but that would make tracking more difficult
   private final byte[] concurrentEntityScopes;
   private final long   activityId;
-  private long messageId;
+  private long         messageId;
 
   /**
    * Total number of frames available.
@@ -35,7 +35,8 @@ public final class StackTraceResponse extends Response {
 
   private StackTraceResponse(final long activityId,
       final StackFrame[] stackFrames, final int totalFrames,
-      final int requestId, final byte[] concurrentEntityScopes, final long messageId, final boolean asyncStack) {
+      final int requestId, final byte[] concurrentEntityScopes, final long messageId,
+      final boolean asyncStack) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId = activityId;
@@ -101,7 +102,8 @@ public final class StackTraceResponse extends Response {
     }
   }
 
-  private static int getNumRootNodesToSkip(final ArrayList<ApplicationThreadStack.StackFrame> frames) {
+  private static int getNumRootNodesToSkip(
+      final ArrayList<ApplicationThreadStack.StackFrame> frames) {
     int skip = 0;
     int size = frames.size();
 
@@ -141,7 +143,8 @@ public final class StackTraceResponse extends Response {
       // TODO: remove the below assert once we are satisfied things work. because now we can
       // have received root nodes in the stack trace
       // assert !(frames.get(
-      // frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped in the
+      // frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped
+      // in the
       // code above";
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
       arr[i] = f;
@@ -152,7 +155,8 @@ public final class StackTraceResponse extends Response {
     // determine the message id to which this trace corresponds
     long messageId = -1;
 
-    Actor actorCurrentMessageIsExecutionOn = EventualMessage.getActorCurrentMessageIsExecutionOn();
+    Actor actorCurrentMessageIsExecutionOn =
+        EventualMessage.getActorCurrentMessageIsExecutionOn();
 
     if (actorCurrentMessageIsExecutionOn.getId() == suspension.getActivity().getId()) {
       EventualMessage message = EventualMessage.getCurrentExecutingMessage();
@@ -160,7 +164,8 @@ public final class StackTraceResponse extends Response {
     }
 
     return new StackTraceResponse(suspension.activityId, arr, frames.size(),
-        requestId, EntityType.getIds(concEntityScopes), messageId, VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE);
+        requestId, EntityType.getIds(concEntityScopes), messageId,
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE);
   }
 
   private static StackFrame createFrame(final Suspension suspension,
@@ -197,6 +202,7 @@ public final class StackTraceResponse extends Response {
 
     boolean async = frame.asyncOperation;
 
-    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length, async);
+    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length,
+        async);
   }
 }

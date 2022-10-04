@@ -50,8 +50,7 @@ public final class TransferObject {
       final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
     assert obj.getSOMClass()
-              .isTransferObject()
-        : "only TransferObjects should be handled here";
+              .isTransferObject() : "only TransferObjects should be handled here";
     assert !obj.isValue() : "TransferObjects can't be Values";
 
     ObjectLayout layout = obj.getObjectLayout();

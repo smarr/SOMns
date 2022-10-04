@@ -92,7 +92,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isEmptyType()")
-  public final Object doEmptySArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final Object doEmptySArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     if (idx < 1 || idx > receiver.getEmptyStorage()) {
       return triggerException(frame, receiver, idx);
     }
@@ -100,7 +101,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final Object doPartiallyEmptySArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final Object doPartiallyEmptySArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     try {
       return receiver.getPartiallyEmptyStorage().get(idx - 1);
     } catch (IndexOutOfBoundsException e) {
@@ -109,7 +111,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isObjectType()")
-  public final Object doObjectSArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final Object doObjectSArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     try {
       return receiver.getObjectStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
@@ -118,7 +121,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isLongType()")
-  public final long doLongSArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final long doLongSArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     try {
       return receiver.getLongStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
@@ -127,7 +131,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
-  public final double doDoubleSArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final double doDoubleSArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     try {
       return receiver.getDoubleStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
@@ -136,7 +141,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
-  public final boolean doBooleanSArray(final VirtualFrame frame, final SArray receiver, final long idx) {
+  public final boolean doBooleanSArray(final VirtualFrame frame, final SArray receiver,
+      final long idx) {
     try {
       return receiver.getBooleanStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {

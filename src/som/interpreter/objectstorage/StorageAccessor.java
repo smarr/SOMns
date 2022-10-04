@@ -59,18 +59,16 @@ public abstract class StorageAccessor {
   }
 
   public static AbstractObjectAccessor getObjectAccessor(final int idx) {
-    assert idx < MAX_OBJECT_FIELDS
-        : "Got a object slot allocated that goes beyond the currently supported. idx: "
-            + idx;
+    assert idx < MAX_OBJECT_FIELDS : "Got a object slot allocated that goes beyond the currently supported. idx: "
+        + idx;
     AbstractObjectAccessor result = objAccessors[idx];
     assert result != null : "Object accessors not yet initialized?";
     return result;
   }
 
   public static AbstractPrimitiveAccessor getPrimitiveAccessor(final int idx) {
-    assert idx < MAX_OBJECT_FIELDS
-        : "Got a primitive slot allocated that goes beyond the currently supported. idx: "
-            + idx;
+    assert idx < MAX_OBJECT_FIELDS : "Got a primitive slot allocated that goes beyond the currently supported. idx: "
+        + idx;
     AbstractPrimitiveAccessor result = primAccessors[idx];
     assert result != null : "Primitive accessors not yet initialized?";
     return result;

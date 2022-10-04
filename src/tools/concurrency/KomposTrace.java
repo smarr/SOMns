@@ -23,28 +23,29 @@ public class KomposTrace {
 
   private static Map<Long, List<Long>> messagesReceivedByActor = new HashMap<>();
 
-//  private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
-//  public static boolean missingBuffers(long actorSuspendedId) {
-//    List<Integer> buffers = buffersByActor.get(actorSuspendedId);
-//    Collections.sort(buffers);
-//
-//    for (int i = 1; i < buffers.size(); i++) {
-//      int previous = buffers.get(i - 1);
-//      int current = buffers.get(i);
-//      if (current != (previous + 1)) {
-//        return true;
-//      }
-//    }
-//
-//    return false;
-//  }
+  // private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
+  // public static boolean missingBuffers(long actorSuspendedId) {
+  // List<Integer> buffers = buffersByActor.get(actorSuspendedId);
+  // Collections.sort(buffers);
+  //
+  // for (int i = 1; i < buffers.size(); i++) {
+  // int previous = buffers.get(i - 1);
+  // int current = buffers.get(i);
+  // if (current != (previous + 1)) {
+  // return true;
+  // }
+  // }
+  //
+  // return false;
+  // }
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
     KomposTraceBuffer buffer = KomposTraceBuffer.create(0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
-    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor, (short) 0, 0, null, null);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor, (short) 0, 0,
+        null, null);
     buffer.returnBuffer(null);
   }
 
@@ -128,12 +129,14 @@ public class KomposTrace {
   public static void promiseChained(final long promiseValueId, final long promiseId) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(
-        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity(), (short) 0, 0, null, null);
+        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity(), (short) 0, 0,
+        null, null);
     t.resolvedPromises++;
   }
 
   public static void sendOperation(final SendOp op, final long entityId,
-      final long targetId, final SSymbol selector, long targetActorId, SourceSection msgSourceCoordinate) {
+      final long targetId, final SSymbol selector, long targetActorId,
+      SourceSection msgSourceCoordinate) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(op, entityId, targetId,
         t.getActivity(), selector.getSymbolId(), targetActorId, msgSourceCoordinate, null);
@@ -162,21 +165,25 @@ public class KomposTrace {
   }
 
   public static void actorMessageReception(long messageId, TracingActivityThread t) {
-//    System.out.println("***** "+((Actor.ActorProcessingThread)t).getCurrentActor() +" activity "+((Actor.ActorProcessingThread)t).getActivity());
+    // System.out.println("***** "+((Actor.ActorProcessingThread)t).getCurrentActor() +"
+    // activity "+((Actor.ActorProcessingThread)t).getActivity());
     Activity activity = t.getActivity();
     if (activity == null) {
       activity = ((Actor.ActorProcessingThread) t).getCurrentActor();
     }
 
     if (!messageReceivedRecorded(messageId, activity.getId())) {
-      ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV, activity, messageId);
+      ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV,
+          activity, messageId);
     }
   }
 
   /**
    * Check the message has not been saved before.
-   * Messages received can be repeated because we record them at the point where the message is sent and when the messages are processed.
-   * This is needed because at the point where the message is append in the mailbox the TracingActivityThread may not be available,
+   * Messages received can be repeated because we record them at the point where the message is
+   * sent and when the messages are processed.
+   * This is needed because at the point where the message is append in the mailbox the
+   * TracingActivityThread may not be available,
    * they become available when the actor is about to process the messages.
    *
    * @param messageId
@@ -193,7 +200,7 @@ public class KomposTrace {
 
     if (messages.contains(messageId)) {
       return true;
-    } else { //new message
+    } else { // new message
       messages.add(messageId);
       messagesReceivedByActor.put(actorId, messages);
     }
@@ -303,14 +310,14 @@ public class KomposTrace {
       putLong(actorId);
       putInt(bufferId);
 
-//      List<Integer> bufferList;
-//      if (buffersByActor.containsKey(actorId)) {
-//        bufferList = buffersByActor.get(actorId);
-//      } else {
-//        bufferList = new ArrayList<>();
-//      }
-//      bufferList.add(bufferId);
-//      buffersByActor.put(actorId, bufferList);
+      // List<Integer> bufferList;
+      // if (buffersByActor.containsKey(actorId)) {
+      // bufferList = buffersByActor.get(actorId);
+      // } else {
+      // bufferList = new ArrayList<>();
+      // }
+      // bufferList.add(bufferId);
+      // buffersByActor.put(actorId, bufferList);
 
       assert position == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
     }
@@ -329,8 +336,7 @@ public class KomposTrace {
       }
 
       assert !origin.getSource()
-                    .isInternal()
-          : "Need special handling to ensure we see user code reported to trace/debugger";
+                    .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
       putShort(Symbols.symbolFor(SourceCoordinate.getURI(origin.getSource())).getSymbolId());
       putShort((short) origin.getStartLine());
       putShort((short) origin.getStartColumn());
@@ -415,7 +421,8 @@ public class KomposTrace {
     }
 
     public void recordSendOperation(final SendOp op, final long entityId,
-        final long targetId, final Activity current, final short symbolId, long targetActorId, SourceSection msgSourceCoordinate, byte[] value) {
+        final long targetId, final Activity current, final short symbolId, long targetActorId,
+        SourceSection msgSourceCoordinate, byte[] value) {
       int requiredSpace;
       if (value == null) {
         requiredSpace = op.getSize();
@@ -433,10 +440,10 @@ public class KomposTrace {
       putShort(symbolId);
 
       if (VmSettings.KOMPOS_TRACING) {
-         writeSourceSection(msgSourceCoordinate);
+        writeSourceSection(msgSourceCoordinate);
       }
 
-      if(value != null) {
+      if (value != null) {
         putInt(value.length);
         for (byte b : value) {
           put(b);
@@ -446,7 +453,8 @@ public class KomposTrace {
       assert position == start + requiredSpace;
     }
 
-    public void recordMessageReceived(MessageReception mr, final Activity current, final long messageId) {
+    public void recordMessageReceived(MessageReception mr, final Activity current,
+        final long messageId) {
       int requiredSpace = mr.getSize();
       ensureSufficientSpace(requiredSpace, current);
 
@@ -454,9 +462,9 @@ public class KomposTrace {
       put(mr.getId());
       putLong(messageId);
 
-//      System.out.println("-message received "+messageId +" actor "+current.getId());
+      // System.out.println("-message received "+messageId +" actor "+current.getId());
 
-      if (position != start + requiredSpace ) {
+      if (position != start + requiredSpace) {
         System.out.println();
       }
 
@@ -508,12 +516,15 @@ public class KomposTrace {
 
       @Override
       public synchronized void recordSendOperation(final SendOp op,
-          final long entityId, final long targetId, final Activity current, final short symbol, final long targetActorId, final SourceSection section, byte[] value) {
-        super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId, section, value);
+          final long entityId, final long targetId, final Activity current, final short symbol,
+          final long targetActorId, final SourceSection section, byte[] value) {
+        super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId,
+            section, value);
       }
 
       @Override
-      public synchronized void recordMessageReceived(MessageReception mr, final Activity current, final long messageId) {
+      public synchronized void recordMessageReceived(MessageReception mr,
+          final Activity current, final long messageId) {
         super.recordMessageReceived(mr, current, messageId);
       }
     }

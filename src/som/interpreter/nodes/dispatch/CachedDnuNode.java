@@ -55,7 +55,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
     // the stack across DNUs
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       SArguments.setShadowStackEntryWithCache(arguments, this,
-              shadowStackEntryLoad, frame, false);
+          shadowStackEntryLoad, frame, false);
     }
     try {
       match = guard.entryMatches(rcvr);

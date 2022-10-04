@@ -31,6 +31,7 @@ import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(primitive = "array:at:put:", selector = "at:put:",
@@ -140,7 +141,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isEmptyType()"})
-  public final long doEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final long doEmptySArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final long value) {
     try {
       receiver.transitionFromEmptyToPartiallyEmptyWith(index - 1, value);
@@ -151,7 +153,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isEmptyType()"})
-  public final double doEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final double doEmptySArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final double value) {
     try {
       receiver.transitionFromEmptyToPartiallyEmptyWith(index - 1, value);
@@ -162,7 +165,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isEmptyType()"})
-  public final boolean doEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final boolean doEmptySArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final boolean value) {
     try {
       receiver.transitionFromEmptyToPartiallyEmptyWith(index - 1, value);
@@ -174,7 +178,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
   @Specialization(guards = {"receiver.isEmptyType()", "valueIsNotNil(value)",
       "valueNotLongDoubleBoolean(value)"})
-  public final Object doEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doEmptySArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final Object value) {
     final int idx = (int) index - 1;
     int size = receiver.getEmptyStorage();
@@ -192,7 +197,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isEmptyType()", "valueIsNil(value)"})
-  public final Object doEmptySArrayWithNil(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doEmptySArrayWithNil(final VirtualFrame frame,
+      final SMutableArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
     if (idx < 0 || idx >= receiver.getEmptyStorage()) {
@@ -202,7 +208,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final long doPartiallyEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final long doPartiallyEmptySArray(final VirtualFrame frame,
+      final SMutableArray receiver, final long index,
       final long value) {
     try {
       setAndPossiblyTransition(receiver, index, value, PartiallyEmptyArray.Type.LONG);
@@ -213,7 +220,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final double doPartiallyEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final double doPartiallyEmptySArray(final VirtualFrame frame,
+      final SMutableArray receiver, final long index,
       final double value) {
     try {
       setAndPossiblyTransition(receiver, index, value, PartiallyEmptyArray.Type.DOUBLE);
@@ -224,7 +232,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final boolean doPartiallyEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final boolean doPartiallyEmptySArray(final VirtualFrame frame,
+      final SMutableArray receiver, final long index,
       final boolean value) {
     try {
       setAndPossiblyTransition(receiver, index, value, PartiallyEmptyArray.Type.BOOLEAN);
@@ -235,7 +244,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNil(value)"})
-  public final Object doPartiallyEmptySArrayWithNil(final VirtualFrame frame, final SMutableArray receiver,
+  public final Object doPartiallyEmptySArrayWithNil(final VirtualFrame frame,
+      final SMutableArray receiver,
       final long index, final Object value) {
     long idx = index - 1;
     PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
@@ -252,7 +262,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNotNil(value)"})
-  public final Object doPartiallyEmptySArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doPartiallyEmptySArray(final VirtualFrame frame,
+      final SMutableArray receiver, final long index,
       final Object value) {
     try {
       setAndPossiblyTransition(receiver, index, value, PartiallyEmptyArray.Type.OBJECT);
@@ -263,7 +274,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isObjectType()")
-  public final Object doObjectSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doObjectSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final Object value) {
     try {
       receiver.getObjectStorage()[(int) index - 1] = value;
@@ -274,7 +286,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isLongType()")
-  public final long doObjectSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final long doObjectSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final long value) {
     try {
       receiver.getLongStorage()[(int) index - 1] = value;
@@ -285,7 +298,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isLongType()", "valueIsNotLong(value)"})
-  public final Object doLongSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doLongSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final Object value) {
     long[] storage = receiver.getLongStorage();
     Object[] newStorage = new Object[storage.length];
@@ -301,7 +315,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
-  public final double doDoubleSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final double doDoubleSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final double value) {
     try {
       receiver.getDoubleStorage()[(int) index - 1] = value;
@@ -312,7 +327,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isDoubleType()", "valueIsNotDouble(value)"})
-  public final Object doDoubleSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doDoubleSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final Object value) {
     double[] storage = receiver.getDoubleStorage();
     Object[] newStorage = new Object[storage.length];
@@ -327,7 +343,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
-  public final boolean doBooleanSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final boolean doBooleanSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final boolean value) {
     try {
       receiver.getBooleanStorage()[(int) index - 1] = value;
@@ -338,7 +355,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isBooleanType()", "valueIsNotBoolean(value)"})
-  public final Object doBooleanSArray(final VirtualFrame frame, final SMutableArray receiver, final long index,
+  public final Object doBooleanSArray(final VirtualFrame frame, final SMutableArray receiver,
+      final long index,
       final Object value) {
     boolean[] storage = receiver.getBooleanStorage();
     Object[] newStorage = new Object[storage.length];

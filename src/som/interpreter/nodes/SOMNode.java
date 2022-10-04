@@ -126,8 +126,7 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
   }
 
   public static Node getParentIgnoringWrapper(final Node node) {
-    assert !(node instanceof WrapperNode)
-        : "A correct usage will not see nodes that are wrappers. This is to detect bugs";
+    assert !(node instanceof WrapperNode) : "A correct usage will not see nodes that are wrappers. This is to detect bugs";
 
     Node parent = node.getParent();
     if (parent instanceof WrapperNode) {

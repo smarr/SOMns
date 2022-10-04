@@ -13,7 +13,8 @@ import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 @NodeInfo(cost = NodeCost.NONE)
 public class InternalObjectArrayNode extends ExprWithTagsNode {
   @Children protected final ExpressionNode[] expressions;
-  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
+  @Child protected ShadowStackEntryLoad      shadowStackEntryLoad =
+      ShadowStackEntryLoad.create();
 
   public InternalObjectArrayNode(final ExpressionNode[] expressions) {
     this.expressions = expressions;
@@ -35,7 +36,7 @@ public class InternalObjectArrayNode extends ExprWithTagsNode {
   }
 
   public static class ArgumentEvaluationNode
-          extends InternalObjectArrayNode {
+      extends InternalObjectArrayNode {
 
     public ArgumentEvaluationNode(final ExpressionNode[] expressions) {
       super(expressions);
@@ -49,7 +50,7 @@ public class InternalObjectArrayNode extends ExprWithTagsNode {
         values[i] = expressions[i].executeGeneric(frame);
       }
       SArguments.setShadowStackEntryWithCache(values, this, shadowStackEntryLoad, frame,
-              true);
+          true);
       return values;
     }
   }

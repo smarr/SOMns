@@ -57,14 +57,16 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
       final SClass actorClass = (SClass) argument;
       KomposTrace.activityCreation(ActivityType.ACTOR, actor.getId(),
           actorClass.getName(), sourceSection);
-      //to keep all the created actors, this information is needed for example when pausing a running actor without specifying a breakpoint
+      // to keep all the created actors, this information is needed for example when pausing a
+      // running actor without specifying a breakpoint
       TracingActor.saveActor(actor);
     }
     return ref;
   }
 
   @Fallback
-  public final Object throwNotAValueException(final VirtualFrame frame, final Object receiver, final Object argument) {
+  public final Object throwNotAValueException(final VirtualFrame frame, final Object receiver,
+      final Object argument) {
     return notAValue.signal(frame, argument);
   }
 

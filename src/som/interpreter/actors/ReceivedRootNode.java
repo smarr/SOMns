@@ -127,7 +127,7 @@ public abstract class ReceivedRootNode extends RootNode {
         resolve = insert(new NullResolver());
       } else {
         resolve = insert(
-                ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
+            ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
       }
       resolve.initialize(sourceSection);
       this.resolve = resolve;
@@ -135,7 +135,8 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     // resolve promise
-    resolve.executeEvaluated(frame, resolver, result, maybeEntry, haltOnResolver, haltOnResolution);
+    resolve.executeEvaluated(frame, resolver, result, maybeEntry, haltOnResolver,
+        haltOnResolution);
   }
 
   protected final void errorPromise(final VirtualFrame frame,
@@ -151,7 +152,7 @@ public abstract class ReceivedRootNode extends RootNode {
         error = insert(new NullResolver());
       } else {
         error = insert(
-                ErrorNodeGen.create(null, null, null, null, null).initialize(vm));
+            ErrorNodeGen.create(null, null, null, null, null).initialize(vm));
       }
       this.error = error;
       this.error.initialize(sourceSection);
@@ -159,7 +160,8 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     // error promise
-    error.executeEvaluated(frame, resolver, exception, maybeEntry, haltOnResolver, haltOnResolution);
+    error.executeEvaluated(frame, resolver, exception, maybeEntry, haltOnResolver,
+        haltOnResolution);
   }
 
   public MessageSerializationNode getSerializer() {
@@ -186,7 +188,8 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
-        final Object firstArg, final Object secondArg, final Object thirdArg, final Object fourthArg) {
+        final Object firstArg, final Object secondArg, final Object thirdArg,
+        final Object fourthArg) {
       if (VmSettings.DYNAMIC_METRICS) {
         numImplicitNullResolutions.getAndIncrement();
       }

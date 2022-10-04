@@ -251,7 +251,8 @@ public class TracingBackend {
       TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
       for (TracingActivityThread tracingActivityThread : result) {
         if ((tracingActivityThread instanceof ActorProcessingThread)) {
-          Actor currentActor = ((ActorProcessingThread) tracingActivityThread).getCurrentActor();
+          Actor currentActor =
+              ((ActorProcessingThread) tracingActivityThread).getCurrentActor();
           if (currentActor != null && currentActor.getId() == actorId) {
             return tracingActivityThread;
           }

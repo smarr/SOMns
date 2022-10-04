@@ -86,10 +86,10 @@ public class VmSettings implements Settings {
 
     ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
     ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE =
-      getBool("som.actorAsyncStackTraceMethodCache", false);
+        getBool("som.actorAsyncStackTraceMethodCache", false);
     ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE =
-      getBool("som.actorAsyncStackTraceInlineCache", false);
-      
+        getBool("som.actorAsyncStackTraceInlineCache", false);
+
     TEST_SNAPSHOTS = getBool("som.snapshotTest", false);
     TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
     SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;

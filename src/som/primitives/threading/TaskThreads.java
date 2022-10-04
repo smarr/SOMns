@@ -39,8 +39,7 @@ public final class TaskThreads {
     public SomTaskOrThread(final Object[] argArray, final boolean stopOnRoot) {
       this.argArray = argArray;
       this.stopOnRoot = stopOnRoot;
-      assert argArray[0] instanceof SBlock
-          : "First argument of a block needs to be the block object";
+      assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
     }
 
     public final SInvokable getMethod() {

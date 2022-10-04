@@ -23,8 +23,8 @@ import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 @GenerateNodeFactory
 @Primitive(selector = "doIndexes:", receiverType = SArray.class, disabled = true)
 public abstract class DoIndexesPrim extends BinaryComplexOperation {
-  @Child protected BlockDispatchNode   block = BlockDispatchNodeGen.create();
-  @Child protected UnaryExpressionNode length;
+  @Child protected BlockDispatchNode    block                = BlockDispatchNodeGen.create();
+  @Child protected UnaryExpressionNode  length;
   @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   // TODO: tag properly, this is a loop, but without array access
@@ -53,11 +53,15 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
 
       if (SArray.FIRST_IDX < length) {
         this.block.executeDispatch(SArguments.getPlainXArgumentsWithReceiver(this,
-                shadowStackEntryLoad, frame, block, (long) SArray.FIRST_IDX + 1)); // +1 because it is going to the smalltalk level
+            shadowStackEntryLoad, frame, block, (long) SArray.FIRST_IDX + 1)); // +1 because it
+                                                                               // is going to
+                                                                               // the smalltalk
+                                                                               // level
       }
       for (long i = 1; i < length; i++) {
         this.block.executeDispatch(SArguments.getPlainXArgumentsWithReceiver(this,
-                shadowStackEntryLoad, frame, block, i + 1)); // +1 because it is going to the smalltalk level
+            shadowStackEntryLoad, frame, block, i + 1)); // +1 because it is going to the
+                                                         // smalltalk level
       }
     } finally {
       if (CompilerDirectives.inInterpreter()) {

@@ -208,8 +208,7 @@ public abstract class StorageLocation {
     @Override
     public boolean isSet(final SObject obj) {
       assert read(
-          obj) != null
-          : "null is not a valid value for an object slot, it needs to be initialized with nil.";
+          obj) != null : "null is not a valid value for an object slot, it needs to be initialized with nil.";
       return true;
     }
 

@@ -74,6 +74,7 @@ import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 import tools.debugger.asyncstacktraces.StackIterator;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
+
 public final class SystemPrims {
 
   /** File extension for SOMns extensions with Java code. */
@@ -147,7 +148,7 @@ public final class SystemPrims {
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
     try {
-     return loadModule(vm, path);
+      return loadModule(vm, path);
     } catch (FileNotFoundException e) {
       ioException.signal(frame, path, "Could not find module file. " + e.getMessage());
     } catch (NotAFileException e) {
@@ -207,7 +208,8 @@ public final class SystemPrims {
     }
 
     @Specialization
-    public final Object load(final VirtualFrame frame, final String filename, final SObjectWithClass moduleObj) {
+    public final Object load(final VirtualFrame frame, final String filename,
+        final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
 
@@ -338,22 +340,25 @@ public final class SystemPrims {
         if (frame != null) {
           method.add(frame.name);
           maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
-          // note: `callNode.getEncapsulatingSourceSection();` is better than  frame.section
-          // because with this one we can get the source section while the other option returns null
+          // note: `callNode.getEncapsulatingSourceSection();` is better than frame.section
+          // because with this one we can get the source section while the other option returns
+          // null
           addSourceSection(frame.section, location);
         }
       }
 
-      //for async traces hide only 1 frame: Thing>>#error:, because we want to show the last frame although is not async
-      Output.print(stringStackTraceFrom(method, location, maxLengthMethod, asyncTrace == false ? skipDnuFrames : 1));
+      // for async traces hide only 1 frame: Thing>>#error:, because we want to show the last
+      // frame although is not async
+      Output.print(stringStackTraceFrom(method, location, maxLengthMethod,
+          asyncTrace == false ? skipDnuFrames : 1));
     }
 
     private static String stringStackTraceFrom(final ArrayList<String> method,
-    final ArrayList<String> location, final int maxLengthMethod, final int skipDnuFrames) {
+        final ArrayList<String> location, final int maxLengthMethod, final int skipDnuFrames) {
       StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
         sb.append(String.format("\t%1$-" + (maxLengthMethod + 4) + "s",
-                method.get(i)));
+            method.get(i)));
         sb.append(location.get(i));
         sb.append('\n');
       }
@@ -361,10 +366,10 @@ public final class SystemPrims {
     }
 
     private static void addSourceSection(final SourceSection section,
-                                         final ArrayList<String> location) {
+        final ArrayList<String> location) {
       if (section != null) {
         location.add(section.getSource().getName()
-                + SourceCoordinate.getLocationQualifier(section));
+            + SourceCoordinate.getLocationQualifier(section));
       } else {
         location.add("");
       }

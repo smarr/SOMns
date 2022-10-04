@@ -123,7 +123,8 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final Object setModeSymbol(final VirtualFrame frame, final SFileDescriptor file, final SSymbol mode) {
+    public final Object setModeSymbol(final VirtualFrame frame, final SFileDescriptor file,
+        final SSymbol mode) {
       try {
         file.setMode(mode);
       } catch (IllegalArgumentException e) {
@@ -133,7 +134,8 @@ public final class FilePrims {
     }
 
     @Fallback
-    public final Object setWithUnsupportedValue(final VirtualFrame frame, final Object file, final Object mode) {
+    public final Object setWithUnsupportedValue(final VirtualFrame frame, final Object file,
+        final Object mode) {
       argumentError.signal(frame, errorMsg(mode));
       return file;
     }
@@ -217,7 +219,8 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final Object write(final VirtualFrame frame, final SFileDescriptor file, final long nBytes,
+    public final Object write(final VirtualFrame frame, final SFileDescriptor file,
+        final long nBytes,
         final long offset, final SBlock fail) {
       file.write(frame, (int) nBytes, offset, fail, dispatchHandler, ioException, errorCases);
       return file;

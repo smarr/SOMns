@@ -184,7 +184,8 @@ public class JsonTests {
     String result = gson.toJson(InitializationResponse.create(
         EntityType.values(), ActivityType.values(), PassiveEntityType.values(),
         DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
-        BreakpointType.values(), SteppingType.values(), Implementation.values(), MessageReception.values()),
+        BreakpointType.values(), SteppingType.values(), Implementation.values(),
+        MessageReception.values()),
         OutgoingMessage.class);
     // This test is only doing a very basic sanity check
     assertTrue(1000 < result.length());

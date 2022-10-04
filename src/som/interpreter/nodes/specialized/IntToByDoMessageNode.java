@@ -50,20 +50,21 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
   @Specialization(guards = "block.getMethod() == blockMethod")
   public final long doIntToByDo(final VirtualFrame frame, final long receiver,
       final double limit, final long step, final SBlock block) {
-    return doLoop(frame, valueSend, this, receiver, (long) limit, step, block, shadowStackEntryLoad);
+    return doLoop(frame, valueSend, this, receiver, (long) limit, step, block,
+        shadowStackEntryLoad);
   }
 
   public static long doLoop(final VirtualFrame frame, final DirectCallNode value,
-                            final ExpressionNode loopNode, final long receiver, final long limit, final long step,
-                            final SBlock block, ShadowStackEntryLoad shadowStackEntryLoad) {
+      final ExpressionNode loopNode, final long receiver, final long limit, final long step,
+      final SBlock block, ShadowStackEntryLoad shadowStackEntryLoad) {
     try {
       if (receiver <= limit) {
         value.call(SArguments.getPlainXArgumentsWithReceiver(loopNode,
-                shadowStackEntryLoad, frame, block, receiver));
+            shadowStackEntryLoad, frame, block, receiver));
       }
       for (long i = receiver + step; i <= limit; i += step) {
         value.call(SArguments.getPlainXArgumentsWithReceiver(loopNode,
-                shadowStackEntryLoad, frame, block, i));
+            shadowStackEntryLoad, frame, block, i));
 
         ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }

@@ -20,7 +20,8 @@ import som.interpreter.Invokable;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
-public final class CachedDispatchNode extends AbstractDispatchNode implements BackCacheCallNode {
+public final class CachedDispatchNode extends AbstractDispatchNode
+    implements BackCacheCallNode {
   private final Assumption            stillUniqueCaller;
   @Child private DirectCallNode       cachedMethod;
   @Child private AbstractDispatchNode nextInCache;
@@ -31,12 +32,13 @@ public final class CachedDispatchNode extends AbstractDispatchNode implements Ba
   private final DispatchGuard guard;
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
-                            final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+      final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
     this(methodCallTarget, guard, nextInCache, true);
   }
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
-      final DispatchGuard guard, final AbstractDispatchNode nextInCache, final boolean defaultUniqueCaller) {
+      final DispatchGuard guard, final AbstractDispatchNode nextInCache,
+      final boolean defaultUniqueCaller) {
     super(nextInCache.getSourceSection());
     stillUniqueCaller = Truffle.getRuntime().createAssumption();
     this.guard = guard;
@@ -51,26 +53,26 @@ public final class CachedDispatchNode extends AbstractDispatchNode implements Ba
   }
 
   public CachedDispatchNode(final CachedDispatchNode node, final boolean uniqueCaller) {
-      this(node.cachedMethod.getCallTarget(), node.guard, node.nextInCache, false);
-      this.uniqueCaller = uniqueCaller;
-    }
+    this(node.cachedMethod.getCallTarget(), node.guard, node.nextInCache, false);
+    this.uniqueCaller = uniqueCaller;
+  }
 
-    @Override
-    public void makeUniqueCaller() {
-      uniqueCaller = true;
-    }
+  @Override
+  public void makeUniqueCaller() {
+    uniqueCaller = true;
+  }
 
-    @Override
-    public void makeMultipleCaller() {
-      uniqueCaller = false;
-      stillUniqueCaller.invalidate();
-    }
+  @Override
+  public void makeMultipleCaller() {
+    uniqueCaller = false;
+    stillUniqueCaller.invalidate();
+  }
 
-    @Override
-    public Invokable getCachedMethod() {
-      RootCallTarget ct = (DefaultCallTarget) cachedMethod.getCallTarget();
-      return (Invokable) ct.getRootNode();
-    }
+  @Override
+  public Invokable getCachedMethod() {
+    RootCallTarget ct = (DefaultCallTarget) cachedMethod.getCallTarget();
+    return (Invokable) ct.getRootNode();
+  }
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
@@ -78,7 +80,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode implements Ba
       if (guard.entryMatches(arguments[0])) {
         stillUniqueCaller.check();
         BackCacheCallNode.setShadowStackEntry(frame,
-                uniqueCaller, arguments, this, shadowStackEntryLoad);
+            uniqueCaller, arguments, this, shadowStackEntryLoad);
         return cachedMethod.call(arguments);
       } else {
         return nextInCache.executeDispatch(frame, arguments);

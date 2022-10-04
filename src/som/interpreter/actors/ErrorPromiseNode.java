@@ -29,7 +29,8 @@ public abstract class ErrorPromiseNode extends BinaryExpressionNode implements O
       final Object result) {
     ShadowStackEntry entry = SArguments.getShadowStackEntry(frame);
     assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
-    return (SResolver) errorNode.executeEvaluated(frame, resolver, result, entry, false, false);
+    return (SResolver) errorNode.executeEvaluated(frame, resolver, result, entry, false,
+        false);
   }
 
   @Override

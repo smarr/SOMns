@@ -208,8 +208,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass()
-               .getSimpleName())
-        : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
+               .getSimpleName()) : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
   }
 
   public void enterMethod() {
@@ -441,8 +440,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
-      assert parent != null
-          : "Direct parent does not seem to be set up properly with event node and/or wrapping";
+      assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
       return new LoopIterationReportNode(p.getProfile());
     });

@@ -265,7 +265,8 @@ public final class InitializationResponse extends OutgoingMessage {
       final SendOp[] supportedSendOps,
       final ReceiveOp[] supportedReceiveOps,
       final BreakpointType[] supportedBreakpoints,
-      final SteppingType[] supportedSteps, final Implementation[] implData, final MessageReception[] msgReception) {
+      final SteppingType[] supportedSteps, final Implementation[] implData,
+      final MessageReception[] msgReception) {
     return new InitializationResponse(new ServerCapabilities(supportedEntities,
         supportedActivities, supportedPassiveEntities, supportedDynamicScopes,
         supportedSendOps, supportedReceiveOps, supportedBreakpoints,

@@ -134,8 +134,8 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void write(final VirtualFrame frame, final int nBytes, final long position,
-                    final SBlock fail, final BlockDispatchNode dispatchHandler,
-                    final ExceptionSignalingNode ioException, final BranchProfile errorCases) {
+      final SBlock fail, final BlockDispatchNode dispatchHandler,
+      final ExceptionSignalingNode ioException, final BranchProfile errorCases) {
     if (raf == null) {
       errorCases.enter();
       dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
@@ -175,7 +175,7 @@ public class SFileDescriptor extends SObjectWithClass {
 
   @TruffleBoundary
   private void write(final int nBytes, final long position, final byte[] buff)
-          throws IOException {
+      throws IOException {
     raf.seek(position);
     raf.write(buff, 0, nBytes);
   }
