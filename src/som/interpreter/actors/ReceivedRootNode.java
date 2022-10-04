@@ -12,7 +12,6 @@ import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.ResolvePromiseNodeFactory.ResolveNodeGen;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
