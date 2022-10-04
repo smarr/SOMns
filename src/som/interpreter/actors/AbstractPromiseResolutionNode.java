@@ -190,13 +190,15 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
-      final Object result, final Actor current, final ForkJoinPool actorPool, final Object maybeEntry,
+      final Object result, final Actor current, final ForkJoinPool actorPool,
+      final Object maybeEntry,
       final boolean haltOnResolution, final ValueProfile whenResolvedProfile,
       final RecordOneEvent tracePromiseResolution2,
       final RecordOneEvent tracePromiseResolutionEnd2) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, tracePromiseResolution2,
+        current, actorPool, maybeEntry, haltOnResolution, whenResolvedProfile,
+        tracePromiseResolution2,
         tracePromiseResolutionEnd2);
   }
 }

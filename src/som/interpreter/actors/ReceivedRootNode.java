@@ -190,7 +190,8 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
-        final Object firstArg, final Object secondArg, final Object thirdArg, final Object forthArg) {
+        final Object firstArg, final Object secondArg, final Object thirdArg,
+        final Object forthArg) {
       if (VmSettings.DYNAMIC_METRICS) {
         numImplicitNullResolutions.getAndIncrement();
       }

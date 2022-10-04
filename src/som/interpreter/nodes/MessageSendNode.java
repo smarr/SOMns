@@ -161,7 +161,8 @@ public final class MessageSendNode {
       Object[] arguments = SArguments.allocateArgumentsArray(argumentNodes);
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
-        assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
+        assert arguments[i] != null
+            : "Some expression evaluated to null, which is not supported.";
         assert !(arguments[i] instanceof ShadowStackEntry);
       }
       // We allocate room for the arguments, but it is not set if non

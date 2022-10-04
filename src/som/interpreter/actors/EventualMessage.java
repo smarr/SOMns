@@ -421,8 +421,10 @@ public abstract class EventualMessage {
      *
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
-    private void setPromiseValue(final Object value, final Actor resolvingActor, final Object maybeEntry) {
-      args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
+    private void setPromiseValue(final Object value, final Actor resolvingActor,
+        final Object maybeEntry) {
+      args[PROMISE_VALUE_IDX] =
+          WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         assert maybeEntry instanceof ShadowStackEntry;
         SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);

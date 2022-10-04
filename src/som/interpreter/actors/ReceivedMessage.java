@@ -53,9 +53,10 @@ public class ReceivedMessage extends ReceivedRootNode {
 
     try {
       assert msg.args[msg.args.length - 1] == null
-        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+          || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
       Object result = onReceive.executeEvaluated(frame, msg.args);
-      resolvePromise(frame, msg.resolver, result, resolutionEntry, haltOnResolver, haltOnResolution);
+      resolvePromise(frame, msg.resolver, result, resolutionEntry, haltOnResolver,
+          haltOnResolution);
     } catch (SomException exception) {
       errorPromise(frame, msg.resolver, exception.getSomObject(),
           resolutionEntry, haltOnResolver, haltOnResolution);
