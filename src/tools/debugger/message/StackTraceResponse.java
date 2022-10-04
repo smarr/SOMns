@@ -11,9 +11,9 @@ import som.interpreter.actors.ReceivedRootNode;
 import som.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
+import tools.debugger.frontend.ApplicationThreadStack;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
-import tools.debugger.frontend.ApplicationThreadStack;
 
 
 @SuppressWarnings("unused")
@@ -83,7 +83,7 @@ public final class StackTraceResponse extends Response {
     /** An optional number of characters in the range. */
     private final int length;
 
-    /** Indicates if the frame corresponds to an async operation */
+    /** Indicates if the frame corresponds to an async operation. */
     private final boolean async;
 
     StackFrame(final long globalId, final String name, final String sourceUri,

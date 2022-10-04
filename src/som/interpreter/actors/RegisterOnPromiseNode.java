@@ -7,12 +7,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.AbstractPromiseSendMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.STracingPromise;
-import som.interpreter.SArguments;
-import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
@@ -20,8 +19,6 @@ import tools.dym.DynamicMetrics;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
-
-import java.util.concurrent.ForkJoinPool;
 
 
 public abstract class RegisterOnPromiseNode {
@@ -88,7 +85,7 @@ public abstract class RegisterOnPromiseNode {
             // we want to know where it was resolved, where the value is coming from
             for (Object obj : msg.args) {
               boolean promiseComplete =
-                  (obj instanceof SPromise) && ((SPromise) promise).isCompleted();
+                  (obj instanceof SPromise) && promise.isCompleted();
               // boolean promiseChained = (obj instanceof SPromise) && !((SPromise)
               // promise).isCompleted();
               if (obj instanceof SBlock || promiseComplete) {
@@ -110,10 +107,10 @@ public abstract class RegisterOnPromiseNode {
               // assert entry != null && entry instanceof ShadowStackEntry.EntryAtMessageSend;
               // ShadowStackEntry shadowStackEntry = SArguments.getShadowStackEntry(frame);
               //
-              //// entry.setPreviousShadowStackEntry(shadowStackEntry);
+              // // entry.setPreviousShadowStackEntry(shadowStackEntry);
               //
-              // System.out.println("-register msg args: "+entry.getSourceSection());
-              // System.out.println("shadow: "+shadowStackEntry.getSourceSection());
+              // so.println("-register msg args: "+entry.getSourceSection());
+              // so.println("shadow: "+shadowStackEntry.getSourceSection());
 
               // assert maybeEntry != null && maybeEntry instanceof
               // ShadowStackEntry.EntryForPromiseResolution;

@@ -1,21 +1,23 @@
 package som.interpreter;
 
-import com.oracle.truffle.api.frame.Frame;
-
-import som.primitives.SizeAndLengthPrim;
-import som.primitives.arrays.AtPrim;
-import som.vm.constants.Classes;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.SImmutableArray;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.SizeAndLengthPrim;
+import som.primitives.arrays.AtPrim;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
@@ -229,8 +231,8 @@ public final class SArguments {
   }
 
   // set the resolution of the promise for the registered callback or message sent to a promise
-  public static void saveCausalEntryForPromise(Object previousPromiseStack,
-      Object currentPromiseStack) {
+  public static void saveCausalEntryForPromise(final Object previousPromiseStack,
+      final Object currentPromiseStack) {
     assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
     assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
     ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry(
@@ -239,8 +241,8 @@ public final class SArguments {
 
   private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = new HashMap<>();
 
-  public static void saveCausalEntryForPromiseGroup(Object previousPromiseStack,
-      Object callbackPromiseStack, long actorId) {
+  public static void saveCausalEntryForPromiseGroup(final Object previousPromiseStack,
+      final Object callbackPromiseStack, final long actorId) {
     if (previousPromiseInGroupByActor != null
         && previousPromiseInGroupByActor.containsKey(actorId)) {
       ShadowStackEntry firstPromise =
@@ -259,8 +261,8 @@ public final class SArguments {
   }
 
   // group non repeated frames
-  private static ShadowStackEntry groupFrames(ShadowStackEntry firstPromiseStack,
-      ShadowStackEntry secondPromiseStack) {
+  private static ShadowStackEntry groupFrames(final ShadowStackEntry firstPromiseStack,
+      final ShadowStackEntry secondPromiseStack) {
     List<ShadowStackEntry> listSecond = getAllEntries(secondPromiseStack, new ArrayList<>());
     List<ShadowStackEntry> listFirst = getAllEntries(firstPromiseStack, new ArrayList<>());
 
@@ -270,8 +272,8 @@ public final class SArguments {
     return group;
   }
 
-  private static List<ShadowStackEntry> getAllEntries(ShadowStackEntry stackEntry,
-      List<ShadowStackEntry> list) {
+  private static List<ShadowStackEntry> getAllEntries(final ShadowStackEntry stackEntry,
+      final List<ShadowStackEntry> list) {
     if (stackEntry == null) {
       return list;
     } else {
@@ -284,8 +286,8 @@ public final class SArguments {
   // equal source section corresponds to the turn node, from there on the stack frames are the
   // same for both promises stacks
   private static ShadowStackEntry setNewEntryAtEqualSourceSection(
-      ShadowStackEntry stackEntryToAdd, List<ShadowStackEntry> listFirst,
-      List<ShadowStackEntry> listSecond) {
+      final ShadowStackEntry stackEntryToAdd, final List<ShadowStackEntry> listFirst,
+      final List<ShadowStackEntry> listSecond) {
     for (ShadowStackEntry entrySecond : listSecond) {
       for (ShadowStackEntry entryFirst : listFirst) {
         boolean entryFirstNotNull = entryFirst.getPreviousShadowStackEntry() != null
@@ -300,6 +302,6 @@ public final class SArguments {
         }
       }
     }
-    return listSecond.get(0);// return top entry
+    return listSecond.get(0); // return top entry
   }
 }

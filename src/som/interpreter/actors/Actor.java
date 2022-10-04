@@ -147,7 +147,7 @@ public class Actor implements Activity {
     } else {
       appendToMailbox(msg);
     }
-    // System.out.println("doSend "+msg.getMessageId() + " actor "+this.getId());
+    // so.println("doSend "+msg.getMessageId() + " actor "+this.getId());
     // save messages in the trace when they are received
     if (VmSettings.KOMPOS_TRACING) {
       TracingActor.saveMessageReceived(this, msg);

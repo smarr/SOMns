@@ -75,7 +75,7 @@ public class ShadowStackEntry {
     if (t instanceof ActorProcessingThread) {
       return EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
     } else {
-      return -1l;
+      return -1L;
     }
   }
 
@@ -91,7 +91,7 @@ public class ShadowStackEntry {
     return false;
   }
 
-  public void setPreviousShadowStackEntry(ShadowStackEntry maybeEntry) {
+  public void setPreviousShadowStackEntry(final ShadowStackEntry maybeEntry) {
     previous = maybeEntry;
   }
 
@@ -111,7 +111,7 @@ public class ShadowStackEntry {
 
       private final String label;
 
-      ResolutionLocation(String label) {
+      ResolutionLocation(final String label) {
         this.label = label;
       }
 
@@ -124,7 +124,8 @@ public class ShadowStackEntry {
     public String             resolutionValue;
 
     private EntryForPromiseResolution(final ShadowStackEntry previous,
-        final Node expr, ResolutionLocation resolutionLocation, String resolutionValue) {
+        final Node expr, final ResolutionLocation resolutionLocation,
+        final String resolutionValue) {
       super(previous, expr);
       this.resolutionLocation = resolutionLocation;
       this.resolutionValue = resolutionValue;

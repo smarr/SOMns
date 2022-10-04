@@ -4,22 +4,20 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.vm.VmSettings;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
-
-import com.oracle.truffle.api.frame.VirtualFrame;
-import som.interpreter.SArguments;
-import som.vm.VmSettings;
-import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 /**

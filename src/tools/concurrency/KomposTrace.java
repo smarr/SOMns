@@ -1,5 +1,10 @@
 package tools.concurrency;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -14,9 +19,13 @@ import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.debugger.PrimitiveCallOrigin;
-import tools.debugger.entities.*;
-
-import java.util.*;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.MessageReception;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
 
 
 public class KomposTrace {
@@ -135,8 +144,8 @@ public class KomposTrace {
   }
 
   public static void sendOperation(final SendOp op, final long entityId,
-      final long targetId, final SSymbol selector, long targetActorId,
-      SourceSection msgSourceCoordinate) {
+      final long targetId, final SSymbol selector, final long targetActorId,
+      final SourceSection msgSourceCoordinate) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(op, entityId, targetId,
         t.getActivity(), selector.getSymbolId(), targetActorId, msgSourceCoordinate, null);
@@ -160,12 +169,13 @@ public class KomposTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordSuspendedActivityByDebugger(TracingActivityThread t) {
+  public static void recordSuspendedActivityByDebugger(final TracingActivityThread t) {
     ((KomposTraceBuffer) t.getBuffer()).recordPausedActivity(t.getActivity());
   }
 
-  public static void actorMessageReception(long messageId, TracingActivityThread t) {
-    // System.out.println("***** "+((Actor.ActorProcessingThread)t).getCurrentActor() +"
+  public static void actorMessageReception(final long messageId,
+      final TracingActivityThread t) {
+    // so.println("***** "+((Actor.ActorProcessingThread)t).getCurrentActor() +"
     // activity "+((Actor.ActorProcessingThread)t).getActivity());
     Activity activity = t.getActivity();
     if (activity == null) {
@@ -190,7 +200,7 @@ public class KomposTrace {
    * @param actorId
    * @return
    */
-  private static boolean messageReceivedRecorded(long messageId, long actorId) {
+  private static boolean messageReceivedRecorded(final long messageId, final long actorId) {
     List<Long> messages;
     if (!messagesReceivedByActor.containsKey(actorId)) {
       messages = new ArrayList<>();
@@ -421,8 +431,9 @@ public class KomposTrace {
     }
 
     public void recordSendOperation(final SendOp op, final long entityId,
-        final long targetId, final Activity current, final short symbolId, long targetActorId,
-        SourceSection msgSourceCoordinate, byte[] value) {
+        final long targetId, final Activity current, final short symbolId,
+        final long targetActorId,
+        final SourceSection msgSourceCoordinate, final byte[] value) {
       int requiredSpace;
       if (value == null) {
         requiredSpace = op.getSize();
@@ -453,7 +464,7 @@ public class KomposTrace {
       assert position == start + requiredSpace;
     }
 
-    public void recordMessageReceived(MessageReception mr, final Activity current,
+    public void recordMessageReceived(final MessageReception mr, final Activity current,
         final long messageId) {
       int requiredSpace = mr.getSize();
       ensureSufficientSpace(requiredSpace, current);
@@ -462,11 +473,11 @@ public class KomposTrace {
       put(mr.getId());
       putLong(messageId);
 
-      // System.out.println("-message received "+messageId +" actor "+current.getId());
+      // so.println("-message received "+messageId +" actor "+current.getId());
 
-      if (position != start + requiredSpace) {
-        System.out.println();
-      }
+      // if (position != start + requiredSpace) {
+      // so.println();
+      // }
 
       assert position == start + requiredSpace;
     }
@@ -517,13 +528,13 @@ public class KomposTrace {
       @Override
       public synchronized void recordSendOperation(final SendOp op,
           final long entityId, final long targetId, final Activity current, final short symbol,
-          final long targetActorId, final SourceSection section, byte[] value) {
+          final long targetActorId, final SourceSection section, final byte[] value) {
         super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId,
             section, value);
       }
 
       @Override
-      public synchronized void recordMessageReceived(MessageReception mr,
+      public synchronized void recordMessageReceived(final MessageReception mr,
           final Activity current, final long messageId) {
         super.recordMessageReceived(mr, current, messageId);
       }

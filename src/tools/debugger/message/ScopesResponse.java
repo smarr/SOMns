@@ -2,7 +2,6 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -14,10 +13,9 @@ import som.interpreter.SArguments;
 import som.interpreter.actors.ReceivedRootNode;
 import som.vmobjects.SBlock;
 import tools.TraceData;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
-import com.oracle.truffle.api.frame.Frame;
-import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
 @SuppressWarnings("unused")

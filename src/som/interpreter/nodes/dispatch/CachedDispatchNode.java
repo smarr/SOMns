@@ -2,21 +2,20 @@ package som.interpreter.nodes.dispatch;
 
 import java.util.Map;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.impl.DefaultCallTarget;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
 import som.vm.VmSettings;
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.impl.DefaultCallTarget;
-import som.interpreter.Invokable;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 

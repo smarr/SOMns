@@ -1,6 +1,13 @@
 package tools.concurrency;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiConsumer;
 
@@ -60,11 +67,11 @@ public class TracingActors {
       this.activityId = id;
     }
 
-    public static void saveMessageReceived(Actor actor, EventualMessage message) {
+    public static void saveMessageReceived(final Actor actor, final EventualMessage message) {
       TracingActivityThread tracingActivityThread =
           TracingBackend.getTracingActivityThread(actor.getId());
       if (tracingActivityThread != null) {
-        // System.out.println("saveMessageReceived "+message.getMessageId() + "
+        // so.println("saveMessageReceived "+message.getMessageId() + "
         // "+actor.getId());
         KomposTrace.actorMessageReception(message.getMessageId(), tracingActivityThread);
       }
@@ -158,16 +165,16 @@ public class TracingActors {
       return null;
     }
 
-    public static void saveActor(Actor actor) {
+    public static void saveActor(final Actor actor) {
       allActors.put(actor.getId(), actor);
     }
 
-    public static Actor getActorById(long actorId) {
+    public static Actor getActorById(final long actorId) {
       return allActors.get(actorId);
     }
 
     /**
-     * Stop actor execution if they are paused to avoid open threads before system shutdown
+     * Stop actor execution if they are paused to avoid open threads before system shutdown.
      */
     public static void stopActorsIfSuspended() {
       for (long actorId : allActors.keySet()) {
