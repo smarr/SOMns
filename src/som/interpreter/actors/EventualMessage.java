@@ -8,6 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.Method;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
@@ -15,12 +16,11 @@ import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.parser.KomposTraceParser;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
-import som.interpreter.SArguments;
-import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 public abstract class EventualMessage {
@@ -141,8 +141,7 @@ public abstract class EventualMessage {
       }
 
       assert target != null;
-      assert !(args[0] instanceof SFarReference)
-          : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
       assert !(args[0] instanceof SPromise);
     }
 
@@ -163,8 +162,7 @@ public abstract class EventualMessage {
       }
 
       assert target != null;
-      assert !(args[0] instanceof SFarReference)
-          : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
       assert !(args[0] instanceof SPromise);
     }
 
@@ -228,8 +226,7 @@ public abstract class EventualMessage {
     // we need to redirect the message to the owner of that far reference
 
     Object receiver = WrapReferenceNode.wrapForUse(target, arguments[0], currentSender, null);
-    assert !(receiver instanceof SPromise)
-        : "TODO: handle this case as well?? Is it possible? didn't think about it";
+    assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     if (receiver instanceof SFarReference) {
       // now we are about to send a message to a far reference, so, it
@@ -240,8 +237,7 @@ public abstract class EventualMessage {
 
     arguments[0] = receiver;
 
-    assert !(receiver instanceof SFarReference)
-        : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+    assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
     for (int i = 1; i < SArguments.getLengthWithoutShadowStack(arguments); i++) {
@@ -272,7 +268,8 @@ public abstract class EventualMessage {
     }
 
     public abstract void resolve(Object rcvr, Actor target, Actor sendingActor,
-                                 Object maybeEntry);
+        Object maybeEntry);
+
     @Override
     public final Actor getSender() {
       assert originalSender != null;
@@ -315,7 +312,8 @@ public abstract class EventualMessage {
     }
 
     @Override
-    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor, final Object maybeEntry) {
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
+        final Object maybeEntry) {
       determineAndSetTarget(rcvr, target, sendingActor, maybeEntry);
     }
 
@@ -334,7 +332,8 @@ public abstract class EventualMessage {
             ActorProcessingThread.currentThread().getSnapshotId());
       }
 
-      //save promise resolution entry corresponding to the promise to which the message is sent
+      // save promise resolution entry corresponding to the promise to which the message is
+      // sent
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         SArguments.saveCausalEntryForPromise(maybeEntry, args[args.length - 1]);
       }
@@ -400,14 +399,14 @@ public abstract class EventualMessage {
      * The promise on which this callback is registered on.
      */
     @CompilationFinal protected SPromise promise;
-    @CompilationFinal protected SBlock callback;
+    @CompilationFinal protected SBlock   callback;
 
     protected AbstractPromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
       super(SArguments.getPromiseCallbackArgumentArray(callback), owner,
-              resolver, onReceive,
+          resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = promiseRegisteredOn;
       this.callback = callback;
@@ -415,7 +414,7 @@ public abstract class EventualMessage {
 
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
-                        final Object maybeEntry) {
+        final Object maybeEntry) {
       setPromiseValue(rcvr, sendingActor, maybeEntry);
     }
 
@@ -426,19 +425,24 @@ public abstract class EventualMessage {
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor,
-                                 final Object maybeEntry) {
-      args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, alue, resolvingActor, null);
-      //save promise resolution entry corresponding to the promise to which this callback is registered on
+        final Object maybeEntry) {
+      args[PROMISE_VALUE_IDX] =
+          WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
+      // save promise resolution entry corresponding to the promise to which this callback is
+      // registered on
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         assert args[args.length - 1] instanceof ShadowStackEntry;
         ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
         boolean promiseGroup = false;
         if (callPromiseStack.getExpression().getParent().getParent() instanceof Method) {
-          promiseGroup = ((Method)callPromiseStack.getExpression().getParent().getParent()).getName().startsWith("PromiseGroup");
+          promiseGroup =
+              ((Method) callPromiseStack.getExpression().getParent()
+                                        .getParent()).getName().startsWith("PromiseGroup");
         }
 
         if (promiseGroup) {
-          SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1], promise.getOwner().getId());
+          SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1],
+              promise.getOwner().getId());
         } else {
           SArguments.saveCausalEntryForPromise(maybeEntry, args[args.length - 1]);
         }

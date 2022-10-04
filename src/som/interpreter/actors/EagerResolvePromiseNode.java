@@ -17,26 +17,26 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 public abstract class EagerResolvePromiseNode extends BinaryExpressionNode
     implements WithContext<EagerResolvePromiseNode, VM> {
 
-  @Child protected AbstractPromiseResolutionNode resolve;
+  @Child protected ResolvePromiseNode resolve;
 
   @Override
   @SuppressWarnings("unchecked")
   public EagerResolvePromiseNode initialize(final SourceSection sourceSection) {
     super.initialize(sourceSection);
-    resolve = ResolvePromiseNodeFactory.create(null, null, null, null);
+    resolve = ResolvePromiseNodeFactory.create(null, null);
     resolve.initialize(sourceSection);
     return this;
   }
 
   @Override
   public final EagerResolvePromiseNode initialize(final VM vm) {
-    resolve.initialize(vm);
+    // resolve.initialize(vm);
     return this;
   }
 
   @Specialization
   public SResolver resolve(final VirtualFrame frame, final SResolver resolver,
       final Object value) {
-    return (SResolver) resolve.executeEvaluated(frame, resolver, value, false, false);
+    return resolve.executeEvaluated(frame, resolver, value);
   }
 }

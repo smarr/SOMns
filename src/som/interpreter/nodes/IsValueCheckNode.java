@@ -122,12 +122,12 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (cachedTester.allFieldsContainValues(rcvr)) {
         return rcvr;
       } else {
-        return notAValue.signal(rcvr);
+        return notAValue.signal(frame, rcvr);
       }
     }
 
     @Specialization
-    public Object fallback(final Object receiver) {
+    public Object fallback(final VirtualFrame frame, final Object receiver) {
       SImmutableObject rcvr = (SImmutableObject) receiver;
       boolean allFieldsContainValues = allFieldsContainValues(rcvr);
       if (allFieldsContainValues) {

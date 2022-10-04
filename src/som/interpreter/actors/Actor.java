@@ -140,15 +140,15 @@ public class Actor implements Activity {
     assert msg.getTarget() == this;
 
     assert msg.args[msg.args.length - 1] != null
-            || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
 
     if (firstMessage == null) {
       firstMessage = msg;
     } else {
       appendToMailbox(msg);
     }
-//    System.out.println("doSend "+msg.getMessageId() + " actor "+this.getId());
-    //save messages in the trace when they are received
+    // System.out.println("doSend "+msg.getMessageId() + " actor "+this.getId());
+    // save messages in the trace when they are received
     if (VmSettings.KOMPOS_TRACING) {
       TracingActor.saveMessageReceived(this, msg);
     }
@@ -214,8 +214,7 @@ public class Actor implements Activity {
 
     @Override
     public void run() {
-      assert executorRoot != null
-          : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
       executorRoot.call(this);
     }
 
@@ -262,14 +261,14 @@ public class Actor implements Activity {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
-      if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+      if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
         t.swapTracingBufferIfRequestedUnsync();
       }
       t.currentlyExecutingActor = null;
     }
 
-    private void saveReceivedMessages(ActorProcessingThread t) {
-      //save messages appended in mailbox in the trace before execute them
+    private void saveReceivedMessages(final ActorProcessingThread t) {
+      // save messages appended in mailbox in the trace before execute them
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.actorMessageReception(firstMessage.getMessageId(), t);
         if (size > 1) {
@@ -351,7 +350,8 @@ public class Actor implements Activity {
   }
 
   @Override
-  public void setStepToNextTurn(final boolean val) {}
+  public void setStepToNextTurn(final boolean val) {
+  }
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {
