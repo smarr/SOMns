@@ -58,6 +58,7 @@ kernel:           ${kernel}</echo>
     <path id="common.cp">
         <pathelement location="${classes.dir}" />
         <pathelement location="${bd.dir}/build/classes" />
+        <pathelement location="${lib.dir}/Java-WebSocket-1.5.1.jar"/>
         <pathelement location="${lib.dir}/somns-deps.jar" />
         <pathelement location="${lib.dir}/affinity.jar" />
 
@@ -75,7 +76,6 @@ kernel:           ${kernel}</echo>
         <path refid="common.cp"/>
         <pathelement location="${unit.dir}" />
 
-        <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${sdk.build}/polyglot-tck.jar" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
 
