@@ -149,6 +149,8 @@ public final class TaskThreads {
   }
 
   public static class ReplayForkJoinTask extends TracedForkJoinTask {
+    private static final long serialVersionUID = -6890370983233213629L;
+
     private final LinkedList<ReplayRecord> replayEvents;
     private final TraceParser              traceParser;
 
@@ -236,6 +238,8 @@ public final class TaskThreads {
   }
 
   public static class ReplayThreadTask extends TracedThreadTask {
+    private static final long serialVersionUID = -6616939317652631224L;
+
     private final LinkedList<ReplayRecord> replayEvents;
     private final TraceParser              traceParser;
 
