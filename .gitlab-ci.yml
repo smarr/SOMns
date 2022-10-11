@@ -7,7 +7,7 @@ stages:
 variables:
   PYTHONUNBUFFERED: "true"
   JVMCI_VERSION_CHECK: ignore
-  ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse4.23/eclipse
+  ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse4.25/eclipse
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
 before_script:
