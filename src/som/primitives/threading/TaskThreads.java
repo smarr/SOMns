@@ -7,8 +7,6 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.interop.InteropLibrary;
-import com.oracle.truffle.api.library.ExportLibrary;
 
 import som.VM;
 import som.interop.SomInteropObject;
@@ -31,7 +29,6 @@ import tools.replay.nodes.TraceContextNodeGen;
 
 public final class TaskThreads {
 
-  @ExportLibrary(InteropLibrary.class)
   public abstract static class SomTaskOrThread extends RecursiveTask<Object>
       implements Activity, SomInteropObject {
     private static final long serialVersionUID = 4823503369882151811L;
@@ -149,6 +146,8 @@ public final class TaskThreads {
   }
 
   public static class ReplayForkJoinTask extends TracedForkJoinTask {
+    private static final long serialVersionUID = -6890370983233213629L;
+
     private final LinkedList<ReplayRecord> replayEvents;
     private final TraceParser              traceParser;
 
@@ -236,6 +235,8 @@ public final class TaskThreads {
   }
 
   public static class ReplayThreadTask extends TracedThreadTask {
+    private static final long serialVersionUID = -6616939317652631224L;
+
     private final LinkedList<ReplayRecord> replayEvents;
     private final TraceParser              traceParser;
 

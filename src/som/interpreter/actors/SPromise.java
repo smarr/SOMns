@@ -937,7 +937,7 @@ public class SPromise extends SObjectWithClass {
 
         if (VmSettings.DYNAMIC_METRICS) {
           int count = onErrorExt == null ? 0 : onErrorExt.size();
-          numScheduledOnError.addAndGet(1 + onErrorExt.size());
+          numScheduledOnError.addAndGet(1 + count);
         }
 
         promise.scheduleCallbacksOnResolution(result, onError, current, actorPool,

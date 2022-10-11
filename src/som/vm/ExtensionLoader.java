@@ -2,6 +2,7 @@ package som.vm;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -76,8 +77,10 @@ public final class ExtensionLoader extends PrimitiveLoader<VM, ExpressionNode, S
     Class<?> ext;
     try {
       ext = moduleJar.loadClass(extensionClassName);
-      return (Extension) ext.newInstance();
-    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
+      return (Extension) ext.getConstructor().newInstance();
+    } catch (IllegalAccessException | InstantiationException | ClassNotFoundException
+        | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+        | SecurityException e) {
       throw new RuntimeException(e);
     }
   }

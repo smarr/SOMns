@@ -153,7 +153,6 @@ public abstract class ChannelPrimitives {
     private int          nextTraceBufferId;
 
     private final boolean stopOnRootNode;
-    private boolean       stopOnJoin;
 
     protected final VM vm;
 
@@ -205,13 +204,12 @@ public abstract class ChannelPrimitives {
 
     @Override
     public void setStepToJoin(final boolean val) {
-      stopOnJoin = val;
+      /* we used to store the val into a field, but the field didn't seem used. */
     }
   }
 
   public static class ReplayProcess extends TracingProcess {
     private final LinkedList<ReplayRecord> replayEvents;
-    private int                            children = 0;
 
     public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode,
         final VM vm) {
