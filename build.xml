@@ -38,6 +38,9 @@ kernel:           ${kernel}</echo>
     <property name="somns-deps.version" value="0.3.7" />
     <property name="checkstyle.version" value="8.36" />
     <property name="jacoco.version"     value="0.8.8" />
+    <property name="affinity.version"   value="3.23.2" />
+    <property name="jna.version"        value="5.12.1" />
+    <property name="slf4j.version"      value="1.7.36" />
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
@@ -196,25 +199,28 @@ kernel:           ${kernel}</echo>
         <get src="${lib.url}/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
-        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/3.2.3/affinity-3.2.3.jar"
+        <get src="https://repo1.maven.org/maven2/org/java-websocket/Java-WebSocket/1.5.1/Java-WebSocket-1.5.1.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/Java-WebSocket-1.5.1.jar" />
+        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/${affinity.version}/affinity-${affinity.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/affinity.jar" />
-        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/3.2.3/affinity-3.2.3-sources.jar"
+        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/${affinity.version}/affinity-${affinity.version}-sources.jar"
             usetimestamp="true"
             dest="${lib.dir}/affinity-sources.jar" />
-        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar"
+        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-api/${slf4j.version}/slf4j-api-${slf4j.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/slf4j-api.jar" />
-        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-nop/1.7.30/slf4j-nop-1.7.30.jar"
+        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-nop/${slf4j.version}/slf4j-nop-${slf4j.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/slf4j-nop.jar" />
-        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-simple/1.7.30/slf4j-simple-1.7.30.jar"
+        <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-simple/${slf4j.version}/slf4j-simple-${slf4j.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/slf4j-simple.jar" />
-        <get src="https://repo1.maven.org/maven2/net/java/dev/jna/jna-platform/5.5.0/jna-platform-5.5.0.jar"
+        <get src="https://repo1.maven.org/maven2/net/java/dev/jna/jna-platform/${jna.version}/jna-platform-${jna.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/jna-platform.jar" />
-        <get src="https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.5.0/jna-5.5.0.jar"
+        <get src="https://repo1.maven.org/maven2/net/java/dev/jna/jna/${jna.version}/jna-${jna.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/jna.jar" />
     </target>
