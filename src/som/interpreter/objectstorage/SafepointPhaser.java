@@ -9,9 +9,7 @@ package som.interpreter.objectstorage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
-import sun.misc.Unsafe;
 import tools.UnsafeUtil;
-import tools.concurrency.TraceBuffer;
 
 
 /**
