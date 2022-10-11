@@ -19,9 +19,6 @@ import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import som.interpreter.SArguments;
-import som.vm.VmSettings;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 

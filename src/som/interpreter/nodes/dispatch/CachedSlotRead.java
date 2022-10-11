@@ -11,6 +11,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
 import som.interpreter.objectstorage.StorageAccessor.AbstractPrimitiveAccessor;
@@ -18,7 +19,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.FieldRead;
-import som.interpreter.SArguments;
 
 
 /**

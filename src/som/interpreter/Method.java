@@ -32,8 +32,8 @@ import som.compiler.MethodBuilder;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
-import som.vmobjects.SInvokable;
 import som.interpreter.nodes.dispatch.BackCacheCallNode;
+import som.vmobjects.SInvokable;
 
 
 public final class Method extends Invokable {

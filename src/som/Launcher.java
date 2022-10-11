@@ -10,7 +10,6 @@ import org.graalvm.polyglot.Value;
 import som.interpreter.SomLanguage;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors;
-import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
 import tools.parser.KomposTraceParser;
 import tools.snapshot.SnapshotBackend;

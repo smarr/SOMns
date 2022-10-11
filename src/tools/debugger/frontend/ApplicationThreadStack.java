@@ -7,9 +7,9 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
-import tools.debugger.asyncstacktraces.StackIterator;
 
 import som.interpreter.LexicalScope.MethodScope;
+import tools.debugger.asyncstacktraces.StackIterator;
 
 
 /**

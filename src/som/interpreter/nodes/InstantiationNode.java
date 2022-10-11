@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.compiler.MixinDefinition;
@@ -12,7 +13,6 @@ import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class InstantiationNode extends Node {

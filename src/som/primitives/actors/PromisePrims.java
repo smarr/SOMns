@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -17,6 +18,7 @@ import bd.primitives.Specializer;
 import bd.tools.nodes.Operation;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
@@ -42,13 +44,11 @@ import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.breakpoints.Breakpoints;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.breakpoints.Breakpoints;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import som.interpreter.SArguments;
-import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class PromisePrims {

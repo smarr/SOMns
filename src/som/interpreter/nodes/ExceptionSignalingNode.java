@@ -3,6 +3,7 @@ package som.interpreter.nodes;
 import java.util.function.Supplier;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -12,7 +13,6 @@ import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class ExceptionSignalingNode extends Node {

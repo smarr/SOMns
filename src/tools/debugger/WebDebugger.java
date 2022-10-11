@@ -31,8 +31,8 @@ import som.vm.Symbols;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors;
-import tools.debugger.frontend.Suspension;
 import tools.debugger.breakpoints.Breakpoints;
+import tools.debugger.frontend.Suspension;
 
 
 /**

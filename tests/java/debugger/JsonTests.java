@@ -17,15 +17,24 @@ import com.google.gson.Gson;
 import bd.source.FullSourceCoordinate;
 import bd.source.SourceCoordinate;
 import tools.debugger.RuntimeReflectionRegistration;
-import tools.debugger.entities.*;
+import tools.debugger.breakpoints.BreakpointInfo;
+import tools.debugger.breakpoints.LineBreakpoint;
+import tools.debugger.breakpoints.SectionBreakpoint;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.EntityType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.MessageReception;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.InitializeConnection;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.breakpoints.BreakpointInfo;
-import tools.debugger.breakpoints.LineBreakpoint;
-import tools.debugger.breakpoints.SectionBreakpoint;
 
 
 public class JsonTests {

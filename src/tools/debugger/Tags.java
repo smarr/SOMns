@@ -24,6 +24,8 @@ package tools.debugger;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+
 
 public abstract class Tags {
   private Tags() {}

@@ -30,6 +30,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
 import som.compiler.Variable;
 import som.interpreter.LexicalScope.MixinScope;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -64,7 +65,6 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.StringSerializati
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SymbolSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.TrueSerializationNodeFactory;
 import tools.snapshot.nodes.SerializerRootNode;
-import som.interpreter.SArguments;
 
 
 public final class ObjectSystem {

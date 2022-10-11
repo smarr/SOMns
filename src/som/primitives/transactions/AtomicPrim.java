@@ -18,11 +18,11 @@ import som.vmobjects.SClass;
 import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.breakpoints.Breakpoints;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.breakpoints.Breakpoints;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 

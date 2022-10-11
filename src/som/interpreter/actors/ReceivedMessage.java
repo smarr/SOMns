@@ -8,15 +8,15 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.SomException;
-import som.interpreter.SomLanguage;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.vmobjects.SSymbol;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
+import som.interpreter.SomException;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 

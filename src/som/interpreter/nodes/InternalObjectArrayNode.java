@@ -5,8 +5,8 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
 
-import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 

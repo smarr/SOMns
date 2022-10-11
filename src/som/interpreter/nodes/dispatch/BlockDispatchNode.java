@@ -12,9 +12,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 import som.interpreter.Invokable;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import som.vm.VmSettings;
 
 
 public abstract class BlockDispatchNode extends Node {

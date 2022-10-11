@@ -44,11 +44,10 @@ import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
+import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNodeGen;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
-import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNodeGen;
 
 
 public class SInvokable extends SAbstractObject implements Dispatchable {

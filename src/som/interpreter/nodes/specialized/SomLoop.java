@@ -1,10 +1,10 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.Invokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+
+import som.interpreter.Invokable;
 
 
 public abstract class SomLoop {

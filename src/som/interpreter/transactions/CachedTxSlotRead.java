@@ -1,11 +1,12 @@
 package som.interpreter.transactions;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class CachedTxSlotRead extends CachedSlotRead {

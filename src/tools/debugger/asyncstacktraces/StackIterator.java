@@ -1,5 +1,10 @@
 package tools.debugger.asyncstacktraces;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.DebugStackFrame;
@@ -10,6 +15,7 @@ import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
+
 import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.actors.EventualSendNode;
@@ -20,11 +26,6 @@ import tools.debugger.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolutio
 import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.HaltShadowStackIterator;
 import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.SuspensionShadowStackIterator;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
 
 
 /**

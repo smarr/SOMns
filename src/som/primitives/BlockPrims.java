@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -31,10 +32,9 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.profiles.DispatchProfile;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class BlockPrims {

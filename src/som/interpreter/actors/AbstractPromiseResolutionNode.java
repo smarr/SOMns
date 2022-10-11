@@ -3,6 +3,8 @@ package som.interpreter.actors;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -17,22 +19,18 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SPromise.STracingPromise;
-import som.interpreter.nodes.nary.QuaternaryExpressionNode;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.EagerPrimitiveNode;
+import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
+import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
-
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.EagerPrimitiveNode;
-import som.interpreter.nodes.nary.EagerlySpecializableNode;
-import som.vm.NotYetImplementedException;
-import som.vmobjects.SSymbol;
 
 
 @GenerateWrapper
@@ -182,7 +180,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
 
   protected void resolvePromise(final Resolution type,
       final SResolver resolver, final Object result, final Object maybeEntry,
-      final boolean haltOnResolution, final VirtualFrame frame, Node expression) {
+      final boolean haltOnResolution, final VirtualFrame frame, final Node expression) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
@@ -194,9 +192,9 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
       final Object result, final Actor current, final ForkJoinPool actorPool,
-      Object maybeEntry,
+      final Object maybeEntry,
       final boolean haltOnResolution, final ValueProfile whenResolvedProfile,
-      final VirtualFrame frame, Node expression,
+      final VirtualFrame frame, final Node expression,
       final RecordOneEvent tracePromiseResolution2,
       final RecordOneEvent tracePromiseResolutionEnd2) {
     Object wrapped = wrapper.execute(result, promise.owner, current);

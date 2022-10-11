@@ -5,6 +5,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.actors.Actor;
@@ -27,7 +28,6 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
-import som.interpreter.SArguments;
 
 
 @GenerateNodeFactory

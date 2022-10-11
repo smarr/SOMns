@@ -1,6 +1,7 @@
 package tools.debugger.message;
 
 import org.java_websocket.WebSocket;
+
 import som.interpreter.actors.Actor;
 import tools.debugger.FrontendConnector;
 

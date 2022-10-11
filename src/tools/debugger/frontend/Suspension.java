@@ -1,11 +1,14 @@
 package tools.debugger.frontend;
 
+import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.Method;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise.SResolver;
@@ -24,10 +27,6 @@ import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 import tools.debugger.message.VariablesRequest.FilterType;
-
-import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CompletableFuture;
 
 
 /**

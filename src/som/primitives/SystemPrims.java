@@ -7,16 +7,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -59,6 +59,10 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.StackIterator;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
@@ -66,13 +70,6 @@ import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
-
-import java.util.Arrays;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import tools.debugger.asyncstacktraces.ShadowStackEntry;
-import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
-import tools.debugger.asyncstacktraces.StackIterator;
-import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
 public final class SystemPrims {

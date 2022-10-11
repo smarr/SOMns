@@ -10,8 +10,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
-import som.vmobjects.SSymbol;
 import som.vm.VmSettings;
+import som.vmobjects.SSymbol;
 
 
 public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {

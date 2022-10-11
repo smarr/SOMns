@@ -24,6 +24,7 @@ import bd.tools.nodes.Invocation;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.ReceivedMessage;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -36,10 +37,9 @@ import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.profiles.DispatchProfile;
-import som.interpreter.SArguments;
-import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 public final class MessageSendNode {

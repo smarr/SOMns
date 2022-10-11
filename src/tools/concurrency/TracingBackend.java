@@ -12,7 +12,10 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +30,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
-import som.Output;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
@@ -246,7 +248,7 @@ public class TracingBackend {
     }
   }
 
-  public static TracingActivityThread getTracingActivityThread(long actorId) {
+  public static TracingActivityThread getTracingActivityThread(final long actorId) {
     synchronized (tracingThreads) {
       TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
       for (TracingActivityThread tracingActivityThread : result) {
