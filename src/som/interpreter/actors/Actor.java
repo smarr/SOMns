@@ -252,13 +252,9 @@ public class Actor implements Activity {
         KomposTrace.currentActivity(actor);
       }
 
-      try {
-        while (getCurrentMessagesOrCompleteExecution()) {
-          saveReceivedMessages(t);
-          processCurrentMessages(t, dbg);
-        }
-      } finally {
-        ObjectTransitionSafepoint.INSTANCE.unregister();
+      while (getCurrentMessagesOrCompleteExecution()) {
+        saveReceivedMessages(t);
+        processCurrentMessages(t, dbg);
       }
 
       if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
