@@ -17,6 +17,6 @@ public class ReflectionRegistrationTests {
     rrr.beforeAnalysis(null);
 
     HashSet<Class<?>> registeredClasses = rrr.getRegisteredClasses();
-    assertEquals(56, registeredClasses.size());
+    assertEquals(59, registeredClasses.size());
   }
 }
