@@ -2,16 +2,20 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ClassInstantiationNodeGen;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -30,7 +34,8 @@ import som.vmobjects.SObject;
 public final class ClassSlotAccessNode extends CachedSlotRead {
   private final MixinDefinition mixinDef;
   private final SlotDefinition  slotDef;
-  private final boolean         objectSlotIsAllocated;
+
+  @CompilationFinal private boolean objectSlotIsAllocated;
 
   @Child protected DirectCallNode         superclassAndMixinResolver;
   @Child protected ClassInstantiationNode instantiation;
@@ -70,6 +75,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
     if (!objectSlotIsAllocated) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       ObjectTransitionSafepoint.INSTANCE.ensureSlotAllocatedToAvoidDeadlock(rcvr, slotDef);
+      objectSlotIsAllocated = true;
     }
 
     synchronized (rcvr) {
