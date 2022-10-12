@@ -358,7 +358,10 @@ kernel:           ${kernel}</echo>
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
-    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib" description="Execute tests">
+    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib,run-unit-tests" description="Execute tests">
+    </target>
+
+    <target name="run-unit-tests" depends="jacoco-lib" description="Execute tests, without dependencies">
       <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
             outputtoformatters="true" fork="true" forkmode="once">
@@ -390,6 +393,9 @@ kernel:           ${kernel}</echo>
     </target>
 
     <target name="som-tests" depends="truffle-libs,compile-core">
+    </target>
+    
+    <target name="run-som-tests">
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
 
