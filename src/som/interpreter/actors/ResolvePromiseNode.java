@@ -3,6 +3,8 @@ package som.interpreter.actors;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
@@ -15,6 +17,7 @@ import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
+@GenerateWrapper
 @GenerateNodeFactory
 @Primitive(primitive = "actorsResolve:with:")
 public abstract class ResolvePromiseNode extends BinaryExpressionNode implements Operation {
@@ -25,7 +28,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode implements
   }
 
   public abstract SResolver executeEvaluated(VirtualFrame frame, SResolver resolver,
-      Object result);
+      Object resultObj);
 
   @Specialization
   public SResolver normalResolution(final VirtualFrame frame, final SResolver resolver,
@@ -51,6 +54,11 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode implements
     } else {
       return "explicitPromiseResolve";
     }
+  }
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    return new ResolvePromiseNodeWrapper(this, probe);
   }
 
   @Override
