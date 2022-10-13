@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.vm.VmSettings;
@@ -22,6 +23,7 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
       final SPromise.SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     if (!initialized) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       initialized = true;
       this.initialize(SomLanguage.getVM(this));
     }
