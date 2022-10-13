@@ -202,11 +202,18 @@ public final class SystemPrims {
     @Specialization
     public final Object load(final VirtualFrame frame, final String filename,
         final SObjectWithClass moduleObj) {
+      String pathWithBasePath = getPathWithBase(filename, moduleObj);
+      return loadModule(frame, vm, pathWithBasePath, ioException);
+    }
+
+    @TruffleBoundary
+    private String getPathWithBase(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
       File file = new File(URI.create(path).getPath());
 
-      return loadModule(frame, vm, file.getParent() + File.separator + filename, ioException);
+      String pathWithBasePath = file.getParent() + File.separator + filename;
+      return pathWithBasePath;
     }
   }
 
