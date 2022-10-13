@@ -368,6 +368,7 @@ kernel:           ${kernel}</echo>
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
+            <jvmarg value="-Dorg.slf4j.simpleLogger.defaultLogLevel=off" />
             <classpath refid="som.cp" />
             <batchtest fork="yes" filtertrace="false">
               <fileset dir="${unit.dir}">
