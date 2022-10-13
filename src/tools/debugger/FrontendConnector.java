@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -29,14 +32,33 @@ import tools.TraceData;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
-import tools.debugger.entities.*;
-import tools.debugger.frontend.Suspension;
-import tools.debugger.message.*;
-import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.SourceMessage.SourceData;
-import tools.debugger.message.VariablesRequest.FilterType;
 import tools.debugger.breakpoints.Breakpoints;
 import tools.debugger.breakpoints.LineBreakpoint;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.EntityType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.MessageReception;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
+import tools.debugger.entities.SteppingType;
+import tools.debugger.frontend.Suspension;
+import tools.debugger.message.InitializationResponse;
+import tools.debugger.message.Message;
+import tools.debugger.message.Message.OutgoingMessage;
+import tools.debugger.message.PauseActorResponse;
+import tools.debugger.message.ProgramInfoResponse;
+import tools.debugger.message.ResumeActorResponse;
+import tools.debugger.message.ScopesResponse;
+import tools.debugger.message.SourceMessage;
+import tools.debugger.message.SourceMessage.SourceData;
+import tools.debugger.message.StackTraceResponse;
+import tools.debugger.message.StoppedMessage;
+import tools.debugger.message.SymbolMessage;
+import tools.debugger.message.VariablesRequest.FilterType;
+import tools.debugger.message.VariablesResponse;
 
 
 /**
@@ -297,11 +319,11 @@ public class FrontendConnector {
         () -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
   }
 
-  public void sendPauseActorResponse(long pausedActorId) {
+  public void sendPauseActorResponse(final long pausedActorId) {
     send(PauseActorResponse.create(pausedActorId));
   }
 
-  public void sendResumeActorResponse(long actorId) {
+  public void sendResumeActorResponse(final long actorId) {
     send(ResumeActorResponse.create(actorId));
   }
 

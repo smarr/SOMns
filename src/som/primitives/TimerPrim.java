@@ -1,11 +1,21 @@
 package som.primitives;
 
-import bd.primitives.Primitive;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+
+import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
@@ -22,15 +32,10 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.TraceParser;
-import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
-
-import java.util.*;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
 
 @GenerateNodeFactory

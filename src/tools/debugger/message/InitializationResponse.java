@@ -2,7 +2,16 @@ package tools.debugger.message;
 
 import com.oracle.truffle.api.instrumentation.Tag;
 
-import tools.debugger.entities.*;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.EntityType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.MessageReception;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.message.Message.OutgoingMessage;
 
 
