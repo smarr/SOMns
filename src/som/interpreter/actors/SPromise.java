@@ -9,6 +9,7 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -780,7 +781,6 @@ public class SPromise extends SObjectWithClass {
      */
     // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go
     // into a node
-    // @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
         final ForkJoinPool actorPool, final Object maybeEntry, final boolean haltOnResolution,
@@ -792,57 +792,68 @@ public class SPromise extends SObjectWithClass {
       // don't need to worry about traversing the chain, which can
       // lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
-      if (promise.chainedPromise != null) {
-        SPromise chainedPromise = promise.chainedPromise;
-        promise.chainedPromise = null;
-        Object wrapped =
-            WrapReferenceNode.wrapForUse(chainedPromise.owner, result, current, null);
-
-        ShadowStackEntry resolutionEntry = null;
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-          // MaterializedFrame context = promise.getContext();
-
-          ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
-          assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || maybeEntry != null;
-          ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location =
-              ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.CHAINED;
-          resolutionEntry =
-              ShadowStackEntry.createAtPromiseResolution(entry, expression, location,
-                  "promise: " + promise.toString());
-
-          SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
-        }
-
-        resolveAndTriggerListenersUnsynced(type, result, wrapped,
-            chainedPromise, current, actorPool, resolutionEntry,
-            chainedPromise.haltOnResolution, whenResolvedProfile, frame, expression, record,
-            recordStop);
-        resolveMoreChainedPromisesUnsynced(type, promise, result, current,
-            actorPool, resolutionEntry, haltOnResolution, whenResolvedProfile,
-            frame, expression, record, recordStop);
+      if (promise.chainedPromise == null) {
+        return;
       }
+
+      // We do not want to invalidate here,
+      // but we can't have a boundary because we need the frame
+      CompilerDirectives.transferToInterpreter();
+
+      SPromise chainedPromise = promise.chainedPromise;
+      promise.chainedPromise = null;
+      Object wrapped =
+          WrapReferenceNode.wrapForUse(chainedPromise.owner, result, current, null);
+
+      ShadowStackEntry resolutionEntry = null;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        // MaterializedFrame context = promise.getContext();
+
+        ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
+        assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || maybeEntry != null;
+        ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location =
+            ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.CHAINED;
+        resolutionEntry =
+            ShadowStackEntry.createAtPromiseResolution(entry, expression, location,
+                "promise: " + promise.toString());
+
+        SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
+      }
+
+      resolveAndTriggerListenersUnsynced(type, result, wrapped,
+          chainedPromise, current, actorPool, resolutionEntry,
+          chainedPromise.haltOnResolution, whenResolvedProfile, frame, expression, record,
+          recordStop);
+      resolveMoreChainedPromisesUnsynced(type, promise, result, current,
+          actorPool, resolutionEntry, haltOnResolution, whenResolvedProfile,
+          frame, expression, record, recordStop);
     }
 
     /**
      * Resolve the other promises that has been chained to the first promise.
      */
-    // @TruffleBoundary
     private static void resolveMoreChainedPromisesUnsynced(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
         final ForkJoinPool actorPool, final Object maybeEntry, final boolean haltOnResolution,
         final ValueProfile whenResolvedProfile, final VirtualFrame frame,
         final Node expression, final RecordOneEvent record,
         final RecordOneEvent recordStop) {
-      if (promise.chainedPromiseExt != null) {
-        ArrayList<SPromise> chainedPromiseExt = promise.chainedPromiseExt;
-        promise.chainedPromiseExt = null;
 
-        for (SPromise p : chainedPromiseExt) {
-          Object wrapped = WrapReferenceNode.wrapForUse(p.owner, result, current, null);
-          resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
-              actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, frame, expression,
-              record, recordStop);
-        }
+      if (promise.chainedPromiseExt == null) {
+        return;
+      }
+
+      // We do not want to invalidate here,
+      // but we can't have a boundary because we need the frame
+      CompilerDirectives.transferToInterpreter();
+      ArrayList<SPromise> chainedPromiseExt = promise.chainedPromiseExt;
+      promise.chainedPromiseExt = null;
+
+      for (SPromise p : chainedPromiseExt) {
+        Object wrapped = WrapReferenceNode.wrapForUse(p.owner, result, current, null);
+        resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
+            actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, frame, expression,
+            record, recordStop);
       }
     }
 

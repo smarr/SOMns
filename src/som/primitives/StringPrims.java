@@ -1,5 +1,6 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -190,6 +191,9 @@ public class StringPrims {
     }
 
     private String doStringWithBoundary(final VirtualFrame frame, final SArray chars) {
+      // Because of the frame, we can't have a boundary, so, just transferToInterpreter
+      CompilerDirectives.transferToInterpreter();
+
       Object[] storage = chars.getObjectStorage();
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
