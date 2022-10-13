@@ -461,7 +461,7 @@ if args.use_pinning:
     bit_mask = 0
     for c in range(core_set[0], core_set[1] + 1):
       bit_mask += 1 << c
-    flags += ['-Daffinity.reserved=' + hex(bit_mask).lstrip("0x")]
+    flags += ['-Daffinity.reserved=' + hex(bit_mask).lstrip("0x"), '-Dorg.slf4j.simpleLogger.defaultLogLevel=off']
 else:
   flags += ['-Dsom.usePinning=false']
 flags += ['-Dorg.slf4j.simpleLogger.defaultLogLevel=off']
