@@ -141,17 +141,34 @@ public final class SystemPrims {
     }
   }
 
+  @TruffleBoundary
+  private static String concat(final String a, final Exception e) {
+    return a.concat(e.getMessage());
+  }
+
+  @TruffleBoundary
+  private static String concat(final String a, final String b) {
+    return a.concat(b);
+  }
+
+  @TruffleBoundary
+  private static String getMessage(final IOException e) {
+    return e.getMessage();
+  }
+
   public static Object loadModule(final VirtualFrame frame, final VM vm, final String path,
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
     try {
       return loadModule(vm, path);
     } catch (FileNotFoundException e) {
-      ioException.signal(frame, path, "Could not find module file. " + e.getMessage());
+      ioException.signal(frame, path,
+          concat("Could not find module file. ", e));
     } catch (NotAFileException e) {
-      ioException.signal(frame, path, "Path does not seem to be a file. " + e.getMessage());
+      ioException.signal(frame, path,
+          concat("Path does not seem to be a file. ", e));
     } catch (IOException e) {
-      ioException.signal(frame, e.getMessage());
+      ioException.signal(frame, getMessage(e));
     }
     assert false : "This should never be reached, because exceptions do not return";
     return Nil.nilObject;

@@ -66,6 +66,11 @@ public class SFileDescriptor extends SObjectWithClass {
     return new RandomAccessFile(f, accessMode.mode);
   }
 
+  @TruffleBoundary
+  private String getMessage(final IOException e) {
+    return e.getMessage();
+  }
+
   public void closeFile(final VirtualFrame frame, final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
@@ -74,7 +79,7 @@ public class SFileDescriptor extends SObjectWithClass {
     try {
       closeFile();
     } catch (IOException e) {
-      ioException.signal(frame, e.getMessage());
+      ioException.signal(frame, getMessage(e));
     }
   }
 
@@ -184,7 +189,7 @@ public class SFileDescriptor extends SObjectWithClass {
     try {
       return length();
     } catch (IOException e) {
-      ioException.signal(frame, e.getMessage());
+      ioException.signal(frame, getMessage(e));
     }
     return 0;
   }

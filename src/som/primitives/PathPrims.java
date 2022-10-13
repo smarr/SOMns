@@ -17,6 +17,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -34,11 +35,15 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class PathPrims {
   @CompilationFinal private static SImmutableObject fileObject;
+
+  @TruffleBoundary
+  private static String getMessage(final Exception e) {
+    return e.getMessage();
+  }
 
   public static final class FileModule implements Supplier<SObject> {
     @Override
@@ -197,10 +202,10 @@ public final class PathPrims {
       try {
         return lastModifiedTime(dir);
       } catch (FileNotFoundException e) {
-        fileNotFound.signal(frame, dir, e.getMessage());
+        fileNotFound.signal(frame, dir, getMessage(e));
         return Nil.nilObject;
       } catch (IOException e) {
-        ioException.signal(frame, e.getMessage());
+        ioException.signal(frame, getMessage(e));
         return Nil.nilObject;
       }
     }
@@ -254,9 +259,9 @@ public final class PathPrims {
       try {
         return size(dir);
       } catch (NoSuchFileException e) {
-        fileNotFound.signal(frame, dir, e.getMessage());
+        fileNotFound.signal(frame, dir, getMessage(e));
       } catch (IOException e) {
-        ioException.signal(frame, e.getMessage());
+        ioException.signal(frame, getMessage(e));
       }
       return -1;
     }
