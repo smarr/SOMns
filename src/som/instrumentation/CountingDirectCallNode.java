@@ -15,7 +15,7 @@ public final class CountingDirectCallNode extends DirectCallNode {
   private final AtomicInteger counter;
 
   public CountingDirectCallNode(final DirectCallNode callNode) {
-    super(null);
+    super(callNode.getCallTarget());
     this.callNode = callNode;
     this.counter = new AtomicInteger();
   }
