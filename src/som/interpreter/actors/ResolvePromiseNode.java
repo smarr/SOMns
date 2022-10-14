@@ -6,9 +6,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
+import bd.primitives.nodes.WithContext;
 import bd.tools.nodes.Operation;
+import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -20,11 +23,26 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
 @GenerateWrapper
 @GenerateNodeFactory
 @Primitive(primitive = "actorsResolve:with:")
-public abstract class ResolvePromiseNode extends BinaryExpressionNode implements Operation {
+public abstract class ResolvePromiseNode extends BinaryExpressionNode
+    implements Operation, WithContext<ResolvePromiseNode, VM> {
   @Child protected ResolveNode resolve;
 
   public ResolvePromiseNode() {
     resolve = ResolveNodeGen.create(null, null, null, null, null);
+  }
+
+  @Override
+  public ResolvePromiseNode initialize(final VM vm) {
+    resolve.initialize(vm);
+    return this;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public ResolvePromiseNode initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    resolve.initialize(sourceSection);
+    return this;
   }
 
   public abstract SResolver executeEvaluated(VirtualFrame frame, SResolver resolver,

@@ -181,6 +181,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   protected void resolvePromise(final Resolution type,
       final SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolution, final VirtualFrame frame, final Node expression) {
+    assert actorPool != null : "Did initialize(VM) get called?";
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 

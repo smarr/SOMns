@@ -30,7 +30,7 @@ public abstract class EagerResolvePromiseNode extends BinaryExpressionNode
 
   @Override
   public final EagerResolvePromiseNode initialize(final VM vm) {
-    // resolve.initialize(vm);
+    resolve.initialize(vm);
     return this;
   }
 

@@ -1,17 +1,14 @@
 package som.interpreter.actors;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
 import som.vm.VmSettings;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 public abstract class ResolveNode extends AbstractPromiseResolutionNode {
-  @CompilerDirectives.CompilationFinal boolean initialized = false;
 
   /**
    * Normal case, when the promise is resolved with a value that's not a promise.
@@ -22,12 +19,6 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
   public SPromise.SResolver normalResolution(final VirtualFrame frame,
       final SPromise.SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
-    if (!initialized) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      initialized = true;
-      this.initialize(SomLanguage.getVM(this));
-    }
-
     SPromise promise = resolver.getPromise();
 
     // this is needed to suspend on explicit promises (which resolved to a a value different
