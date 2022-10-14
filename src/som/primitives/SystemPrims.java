@@ -336,10 +336,10 @@ public final class SystemPrims {
       boolean asyncTrace = false;
 
       if (stack instanceof StackIterator.ShadowStackIterator.HaltShadowStackIterator) {
-        Output.println("- Async Stack Trace -");
+        Output.println("Async Stack Trace");
         asyncTrace = true;
       } else {
-        Output.println("- Stack Trace -");
+        Output.println("Stack Trace");
       }
 
       while (stack.hasNext()) {
