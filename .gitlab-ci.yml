@@ -15,22 +15,20 @@ before_script:
 
 build_and_test_job:
   stage: build-and-test
-  tags: [benchmarks, infinity]
+  tags: [yuria]
   script:
-    - ant checkstyle
-    - ant eclipseformat-check
     - timeout 5m ant unit-tests som-tests
 
 kompos_and_dym_tests:
   stage: full-test
-  tags: [benchmarks, infinity]
+  tags: [yuria]
   script:
     - ant jacoco-lib jar dynamic-metrics-tests superinstructions-tests
     - (cd tools/kompos && npm install . && npm -s run verify && npm test)
 
 replay_tests:
   stage: full-test
-  tags: [benchmarks, infinity]
+  tags: [yuria2]
   script:
     - timeout 30m ant replay-tests
 
@@ -43,34 +41,46 @@ replay_tests:
 
 svm_tests:
   stage: full-test
-  tags: [benchmarks, infinity]
+  tags: [yuria3]
   script:
     - ant native-tests
 
-benchmark_savina_job:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
+style_checks:
+  stage: full-test
+  tags: [yuria3]
   script:
-    - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
+    - ant checkstyle
+    - ant eclipseformat-check
 
-benchmark_job:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
-  script:
-    - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
-benchmark_job_others:
+benchmark_y1:
   stage: benchmark
-  tags: [benchmarks, infinity]
+  tags: [yuria]
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-concurrency-models
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria
+
+benchmark_y2:
+  stage: benchmark
+  tags: [yuria2]
+  allow_failure: true
+  script:
+    - ant compile
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria2
+
+benchmark_y3:
+  stage: benchmark
+  tags: [yuria3]
+  allow_failure: true
+  script:
+    - ant compile
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria3
+
+benchmark_completion:
+  stage: full-test
+  tags: [yuria]
+  script:
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --report-completion codespeed.conf
 
 benchmark_nightly_job:
