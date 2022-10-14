@@ -41,7 +41,10 @@ public final class Method extends Invokable {
   private final MethodScope     methodScope;
   private final SourceSection[] definition;
   private final boolean         block;
-  private BackCacheCallNode     uniqueCaller;
+
+  // Currently only accessed when iterating the stack
+  // Thus, this doesn't need to be compilation final
+  private BackCacheCallNode uniqueCaller;
 
   public Method(final String name, final SourceSection sourceSection,
       final SourceSection[] definition,
