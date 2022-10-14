@@ -52,7 +52,6 @@ style_checks:
     - ant checkstyle
     - ant eclipseformat-check
 
-
 benchmark_y1:
   stage: benchmark
   tags: [yuria]
@@ -60,6 +59,8 @@ benchmark_y1:
   script:
     - ant compile
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria
+  after_script:
+    - sudo reown-project.sh
 
 benchmark_y2:
   stage: benchmark
@@ -68,6 +69,8 @@ benchmark_y2:
   script:
     - ant compile
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria2
+  after_script:
+    - sudo reown-project.sh
 
 benchmark_y3:
   stage: benchmark
@@ -76,6 +79,8 @@ benchmark_y3:
   script:
     - ant compile
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria3
+  after_script:
+    - sudo reown-project.sh
 
 benchmark_completion:
   stage: full-test
@@ -93,6 +98,8 @@ benchmark_nightly_job:
     - ant compile
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf nightly
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina-tracing
+  after_script:
+    - sudo reown-project.sh
 
 build_virtualbox:
   stage: virtualbox-image
