@@ -8,7 +8,8 @@ function cleanup()
   curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
 }
 
-trap cleanup EXIT
+echo Upload of Traces on failure is currently disabled.
+# trap cleanup EXIT
 
 if [ "$1" = "1" ]
 then
