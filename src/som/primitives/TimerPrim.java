@@ -31,8 +31,8 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.TraceParser;
-import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 
