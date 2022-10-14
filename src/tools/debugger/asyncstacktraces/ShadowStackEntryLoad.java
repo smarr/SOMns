@@ -1,4 +1,4 @@
-package tools.asyncstacktraces;
+package tools.debugger.asyncstacktraces;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;

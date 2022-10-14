@@ -1,4 +1,4 @@
-package tools.asyncstacktraces;
+package tools.debugger.asyncstacktraces;
 
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;

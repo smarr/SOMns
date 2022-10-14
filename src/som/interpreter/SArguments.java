@@ -14,9 +14,9 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.ShadowStackEntry;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class SArguments {

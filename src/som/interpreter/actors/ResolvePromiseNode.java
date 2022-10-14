@@ -10,7 +10,7 @@ import bd.tools.nodes.Operation;
 import som.interpreter.SArguments;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 

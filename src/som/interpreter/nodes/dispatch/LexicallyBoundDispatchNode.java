@@ -17,7 +17,7 @@ import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 /**

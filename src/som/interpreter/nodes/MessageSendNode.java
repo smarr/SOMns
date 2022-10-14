@@ -37,7 +37,7 @@ import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.profiles.DispatchProfile;
 

@@ -16,7 +16,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode

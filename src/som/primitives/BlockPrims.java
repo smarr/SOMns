@@ -32,7 +32,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.profiles.DispatchProfile;
 

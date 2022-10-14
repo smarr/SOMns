@@ -9,7 +9,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MethodScope;
-import tools.asyncstacktraces.StackIterator;
+import tools.debugger.asyncstacktraces.StackIterator;
 
 
 /**
