@@ -3,8 +3,7 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="jvmci.version" value="jvmci-22.0-b05" />
-    <property name="jdk.version"   value="17.0.2+8" />
+    <property name="labs-jdk" value="labsjdk-ce-17" />
 
     <condition property="kernel" value="darwin-amd64" else="linux-amd64">
         <os family="mac"/>
@@ -179,12 +178,8 @@ kernel:           ${kernel}</echo>
     </target>
 
     <target name="jvmci-libs" unless="skip.libs">
-        <get src="https://github.com/graalvm/labs-openjdk-17/releases/download/${jvmci.version}/labsjdk-ce-${jdk.version}-${jvmci.version}-${kernel}.tar.gz"
-             usetimestamp="true"
-             dest="${lib.dir}/jvmci.tar.gz" />
-        <mkdir dir="${lib.dir}/jvmci" />
-        <exec executable="tar" dir="${basedir}" failonerror="true">
-          <arg line="-C ${lib.dir}/jvmci -xzf ${lib.dir}/jvmci.tar.gz --strip 1"/>
+        <exec executable="${mx.cmd}" dir="${compiler.dir}">
+            <arg line="fetch-jdk --jdk-id ${labs-jdk} --alias ${lib.dir}/jvmci" />
         </exec>
     </target>
 
@@ -358,13 +353,17 @@ kernel:           ${kernel}</echo>
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
-    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib" description="Execute tests">
+    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib,run-unit-tests" description="Execute tests">
+    </target>
+
+    <target name="run-unit-tests" depends="jacoco-lib" description="Execute tests, without dependencies">
       <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
             outputtoformatters="true" fork="true" forkmode="once">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
+            <jvmarg value="-Dorg.slf4j.simpleLogger.defaultLogLevel=off" />
             <classpath refid="som.cp" />
             <batchtest fork="yes" filtertrace="false">
               <fileset dir="${unit.dir}">
@@ -390,6 +389,9 @@ kernel:           ${kernel}</echo>
     </target>
 
     <target name="som-tests" depends="truffle-libs,compile-core">
+    </target>
+    
+    <target name="run-som-tests">
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
 

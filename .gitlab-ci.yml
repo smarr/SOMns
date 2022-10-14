@@ -1,9 +1,3 @@
-stages:
-  - build-and-test
-  - benchmark
-  - full-test
-  - virtualbox-image
-
 variables:
   PYTHONUNBUFFERED: "true"
   JVMCI_VERSION_CHECK: ignore
@@ -14,67 +8,72 @@ before_script:
   - git submodule update --init
 
 build_and_test_job:
-  stage: build-and-test
-  tags: [benchmarks, infinity]
+  tags: [yuria]
   script:
-    - ant checkstyle
-    - ant eclipseformat-check
     - timeout 5m ant unit-tests som-tests
 
+benchmark_y1:
+  tags: [yuria]
+  needs: ["build_and_test_job"]
+  allow_failure: true
+  script:
+    - ant compile
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria
+  after_script:
+    - sudo reown-project.sh
+
+benchmark_y2:
+  tags: [yuria2]
+  allow_failure: true
+  script:
+    - ant compile
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria2
+  after_script:
+    - sudo reown-project.sh
+
+benchmark_y3:
+  tags: [yuria3]
+  allow_failure: true
+  script:
+    - ant compile
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria3
+  after_script:
+    - sudo reown-project.sh
+
+benchmark_completion:
+  tags: [yuria]
+  needs: ["benchmark_y1", "benchmark_y2", "benchmark_y3"]
+  script:
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --report-completion codespeed.conf
+
 kompos_and_dym_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
+  tags: [yuria]
+  needs: ["benchmark_y1"]
   script:
     - ant jacoco-lib jar dynamic-metrics-tests superinstructions-tests
     - (cd tools/kompos && npm install . && npm -s run verify && npm test)
 
 replay_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
+  tags: [yuria2]
+  needs: ["benchmark_y2"]
   script:
     - timeout 30m ant replay-tests
 
 # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
 #snapshot_tests:
-#  stage: full-test
 #  tags: [benchmarks, infinity]
 #  script:
 #    - timeout 10m ant snapshot-tests
 
-svm_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
+svm_tests_and_style_checks:
+  tags: [yuria3]
+  needs: ["benchmark_y3"]
   script:
     - ant native-tests
-
-benchmark_savina_job:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
-  script:
-    - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
-
-benchmark_job:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
-  script:
-    - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
-
-benchmark_job_others:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
-  script:
-    - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-concurrency-models
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --report-completion codespeed.conf
+    - ant checkstyle
+    - ant eclipseformat-check
 
 benchmark_nightly_job:
-  stage: benchmark
   tags: [benchmarks, infinity]
   allow_failure: true
   only:
@@ -83,9 +82,10 @@ benchmark_nightly_job:
     - ant compile
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf nightly
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina-tracing
+  after_script:
+    - sudo reown-project.sh
 
 build_virtualbox:
-  stage: virtualbox-image
   tags: [benchmarks, infinity]
   only:
     - triggers

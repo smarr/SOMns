@@ -449,6 +449,7 @@ if args.use_pinning:
     flags += ['-Daffinity.reserved=' + hex(bit_mask).lstrip("0x")]
 else:
   flags += ['-Dsom.usePinning=false']
+flags += ['-Dorg.slf4j.simpleLogger.defaultLogLevel=off']
 
 all_args = JAVA_ARGS + ['-classpath', classpath, '-Dtruffle.class.path.append=' + classpath] + flags + SOM_ARGS + args.args
 
