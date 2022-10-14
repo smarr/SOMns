@@ -205,16 +205,25 @@ public final class SArguments {
   }
 
   public static ShadowStackEntry getShadowStackEntry(final VirtualFrame frame) {
+    if (!VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      return null;
+    }
+
     Object[] args = frame.getArguments();
     return getShadowStackEntry(args);
   }
 
   public static ShadowStackEntry getShadowStackEntry(final Object[] args) {
+    assert VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+
     Object maybeShadowStack = args[args.length - 1];
-    if (maybeShadowStack instanceof ShadowStackEntry) {
-      return (ShadowStackEntry) maybeShadowStack;
+    assert maybeShadowStack instanceof ShadowStackEntry || maybeShadowStack == null;
+
+    if (maybeShadowStack == null) {
+      return null;
     }
-    return null;
+
+    return (ShadowStackEntry) maybeShadowStack;
   }
 
   public static void setShadowStackEntry(final Object[] args, final ShadowStackEntry entry) {

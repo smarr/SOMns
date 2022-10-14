@@ -10,7 +10,6 @@ import bd.tools.nodes.Operation;
 import som.interpreter.SArguments;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.VmSettings;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
@@ -28,7 +27,6 @@ public abstract class ErrorPromiseNode extends BinaryExpressionNode implements O
   public SResolver standardError(final VirtualFrame frame, final SResolver resolver,
       final Object result) {
     ShadowStackEntry entry = SArguments.getShadowStackEntry(frame);
-    assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
     return (SResolver) errorNode.executeEvaluated(frame, resolver, result, entry, false,
         false);
   }

@@ -28,7 +28,6 @@ public abstract class ShadowStackEntryLoad extends Node {
   public void loadShadowStackEntry(final Object[] arguments, final Node expression,
       final VirtualFrame frame, final boolean async) {
     ShadowStackEntry prevEntry = SArguments.getShadowStackEntry(frame);
-    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || prevEntry != null;
     loadShadowStackEntry(arguments, expression, prevEntry, this, async);
   }
 
