@@ -157,7 +157,7 @@ export class TestConnection extends VmConnection {
     return promise;
   }
 
-  public close(done: MochaDone) {
+  public close(done) {
     if (!this.closed) {
       this.closed = true;
       this.disconnect();
@@ -184,7 +184,7 @@ export class ControllerWithInitialBreakpoints extends Controller {
 
 export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
   const args = ["-G", "-t1", "-dnu", "tests/pingpong.ns"].concat(extraArgs);
-  return spawnSync(SOM, args);
+  return spawnSync(SOM, args, { encoding: "utf-8" });
 }
 
 export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoints {
