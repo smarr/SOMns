@@ -3,12 +3,16 @@ package tools.concurrency;
 import java.util.concurrent.SynchronousQueue;
 
 import som.interpreter.processes.SChannel;
+import som.vm.Symbols;
+import som.vmobjects.SSymbol;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public final class TracingChannel extends SChannel {
+  private static final SSymbol writeSym = Symbols.symbolFor("write:");
+
   protected final long channelId;
   protected int        messageId;
 
@@ -55,7 +59,7 @@ public final class TracingChannel extends SChannel {
         super.write(value, traceWrite);
       } finally {
         KomposTrace.sendOperation(
-            SendOp.CHANNEL_SEND, current.messageId, current.channelId, null, 0, null);
+            SendOp.CHANNEL_SEND, current.messageId, current.channelId, writeSym, 0, null);
       }
     }
   }
