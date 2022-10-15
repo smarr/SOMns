@@ -17,6 +17,7 @@ enum TraceRecords {
   PassiveEntityCompletion,
   SendOp,
   ReceiveOp,
+  MessageReceiveOp,
   ImplThread,
   ImplThreadCurrentActivity
 }
@@ -25,6 +26,7 @@ const SOURCE_SECTION_SIZE = 8;
 
 const IMPL_THREAD_MARKER = 20;
 const IMPL_THREAD_CURRENT_ACTIVITY_MARKER = 21;
+const ACTOR_MSG_RECEIVE_MARKER = 23;
 
 const RECORD_SIZE = {
   ActivityCreation: 11 + SOURCE_SECTION_SIZE,
@@ -35,6 +37,7 @@ const RECORD_SIZE = {
   PassiveEntityCompletion: undefined,
   SendOp: 17 + 8 /* rcvr actor id */ + 2 /* symbol id */ + SOURCE_SECTION_SIZE,
   ReceiveOp: 9,
+  MessageReceiveOp: 9,
   ImplThread: 9,
   ImplThreadCurrentActivity: 13
 };
@@ -102,6 +105,7 @@ export class TraceParser {
     console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.completionSize === RECORD_SIZE.DynamicScopeEnd);
     console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.creationSize === RECORD_SIZE.SendOp);
     console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.completionSize === RECORD_SIZE.ReceiveOp);
+    console.assert(this.metaModel.serverCapabilities.actorMessageReceiveData.creationSize === RECORD_SIZE.MessageReceiveOp);
 
     console.assert(this.metaModel.serverCapabilities.implementationData[0].marker === IMPL_THREAD_MARKER);
     console.assert(this.metaModel.serverCapabilities.implementationData[0].size === RECORD_SIZE.ImplThread);
@@ -110,6 +114,11 @@ export class TraceParser {
 
     this.parseTable[IMPL_THREAD_MARKER] = TraceRecords.ImplThread;
     this.parseTable[IMPL_THREAD_CURRENT_ACTIVITY_MARKER] = TraceRecords.ImplThreadCurrentActivity;
+
+    // STEFAN: this was added by Carmen and doesn't really fit the bill, so, handled manually
+    this.parseTable[ACTOR_MSG_RECEIVE_MARKER] = TraceRecords.MessageReceiveOp;
+
+    console.assert(Object.keys(this.metaModel.serverCapabilities).length === 13);
   }
 
   /** Read a long within JS int range */
@@ -243,6 +252,10 @@ export class TraceParser {
           currentActivityId = this.readLong(data, i + 1);
           /* currentActivityBufferId = */ data.getUint32(i + 9, true);
           i += RECORD_SIZE.ImplThreadCurrentActivity;
+          break;
+        }
+        case TraceRecords.MessageReceiveOp: {
+          i += RECORD_SIZE.MessageReceiveOp;
           break;
         }
         default:

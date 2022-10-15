@@ -223,6 +223,7 @@ export interface ServerCapabilities {
   passiveEntityParseData: ParseDef;
   dynamicScopeParseData: ParseDef;
   sendReceiveParseData: ParseDef;
+  actorMessageReceiveData: ParseDef;
 
   implementationData: ImplData[];
 
@@ -375,4 +376,3 @@ export interface Variable {
   /** The number of indexed child variables. */
   indexedVariables: number;
 }
-
