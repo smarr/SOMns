@@ -517,7 +517,10 @@ public abstract class EventualMessage {
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
     Thread t = Thread.currentThread();
-    return ((ActorProcessingThread) t).currentlyExecutingActor;
+    if (t instanceof ActorProcessingThread) {
+      return ((ActorProcessingThread) t).currentlyExecutingActor;
+    }
+    return null;
   }
 
   public static EventualMessage getCurrentExecutingMessage() {

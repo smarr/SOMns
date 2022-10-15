@@ -158,7 +158,8 @@ public final class StackTraceResponse extends Response {
     Actor actorCurrentMessageIsExecutionOn =
         EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    if (actorCurrentMessageIsExecutionOn.getId() == suspension.getActivity().getId()) {
+    if (actorCurrentMessageIsExecutionOn != null
+        && actorCurrentMessageIsExecutionOn.getId() == suspension.getActivity().getId()) {
       EventualMessage message = EventualMessage.getCurrentExecutingMessage();
       messageId = message.getMessageId();
     }
