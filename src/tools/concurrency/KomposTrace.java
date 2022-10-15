@@ -435,10 +435,10 @@ public class KomposTrace {
         final long targetActorId,
         final SourceSection msgSourceCoordinate, final byte[] value) {
       int requiredSpace;
-      if (value == null) {
-        requiredSpace = op.getSize();
-      } else {
+      if (VmSettings.KOMPOS_TRACING) {
         requiredSpace = op.getSize(value);
+      } else {
+        requiredSpace = op.getSize();
       }
 
       ensureSufficientSpace(requiredSpace, current);
@@ -452,12 +452,14 @@ public class KomposTrace {
 
       if (VmSettings.KOMPOS_TRACING) {
         writeSourceSection(msgSourceCoordinate);
-      }
 
-      if (value != null) {
-        putInt(value.length);
-        for (byte b : value) {
-          put(b);
+        if (value == null) {
+          putInt(0);
+        } else {
+          putInt(value.length);
+          for (byte b : value) {
+            put(b);
+          }
         }
       }
 

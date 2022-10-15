@@ -126,6 +126,9 @@ public class KomposTraceParser {
 
   @SuppressWarnings({"resource", "unused"})
   private void parse(final String path) {
+    assert !VmSettings.KOMPOS_TRACING : "The Trace Parser is currently not supporting "
+        + "all Kompos features, for instance the value as part of the SendOperation";
+
     File traceFile = new File(path);
     HashMap<Long, Long> openTurns = new HashMap<>();
 
