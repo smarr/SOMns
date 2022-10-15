@@ -185,7 +185,7 @@ describe("Basic Protocol", function() {
         breakpoint: createSectionBreakpointData(PING_PONG_URI, 41, 21, 17, BT.PROMISE_RESOLUTION, true),
         stackLength: 1,
         topMethod: "Thing>>#println",
-        line: 75
+        line: 77
       },
       {
         test: "on resolved explicit promise, accept promise resolver breakpoint on resolved explicit promise, and halt on expected source section",
@@ -222,7 +222,7 @@ describe("Basic Protocol", function() {
         breakpoint: createSectionBreakpointData(PING_PONG_URI, 95, 16, 3, BT.PROMISE_RESOLUTION, true),
         stackLength: 1,
         topMethod: "Thing>>#println",
-        line: 75
+        line: 77
       },
       {
         test: "for chained resolution, accept promise resolution breakpoint for chained resolution, and halt on expected source section",
@@ -243,21 +243,21 @@ describe("Basic Protocol", function() {
         breakpoint: createSectionBreakpointData(PING_PONG_URI, 27, 17, 32, BT.PROMISE_RESOLUTION, true),
         stackLength: 1,
         topMethod: "Thing>>#println",
-        line: 75
+        line: 77
       },
       {
         test: "onError, accept promise resolution breakpoint onError, and halt on expected source section",
         breakpoint: createSectionBreakpointData(PING_PONG_URI, 78, 18, 50, BT.PROMISE_RESOLUTION, true),
         stackLength: 1,
         topMethod: "Thing>>#println",
-        line: 75
+        line: 77
       },
       {
         test: "whenResolvedOnError, accept promise resolution breakpoint on whenResolvedOnError, and halt on expected source section",
         breakpoint: createSectionBreakpointData(PING_PONG_URI, 34, 17, 91, BT.PROMISE_RESOLUTION, true),
         stackLength: 1,
         topMethod: "Thing>>#println",
-        line: 75
+        line: 77
       }]
   };
 
