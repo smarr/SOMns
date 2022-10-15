@@ -53,16 +53,16 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         location, localFrame, false);
   }
 
-  public static StackIterator createHaltIterator() {
+  public static StackIterator createHaltIterator(final SourceSection topNode) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      return new HaltShadowStackIterator();
+      return new HaltShadowStackIterator(topNode);
     } else {
-      return new HaltIterator();
+      return new HaltIterator(topNode);
     }
   }
 
   public static StackIterator createSuspensionIterator(
-      final Iterator<DebugStackFrame> localStack, long actorId) {
+      final Iterator<DebugStackFrame> localStack, final long actorId) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       return new SuspensionShadowStackIterator(localStack, actorId);
     } else {
@@ -101,15 +101,39 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
   public static class HaltIterator extends StackIterator {
 
-    protected ArrayList<FrameInstance> frameInstances;
-    protected int                      currentIndex = 0;
+    protected ArrayList<StackFrame> stackFrames;
 
-    public HaltIterator() {
-      frameInstances = new ArrayList<FrameInstance>();
+    protected int currentIndex = 0;
+
+    public HaltIterator(final SourceSection topNode) {
+      stackFrames = new ArrayList<StackFrame>();
+      boolean[] isFirst = new boolean[] {true};
+
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
         @Override
         public Object visitFrame(final FrameInstance frameInstance) {
-          frameInstances.add(frameInstance);
+          RootCallTarget rt = (RootCallTarget) frameInstance.getCallTarget();
+          if (!(rt.getRootNode() instanceof Invokable)) {
+            return null;
+          }
+
+          Invokable rootNode = (Invokable) rt.getRootNode();
+          SourceSection ss = null;
+          if (frameInstance.getCallNode() != null) {
+            ss = frameInstance.getCallNode().getEncapsulatingSourceSection();
+          }
+
+          if (isFirst[0]) {
+            // for the first frame, we got the topNode's source section handed in
+            assert ss == null;
+            ss = topNode;
+            isFirst[0] = false;
+          }
+
+          stackFrames.add(
+              createStackFrame(
+                  frameInstance.getFrame(FrameAccess.READ_ONLY),
+                  rootNode, rootNode.getName(), ss));
           return null;
         }
       });
@@ -117,26 +141,13 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
     @Override
     public boolean hasNext() {
-      return currentIndex != frameInstances.size();
+      return currentIndex != stackFrames.size();
     }
 
     @Override
     public StackFrame next() {
-      FrameInstance next = frameInstances.get(currentIndex);
-      currentIndex++;
-      RootCallTarget rt = (RootCallTarget) next.getCallTarget();
-      if (!(rt.getRootNode() instanceof Invokable)) {
-        return null;
-      }
-      Invokable rootNode = (Invokable) rt.getRootNode();
-      SourceSection ss = null;
-      if (next.getCallNode() != null) {
-        ss = next.getCallNode().getEncapsulatingSourceSection();
-      }
-      return createStackFrame(next.getFrame(FrameAccess.READ_ONLY),
-          rootNode,
-          rootNode.getName(),
-          ss);
+      currentIndex += 1;
+      return stackFrames.get(currentIndex - 1);
     }
   }
 
@@ -344,7 +355,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
       long          actorId;
 
       public StackFrameDescription(final SourceSection sourceSection,
-          final Frame frame, final RootNode rootNode, long actorId) {
+          final Frame frame, final RootNode rootNode, final long actorId) {
         this.sourceSection = sourceSection;
         this.frame = frame;
         this.rootNode = rootNode;
@@ -375,7 +386,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
       private List<DebugStackFrame> allFrames;
 
       public SuspensionShadowStackIterator(final Iterator<DebugStackFrame> localStack,
-          long actorId) {
+          final long actorId) {
         assert localStack != null;
         assert localStack.hasNext();
         firstDebugFrame = localStack.next(); // first frame
@@ -399,7 +410,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         return firstFrameDescription;
       }
 
-      public StackFrameDescription getFrameBySource(SourceSection sourceSection) {
+      @Override
+      public StackFrameDescription getFrameBySource(final SourceSection sourceSection) {
         for (DebugStackFrame debugStackFrame : allFrames) {
           if (debugStackFrame.getSourceSection() != null
               && debugStackFrame.getSourceSection().equals(sourceSection)) {
@@ -414,35 +426,40 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     }
 
     public static final class HaltShadowStackIterator extends ShadowStackIterator {
-      private final FrameInstance firstFrameInstance;
+      private final StackFrameDescription firstFrame;
 
-      public HaltShadowStackIterator() {
-        firstFrameInstance =
-            Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
-              @Override
-              public FrameInstance visitFrame(final FrameInstance frame) {
-                return frame;
-              }
-            });
+      public HaltShadowStackIterator(final SourceSection topNode) {
+        StackFrameDescription[] result = new StackFrameDescription[1];
+        Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
+          @Override
+          public FrameInstance visitFrame(final FrameInstance firstFrameInstance) {
+            RootCallTarget rt = (RootCallTarget) firstFrameInstance.getCallTarget();
+            assert rt.getRootNode() instanceof Invokable;
+            Invokable rootNode = (Invokable) rt.getRootNode();
+            SourceSection ss = null;
+            if (firstFrameInstance.getCallNode() != null) {
+              ss = firstFrameInstance.getCallNode().getSourceSection();
+            }
+            if (ss == null) {
+              ss = topNode;
+            }
+            result[0] = new StackFrameDescription(ss,
+                firstFrameInstance.getFrame(FrameAccess.READ_ONLY),
+                rootNode, -1);
+
+            return firstFrameInstance;
+          }
+        });
+        firstFrame = result[0];
       }
 
       @Override
       protected StackFrameDescription getFirstFrame() {
-        assert first;
-        RootCallTarget rt = (RootCallTarget) firstFrameInstance.getCallTarget();
-        assert rt.getRootNode() instanceof Invokable;
-        Invokable rootNode = (Invokable) rt.getRootNode();
-        SourceSection ss = null;
-        if (firstFrameInstance.getCallNode() != null) {
-          ss = firstFrameInstance.getCallNode().getSourceSection();
-        }
-        return new StackFrameDescription(ss,
-            firstFrameInstance.getFrame(FrameAccess.READ_ONLY),
-            rootNode, -1);
+        return firstFrame;
       }
 
       @Override
-      protected StackFrameDescription getFrameBySource(SourceSection sourceSection) {
+      protected StackFrameDescription getFrameBySource(final SourceSection sourceSection) {
         return null;
       }
     }
