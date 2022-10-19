@@ -76,7 +76,7 @@ public final class TaskThreads {
         }
         Object[] arguments;
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-          arguments = Arrays.copyOf(argArray,argArray.length+1);
+          arguments = Arrays.copyOf(argArray, argArray.length + 1);
           arguments[argArray.length] = SArguments.instantiateTopShadowStackEntry(target.getRootNode());
         } else {
           arguments = argArray;
