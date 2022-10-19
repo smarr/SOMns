@@ -1,0 +1,12 @@
+class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Value (
+| private TestContext  = minitest TestContext. |
+)(
+    public class BasicAsyncTracesTests = TestContext () (
+        public testRetrievingAsyncStackTrace = (
+                | trace |
+                trace:: 1 asyncTrace.
+                self assert:(trace at: 1) equals: 'actor 0, Thing>>#asyncTrace'
+        )
+    ) : ( TEST_CONTEXT = () )
+
+)

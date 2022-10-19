@@ -1,6 +1,8 @@
 package som.primitives;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.dsl.Cached;
@@ -25,6 +27,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.processes.SChannel.SChannelInput;
 import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
+import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.SImmutableArray;
@@ -35,10 +38,39 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.StackIterator;
+import tools.debugger.frontend.ApplicationThreadStack;
 import tools.dym.Tags.OpComparison;
 
 
 public final class ObjectPrims {
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "asyncTrace:")
+  public abstract static class AsyncTracePrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSAbstractObject(VirtualFrame frame, final Object receiver) {
+      Output.errorPrintln("ASYNC STACK TRACE");
+      StackIterator.ShadowStackIterator iterator = new StackIterator.ShadowStackIterator.HaltShadowStackIterator(this.sourceSection);
+      List<String> stack = new ArrayList<>();
+      while (iterator.hasNext()){
+        ApplicationThreadStack.StackFrame sf = iterator.next();
+        if (sf != null) {
+          stack.add(sf.name);
+        }
+      }
+      return new SMutableArray(stack.toArray(), Classes.arrayClass);
+    }
+
+    @Override
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == AlwaysHalt.class) {
+        return true;
+      }
+      return super.hasTagIgnoringEagerness(tag);
+    }
+  }
 
   @GenerateNodeFactory
   @Primitive(primitive = "objClassName:")
