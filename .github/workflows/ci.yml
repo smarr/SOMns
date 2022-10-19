@@ -40,6 +40,12 @@ jobs:
           export JAVA_HOME=$JAVA_HOME_17_X64
           ./som -G core-lib/TestSuite/TestRunner.ns
 
+      - name: SOMns Test Suite - Async Stack Traces
+        if: matrix.job == 'test-1'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_17_X64
+          ./som -G -asts -astic core-lib/TestSuite/TestRunner.ns
+
       - name: Build Native Image
         if: matrix.job == 'test-1'
         run: |
