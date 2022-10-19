@@ -1,5 +1,7 @@
 package som.primitives.threading;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -10,6 +12,7 @@ import com.oracle.truffle.api.RootCallTarget;
 
 import som.VM;
 import som.interop.SomInteropObject;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
@@ -71,10 +74,17 @@ public final class TaskThreads {
         } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedForkJoinTask) {
           UniformExecutionTrace.recordActivityContext(this, ((TracedForkJoinTask) this).trace);
         }
+        Object[] arguments;
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+          arguments = Arrays.copyOf(argArray,argArray.length+1);
+          arguments[argArray.length] = SArguments.instantiateTopShadowStackEntry(target.getRootNode());
+        } else {
+          arguments = argArray;
+        }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
-        return target.call(argArray);
+        return target.call(arguments);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
