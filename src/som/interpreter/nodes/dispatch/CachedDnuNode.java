@@ -19,6 +19,7 @@ import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
 import som.vm.Symbols;
 import som.vm.VmSettings;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -76,9 +77,16 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       Output.errorPrintln("Lookup of " + selector + " failed in "
           + Types.getClassOf(rcvr).getName().getString());
     }
-
-    Object[] argsArr = new Object[] {
-        rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments)};
+    Object[] argsArr;
+    SArray.SImmutableArray dnuArguments = SArguments.getArgumentsWithoutReceiver(arguments);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      argsArr = new Object[]{
+              rcvr,selector,dnuArguments,arguments[arguments.length-1]
+      };
+    } else {
+      argsArr = new Object[]{
+              rcvr, selector, dnuArguments};
+    }
     return cachedMethod.call(argsArr);
   }
 

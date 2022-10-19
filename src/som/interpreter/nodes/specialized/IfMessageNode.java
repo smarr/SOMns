@@ -7,9 +7,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.ConditionProfile;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 import bd.primitives.Primitive;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -49,14 +52,22 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
   }
 
   @Specialization(guards = {"arg.getMethod() == method"})
-  public final Object cachedBlock(final boolean rcvr, final SBlock arg,
+  public final Object cachedBlock(VirtualFrame frame, final boolean rcvr, final SBlock arg,
       @Cached("arg.getMethod()") final SInvokable method,
       @Cached("createDirect(method)") final DirectCallNode callTarget) {
+    Object[] args;
+    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      args = new Object[]{arg, SArguments.getShadowStackEntry(frame)};
+    } else {
+      args = new Object[]{arg};
+    }
+    //this was there before Async Stack traces
     if (condProf.profile(rcvr == expected)) {
-      return callTarget.call(new Object[] {arg});
+      return callTarget.call(args);
     } else {
       return Nil.nilObject;
     }
+
   }
 
   @Specialization(replaces = "cachedBlock")

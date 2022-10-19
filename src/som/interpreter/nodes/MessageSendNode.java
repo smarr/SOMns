@@ -36,6 +36,7 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.VirtualInvoke;
@@ -161,6 +162,10 @@ public final class MessageSendNode {
       Object[] arguments = SArguments.allocateArgumentsArray(argumentNodes);
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE && arguments[i] instanceof  ShadowStackEntry){
+          CompilerDirectives.transferToInterpreter();
+          insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection)).signal(frame,frame.getArguments());
+        }
         assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
         assert !(arguments[i] instanceof ShadowStackEntry);
       }

@@ -76,8 +76,10 @@ public final class SArguments {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       if (arguments.length == 2) {
         assert arguments[1] instanceof ShadowStackEntry;
+        //new Object[]{arguments[1]}
         return new SImmutableArray(0, Classes.valueArrayClass);
       }
+      /**TODO: I don't understand why this case is different **/
       Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
       return new SImmutableArray(argsArr, Classes.valueArrayClass);
 
@@ -89,6 +91,20 @@ public final class SArguments {
       Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
       return new SImmutableArray(argsArr, Classes.valueArrayClass);
     }
+  }
+
+  public static Object[] getPlainArguments(final Object o, final Object[] objects) {
+    Object[] allArgs;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+     allArgs = new Object[objects.length + 2];
+    } else {
+      allArgs = new Object[objects.length + 1];
+    }
+    allArgs[0] = o;
+    for (int i = 0; i < objects.length; i++) {
+      allArgs[i + 1] = objects[i];
+    }
+    return allArgs;
   }
 
   /**

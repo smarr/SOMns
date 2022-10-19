@@ -7,6 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.CompilerDirectives;
 
 import bd.primitives.nodes.PreevaluatedExpression;
 import som.compiler.AccessModifier;
@@ -14,6 +15,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.primitives.arrays.ToArgumentsArrayNode;
@@ -22,6 +24,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class AbstractSymbolDispatch extends Node {
@@ -66,8 +69,12 @@ public abstract class AbstractSymbolDispatch extends Node {
       final Object receiver, final SSymbol selector, final Object argsArr,
       @Cached("selector") final SSymbol cachedSelector,
       @Cached("createForPerformNodes(selector)") final AbstractMessageSendNode cachedSend) {
-    Object[] arguments = {receiver};
-
+    Object[] arguments;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      arguments = new Object[]{receiver,null};
+    } else {
+      arguments = new Object[]{receiver};
+    }
     PreevaluatedExpression realCachedSend = cachedSend;
     return realCachedSend.doPreEvaluated(frame, arguments);
   }
@@ -85,14 +92,23 @@ public abstract class AbstractSymbolDispatch extends Node {
   }
 
   @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
-  @TruffleBoundary
-  public Object doUncached(final Object receiver, final SSymbol selector,
-      final Object argsArr,
-      @Cached("create()") final IndirectCallNode call) {
+  //@TruffleBoundary
+  public Object doUncached(final VirtualFrame frame, final Object receiver, final SSymbol selector,
+                           final Object argsArr,
+                           @Cached("create()") final IndirectCallNode call,
+                           @Cached   ShadowStackEntryLoad shadowStackEntryLoad) {
+    CompilerDirectives.transferToInterpreter();
     SClass rcvrClass = Types.getClassOf(receiver);
     Dispatchable invokable = rcvrClass.lookupMessage(selector, AccessModifier.PUBLIC);
+    Object[] arguments;
+    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      arguments = new Object[]{receiver,null};
+      BackCacheCallNode.setShadowStackEntry(frame,
+              false, arguments , this, shadowStackEntryLoad);
+    } else {
+    arguments = new Object[]{receiver};
+    }
 
-    Object[] arguments = {receiver};
     if (invokable != null) {
       return invokable.invoke(call, arguments);
     } else {

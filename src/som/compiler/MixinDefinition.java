@@ -748,8 +748,11 @@ public final class MixinDefinition implements SomInteropObject {
       if (TruffleOptions.AOT) {
         CompilerDirectives.transferToInterpreter();
       }
-
-      assert arguments.length == 1;
+      if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+        assert arguments.length == 2;
+      } else {
+        assert arguments.length == 1;
+      }
       SObject rcvr = (SObject) arguments[0];
       Object result = rcvr.readSlot(this);
       assert result != null;
@@ -763,9 +766,16 @@ public final class MixinDefinition implements SomInteropObject {
         if (result != Nil.nilObject) {
           return result;
         }
+        Object superclassAndMixins;
+        if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+          superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
+                  .getCallTarget().call(rcvr,SArguments.instantiateTopShadowStackEntry(mixinDefinition.getSuperclassAndMixinResolutionInvokable()));
+        } else {
+          superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
+                  .getCallTarget().call(rcvr); }
         // ok, now it is for sure not initialized yet, instantiate class
-        Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                                                    .getCallTarget().call(rcvr);
+       // Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
+                   //                                 .getCallTarget().call(rcvr);
         SClass clazz = mixinDefinition.instantiateClass(null, rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;
