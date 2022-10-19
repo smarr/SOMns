@@ -56,12 +56,12 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
       @Cached("arg.getMethod()") final SInvokable method,
       @Cached("createDirect(method)") final DirectCallNode callTarget) {
     Object[] args;
-    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       args = new Object[]{arg, SArguments.getShadowStackEntry(frame)};
     } else {
       args = new Object[]{arg};
     }
-    //this was there before Async Stack traces
+    // this was there before Async Stack traces
     if (condProf.profile(rcvr == expected)) {
       return callTarget.call(args);
     } else {

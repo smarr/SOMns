@@ -70,8 +70,8 @@ public abstract class AbstractSymbolDispatch extends Node {
       @Cached("selector") final SSymbol cachedSelector,
       @Cached("createForPerformNodes(selector)") final AbstractMessageSendNode cachedSend) {
     Object[] arguments;
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-      arguments = new Object[]{receiver,null};
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments = new Object[]{receiver, null};
     } else {
       arguments = new Object[]{receiver};
     }
@@ -92,7 +92,7 @@ public abstract class AbstractSymbolDispatch extends Node {
   }
 
   @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
-  //@TruffleBoundary
+  // @TruffleBoundary
   public Object doUncached(final VirtualFrame frame, final Object receiver, final SSymbol selector,
                            final Object argsArr,
                            @Cached("create()") final IndirectCallNode call,
@@ -101,10 +101,9 @@ public abstract class AbstractSymbolDispatch extends Node {
     SClass rcvrClass = Types.getClassOf(receiver);
     Dispatchable invokable = rcvrClass.lookupMessage(selector, AccessModifier.PUBLIC);
     Object[] arguments;
-    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-      arguments = new Object[]{receiver,null};
-      BackCacheCallNode.setShadowStackEntry(frame,
-              false, arguments , this, shadowStackEntryLoad);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments = new Object[]{receiver, null};
+      BackCacheCallNode.setShadowStackEntry(frame, false, arguments, this, shadowStackEntryLoad);
     } else {
     arguments = new Object[]{receiver};
     }

@@ -748,7 +748,7 @@ public final class MixinDefinition implements SomInteropObject {
       if (TruffleOptions.AOT) {
         CompilerDirectives.transferToInterpreter();
       }
-      if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         assert arguments.length == 2;
       } else {
         assert arguments.length == 1;
@@ -767,9 +767,9 @@ public final class MixinDefinition implements SomInteropObject {
           return result;
         }
         Object superclassAndMixins;
-        if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
           superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                  .getCallTarget().call(rcvr,SArguments.instantiateTopShadowStackEntry(mixinDefinition.getSuperclassAndMixinResolutionInvokable()));
+                  .getCallTarget().call(rcvr, SArguments.instantiateTopShadowStackEntry(mixinDefinition.getSuperclassAndMixinResolutionInvokable()));
         } else {
           superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
                   .getCallTarget().call(rcvr); }

@@ -93,11 +93,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
 
     return executeEvaluated(frame, rcvr, arg);
   }
-  /** MATTEO: HERE IS THE SPOT IN WHICH I MIGHT BREAK EVERYTHING **/
+  /** MATTEO: HERE IS THE SPOT IN WHICH I MIGHT BREAK EVERYTHING. **/
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument) {
     try {
-      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         Object[] args;
 
         args = new Object[] {receiver, argument, null};
