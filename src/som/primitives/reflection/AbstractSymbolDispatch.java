@@ -26,6 +26,8 @@ import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
+import java.util.Arrays;
+
 
 public abstract class AbstractSymbolDispatch extends Node {
   public static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
@@ -86,6 +88,10 @@ public abstract class AbstractSymbolDispatch extends Node {
       @Cached("createForPerformNodes(selector)") final AbstractMessageSendNode cachedSend,
       @Cached("createArgArrayNode()") final ToArgumentsArrayNode toArgArray) {
     Object[] arguments = toArgArray.executedEvaluated(argsArr, receiver);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments = Arrays.copyOf(arguments,arguments.length+1);
+      arguments[arguments.length-1] = null;
+    }
 
     PreevaluatedExpression realCachedSend = cachedSend;
     return realCachedSend.doPreEvaluated(frame, arguments);
