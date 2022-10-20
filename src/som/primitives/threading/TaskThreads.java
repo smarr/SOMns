@@ -22,6 +22,7 @@ import som.vmobjects.SInvokable;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
@@ -74,17 +75,10 @@ public final class TaskThreads {
         } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedForkJoinTask) {
           UniformExecutionTrace.recordActivityContext(this, ((TracedForkJoinTask) this).trace);
         }
-        Object[] arguments;
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-          arguments = Arrays.copyOf(argArray, argArray.length + 1);
-          arguments[argArray.length] = SArguments.instantiateTopShadowStackEntry(target.getRootNode());
-        } else {
-          arguments = argArray;
-        }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
-        return target.call(arguments);
+        return target.call(argArray);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
@@ -213,6 +207,7 @@ public final class TaskThreads {
     private final TraceContextNode trace = TraceContextNodeGen.create();
 
     protected final VM vm;
+
 
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot);

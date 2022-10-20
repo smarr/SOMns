@@ -16,6 +16,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
@@ -155,9 +156,16 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == TaskClass")
-    @TruffleBoundary
-    public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
-      SomForkJoinTask task = createTask(new Object[] {block},
+    //@TruffleBoundary
+    public final SomForkJoinTask spawnTask(VirtualFrame frame, final SClass clazz, final SBlock block) {
+      Object[] arguments;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        arguments = new Object[] {block, SArguments.getShadowStackEntry(frame)};
+      } else {
+        arguments =new Object[] {block};
+      }
+
+      SomForkJoinTask task = createTask(arguments,
           onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       forkJoinPool.execute(task);
       return task;
