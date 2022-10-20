@@ -13,6 +13,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import bd.tools.nodes.Operation;
@@ -44,6 +45,8 @@ import tools.debugger.frontend.ApplicationThreadStack;
 import tools.dym.Tags.OpComparison;
 
 
+
+
 public final class ObjectPrims {
 
   @GenerateNodeFactory
@@ -57,7 +60,8 @@ public final class ObjectPrims {
       while (iterator.hasNext()){
         ApplicationThreadStack.StackFrame sf = iterator.next();
         if (sf != null) {
-          stack.add(sf.name);
+          SourceSection section = sf.section;
+          stack.add(sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine());
         }
       }
       return new SMutableArray(stack.toArray(), Classes.arrayClass);
