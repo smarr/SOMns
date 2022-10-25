@@ -7,11 +7,11 @@ import tools.debugger.FrontendConnector;
  * A task that needs to be executed by the application thread while it is in a
  * {@link Suspension}.
  */
-abstract class ApplicationThreadTask {
+public abstract class ApplicationThreadTask {
   /**
    * @return continue waiting on true, resume execution on false.
    */
-  abstract boolean execute();
+  protected abstract boolean execute();
 
   static class Resume extends ApplicationThreadTask {
     @Override
