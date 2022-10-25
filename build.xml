@@ -381,6 +381,7 @@ kernel:           ${kernel}</echo>
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <jvmarg value="-Dpolyglot.engine.WarnInterpreterOnly=false" />
+            <jvmarg value="-Dorg.slf4j.simpleLogger.defaultLogLevel=off" />
             <arg line="${corelib.dir}/TestSuite/TestRunner.ns" />
         </java>
      </jacoco:coverage>
