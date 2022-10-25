@@ -1,14 +1,77 @@
 class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Value (
-| private TestContext  = minitest TestContext.
- private ClassMirror = platform mirrors ClassMirror.
- private Task = platform threading Task. |
-)(  public class AsyncStackFrame new: asyncString = (
+|   private TestContext  = minitest TestContext.
+    private AsyncTestContext = minitest AsyncTestContext.
+    private ClassMirror = platform mirrors ClassMirror.
+    private Task = platform threading Task.
+    public actors = platform actors.
+    private Delay = platform threading Delay.
+     |
+)(   public class PingPong new: numPings = Value (
+        | private NumPings = numPings.
+        |
+        )(
+            public class Ping new: cnt with: pong = (
+                | private pingsLeft ::= cnt.
+                    private pong = pong.
+                |
+                ) (
+                public start = (
+                    pong <-: ping: self.
+                    pingsLeft:: pingsLeft - 1.
+                )
+
+                public ping = (
+                    pong <-: ping: self.
+                    pingsLeft:: pingsLeft - 1.
+                )
+
+                public pong: sender = (
+                    pingsLeft > 0
+                    ifTrue:  [ self <-: ping ]
+                    ifFalse: [ pong <-: stop ].
+                )
+            )
+
+            public class Pong new: completionRes = (
+                | private pongCount ::= 0.
+                private completionRes = completionRes.
+                public asyncStack ::= 0.
+                |
+                ) (
+                public ping: sender = (
+                    'PONG PINGING' println.
+                    asyncStack:: 1 asyncTrace.
+                    'PONG PINGED' println.
+                    sender <-: pong: self.
+                    pongCount:: pongCount + 1.
+                )
+
+                public stop = (
+                    'STOPPING' println.
+                    completionRes resolve: asyncStack.
+                )
+            )
+
+            public pingPong = ( 
+            |completionPP ping pong |
+            completionPP:: actors createPromisePair.
+            pong:: (actors createActorFromValue: Pong) <-: new: completionPP resolver.
+            ping:: (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
+            ping <-: start.
+            ^ completionPP promise
+            )
+    )
+    
+    
+    public class AsyncStackFrame new: asyncString = (
     (* This class represents an async stack frame *)
-        |  private asyncStrings =  self splitAsyncString: asyncString.
+        |  
+           private asyncStrings =  self splitAsyncString: asyncString.
            public actorID = asyncStrings at: 1.
            public methodSignature = asyncStrings at: 2.
            public fileName = asyncStrings at: 3.
            public fileLine = asyncStrings at: 4.
+          
             |
         )(
         
@@ -17,13 +80,20 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
             ^ (aString split: ',') collect: [:string | (string beginsWith: ' ') ifTrue: [string substringFrom: 2 to: string length ] ifFalse: [string] ].
 
         )
+
     )
 
-    private class AsyncTestBase = TestContext () (
+    private class AsyncTestBase = AsyncTestContext () (
     (* This class represent the base class for async stack trace tests, shadowing 
     the asyncTrace primitive to initialize AsyncStackFrame*)
+        public isAsync = ( ^ true )
+
         public asyncTrace = (
             ^ (1 asyncTrace collect: [:e | AsyncStackFrame new: e]) copyFrom: 3. 
+        )
+
+        public asyncTrace: aTrace = (
+            ^ (aTrace collect: [:e | AsyncStackFrame new: e]) copyFrom: 2. 
         )
     )
     public class BasicAsyncTracesTests = AsyncTestBase () (
@@ -68,6 +138,85 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
             result:: trace collect: [:e | e methodSignature].
             self assert: (result contains: 'ForkJoinAsyncStackTraceTest>>#testForkedAsyncStackTraceHasCallToThisMethod')
         )
+    ) : ( TEST_CONTEXT = () )
+
+    public class ActorAsyncStackTraceTest = AsyncTestBase (
+    ) (
+        private calledMethod = (^ self asyncTrace)
+
+        public testAsyncPongAsyncStackTraceHasCorrectTopFrame = (
+            | promise result pp  toAssert|
+            pp:: PingPong new: 1.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |firstFrame|
+                firstFrame:: (asyncTrace: res) at: 1.
+                firstFrame methodSignature.
+            ].
+            ^ assert: toAssert resolvedWith: 'Pong>>#ping:'
+        )
+
+        public testAsyncPongAsyncStackTraceHasCallOfPingStart = (
+            | promise result pp resolved toAssert|
+             pp:: PingPong new: 1.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |collectedStack correctFrameIndex result|
+                    collectedStack:: (asyncTrace: res) collect: [:e | e methodSignature].
+                    correctFrameIndex:: collectedStack  indexOf: 'Ping>>#start'.
+                    correctFrameIndex ifNotNil: [
+                        result:: (collectedStack at: correctFrameIndex)
+                    ].
+                    result
+            ].
+            ^ assert: toAssert resolvedWith: 'Ping>>#start'
+        )
+
+        public testAsyncPongAsyncStackTraceHasCallToThisMethod = (
+            | promise result pp resolved toAssert|
+             pp:: PingPong new: 1.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |collectedStack correctFrameIndex result|
+                    collectedStack:: (asyncTrace: res) collect: [:e | e methodSignature].
+                    correctFrameIndex:: collectedStack  indexOf: 'ActorAsyncStackTraceTest>>#testAsyncPongAsyncStackTraceHasCallToThisMethod'.
+                    correctFrameIndex ~= nil.
+            ].
+            ^ assert: toAssert resolvedWith: true
+        )
+
+        public testAsyncPong2AsyncStackTraceHasTwoCallsToPongPing = (
+            | promise result pp resolved toAssert|
+             pp:: PingPong new: 2.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |collectedStack correctFrameIndex result|
+                    collectedStack:: (asyncTrace: res) collect: [:e | e methodSignature].
+                    correctFrameIndex:: collectedStack  select: [:e | e = 'Pong>>#ping:'].
+                    correctFrameIndex size = 2.
+            ].
+            ^ assert: toAssert resolvedWith: true
+        )
+
+
+        public testAsyncPong2AsyncStackTraceHasCallOfPingStart = (
+            | promise result pp resolved toAssert|
+             pp:: PingPong new: 2.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |collectedStack correctFrameIndex result|
+                    collectedStack:: (asyncTrace: res) collect: [:e | e methodSignature].
+                    correctFrameIndex:: collectedStack  indexOf: 'Ping>>#start'.
+                    correctFrameIndex ~= nil.
+            ].
+            ^ assert: toAssert resolvedWith: true
+        )
+
+        public cleanUp = (
+            1 resetAsyncTrace.
+        )
+
+    
     ) : ( TEST_CONTEXT = () )
    
 )
