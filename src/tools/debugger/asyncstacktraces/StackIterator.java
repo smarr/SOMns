@@ -194,7 +194,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
       }
     }
 
-    protected StackFrame nextAsyncStackStructure() {
+    public StackFrame nextAsyncStackStructure() {
       ShadowStackEntry shadow = null;
       Frame localFrame = null;
       boolean usedAgain = false;
