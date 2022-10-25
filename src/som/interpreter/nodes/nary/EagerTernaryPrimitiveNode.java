@@ -5,12 +5,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.interpreter.SArguments;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 
 
@@ -103,8 +105,12 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate(
           "Eager Primitive with unsupported specialization.");
+      Object[] arguments =  {receiver, argument1, argument2};
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+         arguments =  new Object[]{receiver, argument1, argument2, null};
+      }
       return makeGenericSend().doPreEvaluated(frame,
-          new Object[] {receiver, argument1, argument2});
+          arguments );
     }
   }
 
