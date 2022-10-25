@@ -19,10 +19,12 @@ import bd.primitives.Primitive;
 import bd.tools.nodes.Operation;
 import som.Output;
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.processes.SChannel.SChannelInput;
@@ -64,7 +66,41 @@ public final class ObjectPrims {
           stack.add(sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine());
         }
       }
-      return new SMutableArray(stack.toArray(), Classes.arrayClass);
+      return new SImmutableArray(stack.toArray(), Classes.arrayClass);
+    }
+
+    @Override
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == AlwaysHalt.class) {
+        return true;
+      }
+      return super.hasTagIgnoringEagerness(tag);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "resetAsyncTrace:")
+  public abstract static class ResetAsyncTracePrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSAbstractObject(VirtualFrame frame, final Object receiver) {
+      Output.errorPrintln("RESETTING ASYNC STACK TRACE");
+      ShadowStackEntry currentEntry = SArguments.getShadowStackEntry(frame);
+      boolean keepLooping = true;
+      String methodName;
+      while (keepLooping && currentEntry != null) {
+        if(currentEntry instanceof ShadowStackEntry.EntryForPromiseResolution){
+          methodName = ((ShadowStackEntry.EntryForPromiseResolution) currentEntry).resolutionLocation.toString();
+        } else {
+          methodName = ((CachedDispatchNode) currentEntry.getExpression()).getCachedMethod().getName();
+        }
+          if (methodName.equals("ON_WHEN_RESOLVED_BLOCK")) {
+          keepLooping = false;
+        } else {
+          currentEntry = currentEntry.getPreviousShadowStackEntry();
+        }
+      }
+      currentEntry.setPreviousShadowStackEntry(ShadowStackEntry.createTop(this));
+      return "RESET";
     }
 
     @Override
