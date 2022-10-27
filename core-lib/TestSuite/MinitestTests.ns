@@ -13,7 +13,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   public class AssertionTests = AsyncTestContext (
     (* Describe the class in this comment. *)
   | guineaPig = GuineaPigTestModule testFramework: testFramework.
-    catalog = TestCatalog forModule: guineaPig. (* catalog is not a value... *)
+    catalog = TestCatalog forModule: guineaPig.
   |)(
     public class GuineaPigTestModule testFramework: testFramework = (
     | private TestContext = testFramework TestContext.
