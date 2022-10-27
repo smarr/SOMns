@@ -6,7 +6,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   private TestContext   = minitest TestContext.
   private TestCatalog   = minitest TestCatalog.
   private Tester        = minitest Tester.
-  private AsyncTestContext   = minitest AsyncTestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
   private actors   = platform actors.
 |
 ) (
@@ -15,9 +15,9 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   | guineaPig = GuineaPigTestModule testFramework: testFramework.
     catalog = TestCatalog forModule: guineaPig. (* catalog is not a value... *)
   |)(
-    public class GuineaPigTestModule testFramework: testFramework = Value (
-      | private TestContext = testFramework TestContext. |
-    ) (
+    public class GuineaPigTestModule testFramework: testFramework = (
+    | private TestContext = testFramework TestContext.
+    |)(
       public class AssertEqualsTestContext = TestContext ()(
         public testAssertEqualsFail = (
           assert: 3 equals: 4

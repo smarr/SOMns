@@ -786,7 +786,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
   )
 
-  public class AsyncTestContext = TestContext <: Value (
+  public class AsyncTestContext = TestContext (
     (* An object for defining and running individual asynchronous tests.
        Instances of this class need to implement test methods which start with
        the 'testAsync' prefix. *)
