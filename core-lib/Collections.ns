@@ -20,6 +20,7 @@ THE SOFTWARE.
 *)
 class Collections usingKernel: kernel = Value (
 | private Array  = kernel Array.
+  private ValueArray = kernel ValueArray.
   private Pair   = kernel Pair.
   private Vector = kernel Vector.
   private initialSize = 10.
@@ -156,7 +157,37 @@ class Collections usingKernel: kernel = Value (
     public new = ( ^ self new: initialSize )
   )
 
+  protected class ValueEntry new: hash key: key value: val next: next = Value (
+  | public hash  = hash.
+    public key   = key.
+    public value = val.
+    public next  = next.
+  |)(
+    public match: aHash key: aKey = (
+      ^ hash = aHash and: [key = aKey]
+    )
+  )
+
   public class DictionaryReadMixin = ()(
+    protected class Entry new: hash key: key value: val next: next = (
+    | public hash  = hash.
+      public key   = key.
+      public value ::= val.
+      public next  ::= next.
+    |)(
+      public match: aHash key: aKey = (
+        ^ hash = aHash and: [key = aKey]
+      )
+
+      public asValue = (
+        | n = next. |
+        n ifNil: [
+            ^ ValueEntry new: hash key: key value: value next: nil ]
+          ifNotNil: [
+            ^ ValueEntry new: hash key: key value: value next: n asValue ]
+      )
+    )
+
     protected hash: key = (
       | hash |
       key isNil ifTrue: [ ^ 0 ].
@@ -200,12 +231,11 @@ class Collections usingKernel: kernel = Value (
       ^ false
     )
 
-    public size      = ( ^ size_ )
-    public isEmpty   = ( ^ size_ = 0 )
+    public isEmpty   = ( ^ size = 0 )
 
     public keys = (
       | keys |
-      keys:: Vector new: size_.
+      keys:: Vector new: size.
       buckets do: [:b |
         | current |
         current:: b.
@@ -226,7 +256,7 @@ class Collections usingKernel: kernel = Value (
 
     public values = (
       | values |
-      values:: Vector new: size_.
+      values:: Vector new: size.
       buckets do: [:b |
         | current |
         current:: b.
@@ -235,22 +265,21 @@ class Collections usingKernel: kernel = Value (
           current:: current next ] ].
       ^ values
     )
+
+    public valueBuckets = (
+      ^ ValueArray new: buckets size withAll: [:i |
+          | bucket = (buckets at: i). |
+          bucket
+            ifNil: [ nil ]
+            ifNotNil: [ bucket asValue ] ]
+    )
   )
 
   public class Dictionary new: size = Object <: DictionaryReadMixin (
   | protected buckets ::= Array new: size.
     protected size_   ::= 0.
   |)(
-    protected class Entry new: hash key: key value: val next: next = (
-    | public hash  = hash.
-      public key   = key.
-      public value ::= val.
-      public next  ::= next.
-    |)(
-      public match: aHash key: aKey = (
-        ^ hash = aHash and: [key = aKey]
-      )
-    )
+    public size      = ( ^ size_ )
 
     public at: aKey put: aVal = (
       | hash i current |
@@ -374,6 +403,12 @@ class Collections usingKernel: kernel = Value (
   ) : (
     public new = ( ^ self new: initialCapacity )
   )
+
+  public class ValueDictionary new: dict = Value <: DictionaryReadMixin (
+  | protected buckets = dict valueBuckets.
+    public size = dict size.
+  |
+  )()
 
   public class IdentityDictionary new: size = Dictionary new: size ()(
     protected class Entry new: hash key: key value: val next: next = super Entry new: hash key: key value: val next: next (

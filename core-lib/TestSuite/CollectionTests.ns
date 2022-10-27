@@ -22,6 +22,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
   private Set         = platform collections Set.
   private Dictionary  = platform collections Dictionary.
+  private ValueDictionary    = platform collections ValueDictionary.
   private IdentityDictionary = platform collections IdentityDictionary.
   private Array       = platform kernel Array.
   private Vector      = platform kernel Vector.
@@ -560,6 +561,73 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 
       self assert: dict size equals: 100000.
       self assert: dict values size equals: 100000.
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class ValueDictionaryTest = TestContext ()(
+    public testCreateFromSmallDict = (
+      | dict valDict |
+      dict:: Dictionary new.
+      dict at: #fa put: 33.
+      dict at: #fb put: 44.
+
+      valDict:: ValueDictionary new: dict.
+      assert: (valDict at: #fa) equals: 33.
+      assert: (valDict at: #fb) equals: 44.
+      assert: (valDict at: #fc) equals: nil.
+    )
+
+    public testValDictIsCopy = (
+      | dict valDict |
+      dict:: Dictionary new.
+      dict at: #fa put: 33.
+      dict at: #fb put: 44.
+
+      valDict:: ValueDictionary new: dict.
+      assert: (valDict at: #fa) equals: 33.
+      assert: (valDict at: #fb) equals: 44.
+      assert: (valDict at: #fc) equals: nil.
+
+      dict at: #fb put: 55.
+
+      assert: (valDict at: #fb) equals: 44.
+    )
+
+    public testContainsKey = (
+      | dict valDict |
+      dict:: Dictionary new.
+      dict at: #ff put: 0.
+
+      valDict:: ValueDictionary new: dict.
+
+      deny:   (valDict containsKey: #fe).
+      assert: (valDict containsKey: #ff).
+    )
+
+    public testKeysAndValues = (
+      | dict valDict |
+      dict:: Dictionary new.
+      dict at: #ee put: 55.
+
+      valDict:: ValueDictionary new: dict.
+
+      assert: valDict keys size   equals: 1.
+      assert: valDict values size equals: 1.
+
+      assert: (valDict keys contains: #ee).
+      assert: (valDict values contains: 55).
+    )
+
+    public testLargerDict = (
+      | dict valDict |
+      dict:: Dictionary new.
+      1 to: 100000 do: [:i |
+        dict at: i put: i ].
+
+      valDict:: ValueDictionary new: dict.
+
+      assert: valDict size equals: 100000.
+      assert: valDict values size equals: 100000.
     )
   ) : ( TEST_CONTEXT = () )
 )
