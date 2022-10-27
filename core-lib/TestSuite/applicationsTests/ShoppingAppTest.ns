@@ -1,0 +1,80 @@
+class ShoppingAppTest usingPlatform: platform testFramework: minitest = Value (
+| private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private actors = platform actors.
+  private Exception   = platform kernel Exception.
+  private shoppingApp = (platform system loadModule: '../../demos/applications/ShoppingApplication.ns' nextTo: self) usingPlatform: platform.
+  private Product    = shoppingApp Product.
+  private Listener    = shoppingApp Listener.
+  private Teller    = shoppingApp Teller.
+  private Account    = shoppingApp Account.
+  private Shipper    = shoppingApp Shipper.
+  private Buyer    = shoppingApp Buyer.
+  private Vector = platform kernel Vector.
+|)(
+
+  public class ShoppingTests = AsyncTestContext ()(
+
+          public testAsyncAnd = (
+               | p1 p2 p3 listener teller product account shipper shoppingCart |
+
+               product:: (actors createActorFromValue: Product) <-: new.
+               account:: (actors createActorFromValue: Account)  <-: new.
+               shipper:: (actors createActorFromValue: Shipper)  <-: new.
+
+               listener:: Listener new: [:p1 | 'execute block in listener' println.].
+
+               shoppingCart:: Vector new.
+               shoppingCart append: 'phone'.
+               shoppingCart append: 'laptop'.
+               shoppingCart append: 'screen'.
+
+               teller:: Teller new: (shoppingCart size + 2) listener: listener.
+
+               shoppingCart doIndexes:[:i |
+                 | partNo |
+                  partNo:: shoppingCart at: i.
+                  p1:: product <-: partInStock: partNo teller: teller.
+                  p1 whenResolved:[: r|
+                    assert: r equals: false.
+                  ].
+               ].
+
+               p2:: account <-: checkCredit: 'customer' teller: teller.
+               p3:: shipper <-: canDeliver: 'profile' teller: teller.
+
+              ^ (assert: p2 resolvedWith: false),
+                (assert: p3 resolvedWith: true)
+          )
+
+          public testAsyncFullProgram = (
+            | p product account shipper buyer shoppingCart asyncPromise finalPromise |
+
+                product:: (actors createActorFromValue: Product) <-: new.
+                account:: (actors createActorFromValue: Account)  <-: new.
+                shipper:: (actors createActorFromValue: Shipper)  <-: new.
+                buyer:: (actors createActorFromValue: Buyer) <-: new.
+
+                shoppingCart:: Vector new.
+                shoppingCart append: 'phone'.
+                shoppingCart append: 'laptop'.
+                shoppingCart append: 'screen'.
+
+                asyncPromise:: actors async: shoppingCart do:[: i |
+                  (buyer <-: addItem: i) whenResolved: [: r |
+                   r = #ok
+                   ifTrue:[
+                    ('-items added in shopping cart: ' + i) println.
+                   ].
+                  ].
+                ].
+
+                finalPromise:: asyncPromise whenResolved:[: r |
+                   buyer <-: checkoutShoppingCart: product account: account shipper: shipper.
+                ].
+
+                ^ assert: finalPromise resolvedWith: 'The order has been placed successfully'.
+          )
+
+      ) : ( TEST_CONTEXT = () )
+)
