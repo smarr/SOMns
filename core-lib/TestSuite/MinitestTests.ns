@@ -39,6 +39,10 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           assert: [3 zork]
         )
 
+        public testAssertErrorLiteral = (
+          assert: Exception signal
+        )
+
         public testAssertErrorExpression = (
           assert: 3 zork
         )
@@ -151,22 +155,16 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
         TEST_CONTEXT = ()
       )
 
-      public class ShouldShouldntTestContext = TestContext (
-        (* Describe the class in this comment. *)
-      ) (
-        (*public testShouldFail = (
-          [should: [TestException1 new signal] signal: TestException2]
-            on: TestException1
-            do: [:ex | ex resume]
+      public class ShouldShouldntTestContext = TestContext () (
+        public testShouldFail = (
+          should: [TestException1 new signal] signal: TestException2
         )
 
         public testShouldFailWithDescription = (
-          [should: [TestException1 new signal]
+          should: [TestException1 new signal]
           signal: TestException2
-          description: 'custom description']
-            on: TestException1
-            do: [:ex | ex resume]
-        )*)
+          description: 'custom description'
+        )
 
         public testShouldPassExceptionSubclass = (
           should: [TestException1 new signal] signal: Exception
@@ -176,21 +174,21 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           should: [TestException1 new signal] signal: TestException1
         )
 
-        public testShouldntFail = (
+        public testShouldntIsMakeingTestFail = (
           shouldnt: [TestException1 new signal] signal: TestException1
         )
 
-        public testShouldntFailWithDescription = (
+        public testShouldntIsMakeingTestFailWithDescription = (
           shouldnt: [TestException1 new signal]
             signal: TestException1
             description: 'custom description'
         )
 
-        (*public testShouldntPass = (
+        public testShouldntIsNotFailingTestForOtherException = (
           [shouldnt: [TestException1 new signal] signal: TestException2]
             on: TestException1
-            do: [:ex | ex resume]
-        )*)
+            do: [:ex | #noop ]
+        )
       ) : (
         TEST_CONTEXT = ()
       )
@@ -203,13 +201,14 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     assert: testResults containsSelector: selector = (
-      ^ (resultForSelector: selector in: testResults) notNil
+      assert: (resultForSelector: selector in: testResults) notNil
+      descriptionBlock: [ 'The test results did not contain ' + selector ]
     )
 
     resultForSelector: selector in: collection = (
       ^ collection
-        detect: [:some | some testCase selector = selector]
-        ifNone: [nil]
+          detect: [:some | some testCase selector = selector]
+          ifNone: [nil]
     )
 
     public testAsyncAssertEquals = (
@@ -229,18 +228,21 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     public testAsyncAsserts = (
       tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertTestContext').
       ^ tester runAll whenResolved: [:r |
-          assert: tester errors size equals: 2.
+          assert: tester errors size equals: 3.
+
           assert: tester errors containsSelector: #testAssertErrorBlock.
           assert: tester errors containsSelector: #testAssertErrorLiteral.
+          assert: tester errors containsSelector: #testAssertErrorExpression.
+
           assert: tester failures size equals: 3.
           assert: tester failures containsSelector: #testAssertFailBlock.
-          assert: tester failures containsSelector: #testAssertFailLiteralBoolean.
+          assert: tester failures containsSelector: #testAssertFailExpression.
           assert: tester failures containsSelector: #testAssertFailWithDescription.
           assert: (resultForSelector: #testAssertFailWithDescription in: tester failures) description
             equals: 'custom description'.
           assert: tester successes size equals: 2.
           assert: tester successes containsSelector: #testAssertPassBlock.
-          assert: tester successes containsSelector: #testAssertPassLiteralBoolean.
+          assert: tester successes containsSelector: #testAssertPassExpression.
       ]
     )
 
@@ -280,15 +282,17 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
       tester:: Tester testSuite: (catalog testSuiteNamed: 'ShouldShouldntTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 0.
-          assert: tester failures size equals: 2. '4.'.
-          (* assert: tester failures containsSelector: #testShouldFail.
-          assert: tester failures containsSelector: #testShouldFailWithDescription.*)
-          assert: tester failures containsSelector: #testShouldntFail.
-          assert: tester failures containsSelector: #testShouldntFailWithDescription.
-          assert: tester successes size equals: 2. '3.'.
+          assert: tester failures size equals: 4.
+
+          assert: tester failures containsSelector: #testShouldFail.
+          assert: tester failures containsSelector: #testShouldFailWithDescription.
+          assert: tester failures containsSelector: #testShouldntIsMakeingTestFail.
+          assert: tester failures containsSelector: #testShouldntIsMakeingTestFailWithDescription.
+
+          assert: tester successes size equals: 3.
           assert: tester successes containsSelector: #testShouldPassExceptionSubclass.
           assert: tester successes containsSelector: #testShouldPassSameExceptionClass.
-          'assert: tester successes containsSelector: #testShouldntPass'.
+          assert: tester successes containsSelector: #testShouldntIsNotFailingTestForOtherException.
       ]
     )
   ) : (

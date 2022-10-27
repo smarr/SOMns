@@ -724,10 +724,15 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     should: aBlock signal: anException descriptionBlock: descriptionBlock = (
-      [aBlock value. (* should not return if successful *)
-      failWithMessage: descriptionBlock value]
-        on: anException
-        do: [:ex | ]
+      | caughtException ::= false. |
+      [ [ aBlock value. (* should not return if successful *)
+          failWithMessage: descriptionBlock value
+        ] on: anException
+          do: [:ex |
+            caughtException:: true ]
+      ] ensure: [
+        caughtException ifFalse: [
+          failWithMessage: descriptionBlock value ] ]
     )
 
     should: aBlock takeLongerThan: aDuration = (
@@ -902,6 +907,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public isError = (
       ^ true
     )
+
+    public asString = (
+      ^ 'TestError(' + testCase selector + ', description: ' + description + ')'
+    )
   )
 
   public class TestFailure case: testCase description: text = TestResult case: testCase (
@@ -911,6 +920,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     (* testing *)
     public isFailure = (
       ^ true
+    )
+
+    public asString = (
+      ^ 'TestFailure(' + testCase selector + ', description: ' + description + ')'
     )
   )
 
@@ -950,6 +963,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     (* testing *)
     public isSuccess = (
       ^true
+    )
+
+    public asString = (
+      ^ 'TestSuccess(' + testCase selector + ')'
     )
   )
 
