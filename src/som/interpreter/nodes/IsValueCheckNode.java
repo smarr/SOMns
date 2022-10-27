@@ -123,7 +123,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (cachedTester.allFieldsContainValues(rcvr)) {
         return rcvr;
       } else {
-        return notAValue.signal(rcvr);
+        return notAValue.signal(rcvr.getSOMClass());
       }
     }
 
