@@ -466,7 +466,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
               promisePair resolve: testSuccess ]
             onError: [:ex |
               | exClass |
-              exClass:: (ClassMirror reflecting: e) classObject.
+              exClass:: (ClassMirror reflecting: ex) classObject.
               exClass == TestFailureException ifTrue: [
                 promisePair resolve: (testContextInstance
                   ifNil:    [ TestFailure case: self description: ex messageText ]
