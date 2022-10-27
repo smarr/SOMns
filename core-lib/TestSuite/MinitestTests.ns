@@ -203,13 +203,14 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     assert: testResults containsSelector: selector = (
-      ^ (resultForSelector: selector in: testResults) notNil
+      assert: (resultForSelector: selector in: testResults) notNil
+      descriptionBlock: [ 'The test results did not contain ' + selector ]
     )
 
     resultForSelector: selector in: collection = (
       ^ collection
-        detect: [:some | some testCase selector = selector]
-        ifNone: [nil]
+          detect: [:some | some testCase selector = selector]
+          ifNone: [nil]
     )
 
     public testAsyncAssertEquals = (
