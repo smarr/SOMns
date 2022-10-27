@@ -230,6 +230,7 @@ public final class ArraySetAllStrategy {
       return newStorage;
     } else {
       Object[] newStorage = new Object[(int) length];
+      newStorage[0] = result;
       evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch,
           result,
           isValue, notAValue);
