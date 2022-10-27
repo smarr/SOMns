@@ -724,10 +724,15 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     should: aBlock signal: anException descriptionBlock: descriptionBlock = (
-      [aBlock value. (* should not return if successful *)
-      failWithMessage: descriptionBlock value]
-        on: anException
-        do: [:ex | ]
+      | caughtException ::= false. |
+      [ [ aBlock value. (* should not return if successful *)
+          failWithMessage: descriptionBlock value
+        ] on: anException
+          do: [:ex |
+            caughtException:: true ]
+      ] ensure: [
+        caughtException ifFalse: [
+          failWithMessage: descriptionBlock value ] ]
     )
 
     should: aBlock takeLongerThan: aDuration = (
