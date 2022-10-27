@@ -260,17 +260,13 @@ class Collections usingKernel: kernel = Value (
 
       current isNil
         ifTrue: [
-          buckets at: i put: (newEntry: aKey value: aVal hash: hash).
+          buckets at: i put: (Entry new: hash key: aKey value: aVal next: nil).
           size_:: size_ + 1 ]
         ifFalse: [
           insertBucketEntry: aKey value: aVal hash: hash head: current ].
 
 
       size_ > buckets size ifTrue: [ resize ]
-    )
-
-    protected newEntry: aKey value: value hash: hash = (
-      ^ Entry new: hash key: aKey value: value next: nil
     )
 
     private insertBucketEntry: key value: value hash: hash head: head = (
@@ -283,7 +279,7 @@ class Collections usingKernel: kernel = Value (
           ^ self ].
         current next isNil ifTrue: [
           size_:: size_ + 1.
-          current next: (newEntry: key value: value hash: hash).
+          current next: (Entry new: hash key: key value: value next: nil).
           ^ self ].
         current:: current next ]
     )
@@ -380,15 +376,11 @@ class Collections usingKernel: kernel = Value (
   )
 
   public class IdentityDictionary new: size = Dictionary new: size ()(
-    protected class IdEntry new: hash key: key value: val next: next = Entry new: hash key: key value: val next: next (
+    protected class Entry new: hash key: key value: val next: next = super Entry new: hash key: key value: val next: next (
     )(
       public match: aHash key: aKey = (
         ^ hash = aHash and: [key == aKey]
       )
-    )
-
-    protected newEntry: aKey value: value hash: hash = (
-      ^ IdEntry new: hash key: aKey value: value next: nil
     )
   ) : (
     public new = ( ^ self new: initialCapacity )
