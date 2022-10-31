@@ -16,6 +16,7 @@ import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.Types;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
@@ -316,7 +317,8 @@ public abstract class ChannelPrimitives {
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
       if (!isVal.executeBoolean(frame, val)) {
-        notAValue.signal(val);
+        CompilerDirectives.transferToInterpreter();
+        notAValue.signal(Types.getClassOf(val));
       }
       try {
         out.writeAndSuspendReader(val, afterRead.executeShouldHalt(), traceWrite);

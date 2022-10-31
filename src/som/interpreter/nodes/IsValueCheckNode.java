@@ -17,6 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.Types;
 import som.interpreter.nodes.IsValueCheckNodeFactory.ValueCheckNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectLayout;
@@ -122,7 +123,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (cachedTester.allFieldsContainValues(rcvr)) {
         return rcvr;
       } else {
-        return notAValue.signal(rcvr);
+        return notAValue.signal(rcvr.getSOMClass());
       }
     }
 
@@ -133,7 +134,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return notAValue.signal(rcvr);
+      return notAValue.signal(Types.getClassOf(rcvr));
     }
 
     protected static final class FieldTester extends Node {

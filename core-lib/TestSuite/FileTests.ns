@@ -1,14 +1,8 @@
 class FileTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext = minitest TestContext.
-  private AsyncTestContext = minitest AsyncTestContext.
-  private actors      = platform actors.
   private Exception   = platform kernel Exception.
-  private NotAValue   = platform kernel NotAValue.
   private ArgumentError = platform kernel ArgumentError.
-  private Vector      = platform kernel Vector.
-  private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
-  private errorTestMessage = 'test exception 1'.
 
   private FilePath    = platform files FilePath.
   private FilePattern = platform files FilePattern.
