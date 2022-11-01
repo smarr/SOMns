@@ -88,8 +88,18 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
+  @CompilationFinal private static SourcecodeCompiler compiler;
+
+  public static void setCompiler(final SourcecodeCompiler c) {
+    compiler = c;
+  }
+
   @TruffleBoundary
   public VM(final VmOptions vmOptions) {
+    if (compiler == null) {
+      compiler = new SourcecodeCompiler();
+    }
+
     options = vmOptions;
 
     actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
@@ -315,9 +325,10 @@ public final class VM {
       return;
     }
 
-    Actor.initializeActorSystem(language);
+    language = lang;
+    Actor.initializeActorSystem(lang);
 
-    objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
+    objectSystem = new ObjectSystem(compiler, structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     assert vmMirror == null : "VM seems to be initialized already";
@@ -337,7 +348,6 @@ public final class VM {
       KomposTrace.recordMainActor(mainActor, objectSystem);
     }
 
-    language = lang;
   }
 
   public Object execute(final String selector) {

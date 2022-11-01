@@ -93,16 +93,18 @@ public final class ObjectSystem {
 
   private CompletableFuture<Object> mainThreadCompleted;
 
-  private final VM vm;
+  private final VM          vm;
+  private final SomLanguage language;
 
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
       final VM vm) {
-    this.primitives = new Primitives(compiler.getLanguage());
+    this.primitives = new Primitives(vm.getLanguage());
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = EconomicMap.create();
     this.vm = vm;
+    this.language = vm.getLanguage();
   }
 
   public void loadKernelAndPlatform(final String platformFilename,
@@ -129,7 +131,7 @@ public final class ObjectSystem {
   }
 
   public SClass loadExtensionModule(final String filename) {
-    ExtensionLoader loader = new ExtensionLoader(filename, compiler.getLanguage());
+    ExtensionLoader loader = new ExtensionLoader(filename, language);
     EconomicMap<SSymbol, Dispatchable> primitives = loader.getPrimitives();
     MixinDefinition mixin = constructPrimitiveMixin(filename, primitives);
     return mixin.instantiateClass(Nil.nilObject, Classes.topClass);
@@ -158,7 +160,7 @@ public final class ObjectSystem {
 
     MixinDefinition module;
     try {
-      module = compiler.compileModule(source, structuralProbe);
+      module = compiler.compileModule(source, language, structuralProbe);
       loadedModules.put(uri, module);
       return module;
     } catch (ProgramDefinitionError e) {
@@ -180,7 +182,7 @@ public final class ObjectSystem {
     SourceSection ss = source.createSection(1);
 
     MixinBuilder mixin = new MixinBuilder(null, AccessModifier.PUBLIC, moduleName,
-        ss, null, compiler.getLanguage());
+        ss, null, language);
     MethodBuilder primFactor = mixin.getPrimaryFactoryMethodBuilder();
 
     primFactor.addArgument(Symbols.SELF, ss);
@@ -289,7 +291,7 @@ public final class ObjectSystem {
     assert transferDef.getNumberOfSlots() == 0;
 
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      SerializerRootNode.initializeSerialization(compiler.getLanguage());
+      SerializerRootNode.initializeSerialization(language);
 
       topDef.initializeClass(Classes.topClass, null,
           SObjectWithoutFieldsSerializationNodeFactory.getInstance()); // Top doesn't have a
@@ -545,7 +547,7 @@ public final class ObjectSystem {
     DirectMessage msg = new DirectMessage(mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
-            start, 1, source, mainThreadCompleted, compiler.getLanguage()));
+            start, 1, source, mainThreadCompleted, language));
     mainActor.sendInitialStartMessage(msg, vm.getActorPool());
 
     try {
