@@ -36,26 +36,16 @@ import som.vmobjects.SSymbol;
 
 public class SourcecodeCompiler {
 
-  protected final SomLanguage language;
-
-  public SourcecodeCompiler(final SomLanguage language) {
-    this.language = language;
-  }
-
-  public final SomLanguage getLanguage() {
-    return language;
-  }
-
-  public MixinDefinition compileModule(final Source source,
+  public MixinDefinition compileModule(final Source source, final SomLanguage language,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError {
     Parser parser =
         new Parser(source.getCharacters().toString(), source, structuralProbe, language);
-    return compile(parser, source);
+    return compile(parser, source, language);
   }
 
   protected final MixinDefinition compile(final Parser parser,
-      final Source source) throws ProgramDefinitionError {
+      final Source source, final SomLanguage language) throws ProgramDefinitionError {
     int coord = parser.getStartIndex();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
