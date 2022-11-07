@@ -30,13 +30,14 @@ public class EvaluateExpressionRequest extends Message.IncommingMessage {
 
         @Override
         protected boolean execute() {
-            Iterator<DebugStackFrame> it =frontend.getSuspension(0).getEvent().getStackFrames().iterator();
-            DebugStackFrame frame = null;
-                for(int i=0;i<=frameID;i++){
-                    frame = it.next();
-                }
-            resultValue = frame.eval(expression);
-            executed = true;
+//            Iterator<DebugStackFrame> it =frontend.getSuspension(0).getEvent().getStackFrames().iterator();
+//            DebugStackFrame frame = null;
+//                for(int i=0;i<=frameID;i++){
+//                    frame = it.next();
+//                }
+//            resultValue = frame.eval("class _test = (||) \n ( \n public expression() = (^ "+ expression + ". \n ) \n )");
+//            executed = true;
+//            return true;
             return true;
         }
     }
@@ -46,13 +47,13 @@ public class EvaluateExpressionRequest extends Message.IncommingMessage {
 
     @Override
     public void process(FrontendConnector connector, WebSocket conn) {
-//       Suspension suspension = connector.getSuspension(0);
-//       EvaluateExpressionTask task = new EvaluateExpressionTask(connector,suspension,frameId,expression);
-//       suspension.submitTask(task);
-//       int a = 0;
-//       while (!task.executed){
-//            a = a +1;
-//       }
-//       DebugValue value = task.resultValue;
+       Suspension suspension = connector.getSuspension(0);
+       EvaluateExpressionTask task = new EvaluateExpressionTask(connector,suspension,frameId,expression);
+       suspension.submitTask(task);
+       int a = 0;
+       while (!task.executed){
+            a = a +1;
+       }
+       DebugValue value = task.resultValue;
     }
 }
