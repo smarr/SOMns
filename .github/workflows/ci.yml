@@ -28,11 +28,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Compile SOMns Jar and Unit Tests
+      - name: Compile SOMns 
         if: matrix.job != 'lint'
         run: |
           export JAVA_HOME=$JAVA_HOME_17_X64
-          ant -e jar unit-tests
+          ant compile
 
       - name: SOMns Test Suite
         if: matrix.job != 'lint'
