@@ -100,7 +100,7 @@ public abstract class RegisterOnPromiseNode {
                     getParent().getParent(), onReceiveLocation, "");
                 assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
                     || resolutionEntry != null;
-                SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+                SArguments.updateShadowStackEntry(msg.args, resolutionEntry);
               }
               // else if (promiseChained) {
               // ShadowStackEntry entry = (ShadowStackEntry) msg.args[msg.args.length - 1];

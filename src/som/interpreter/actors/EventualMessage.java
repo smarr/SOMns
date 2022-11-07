@@ -434,7 +434,7 @@ public abstract class EventualMessage {
         assert args[args.length - 1] instanceof ShadowStackEntry;
         ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
         boolean promiseGroup = false;
-        if (callPromiseStack.getExpression().getParent().getParent() instanceof Method) {
+        if (callPromiseStack.getPreviousShadowStackEntry().getExpression().getParent().getParent() instanceof Method) {
           promiseGroup =
               ((Method) callPromiseStack.getExpression().getParent()
                                         .getParent()).getName().startsWith("PromiseGroup");
