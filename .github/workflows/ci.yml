@@ -32,7 +32,7 @@ jobs:
         if: matrix.job != 'lint'
         run: |
           export JAVA_HOME=$JAVA_HOME_17_X64
-          ant compile
+          ant -e jar
 
       - name: SOMns Test Suite
         if: matrix.job != 'lint'
