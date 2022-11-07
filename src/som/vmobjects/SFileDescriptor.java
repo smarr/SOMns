@@ -47,15 +47,15 @@ public class SFileDescriptor extends SObjectWithClass {
     f = new File(uri);
   }
 
-  @TruffleBoundary
-  public Object openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
+  //@TruffleBoundary
+  public Object openFile(final VirtualFrame frame, final SBlock fail, final BlockDispatchNode dispatchHandler) {
     long[] storage = new long[bufferSize];
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
       raf = open();
     } catch (FileNotFoundException e) {
-      return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
+      return dispatchHandler.executeDispatch(frame, new Object[] {fail, FILE_NOT_FOUND});
     }
 
     return this;
@@ -89,7 +89,7 @@ public class SFileDescriptor extends SObjectWithClass {
     raf = null;
   }
 
-  public int read(final long position, final SBlock fail,
+  public int read(final VirtualFrame frame, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler, final BranchProfile errorCases) {
     if (raf == null) {
       errorCases.enter();
@@ -114,7 +114,7 @@ public class SFileDescriptor extends SObjectWithClass {
       bytes = read(position, buff);
     } catch (IOException e) {
       errorCases.enter();
-      dispatchHandler.executeDispatch(new Object[] {fail, toString(e)});
+      dispatchHandler.executeDispatch(frame, new Object[] {fail, toString(e)});
     }
 
     // move read data to the storage
@@ -143,7 +143,7 @@ public class SFileDescriptor extends SObjectWithClass {
       final ExceptionSignalingNode ioException, final BranchProfile errorCases) {
     if (raf == null) {
       errorCases.enter();
-      dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
+      dispatchHandler.executeDispatch(frame, new Object[] {fail, FILE_IS_CLOSED});
       return;
     }
 
@@ -169,7 +169,7 @@ public class SFileDescriptor extends SObjectWithClass {
       write(nBytes, position, buff);
     } catch (IOException e) {
       errorCases.enter();
-      dispatchHandler.executeDispatch(new Object[] {fail, toString(e)});
+      dispatchHandler.executeDispatch(frame, new Object[] {fail, toString(e)});
     }
   }
 

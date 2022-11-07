@@ -7,6 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
@@ -102,10 +103,10 @@ public final class MutexPrimitives {
     @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
 
     @Specialization
-    public Object critical(final ReentrantLock lock, final SBlock block) {
+    public Object critical(final VirtualFrame frame, final ReentrantLock lock, final SBlock block) {
       LockPrim.lock(lock);
       try {
-        return dispatchBody.executeDispatch(new Object[] {block});
+        return dispatchBody.executeDispatch(frame, new Object[] {block});
       } finally {
         UnlockPrim.unlock(lock);
       }

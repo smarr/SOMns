@@ -150,19 +150,19 @@ public abstract class ExceptionsPrims {
           Object[] args = new Object[] {body, null};
           SArguments.setShadowStackEntryWithCache(args, this, shadowStackEntryLoadBody, frame,
               false);
-          return dispatchBody.executeDispatch(args);
+          return dispatchBody.executeDispatch(frame, args);
         } finally {
           Object[] args = new Object[] {ensureHandler, null};
           SArguments.setShadowStackEntryWithCache(args, this, shadowStackEntryLoadHandler,
               frame,
               false);
-          dispatchHandler.executeDispatch(args);
+          dispatchHandler.executeDispatch(frame, args);
         }
       } else {
         try {
-          return dispatchBody.executeDispatch(new Object[] {body});
+          return dispatchBody.executeDispatch(frame, new Object[] {body});
         } finally {
-          dispatchHandler.executeDispatch(new Object[] {ensureHandler});
+          dispatchHandler.executeDispatch(frame, new Object[] {ensureHandler});
         }
       }
     }

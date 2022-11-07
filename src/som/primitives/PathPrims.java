@@ -93,11 +93,11 @@ public final class PathPrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object copyAs(final String source, final String dest, final SBlock fail) {
+    public final Object copyAs(final VirtualFrame frame, final String source, final String dest, final SBlock fail) {
       try {
         copy(source, dest);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
+        dispatchHandler.executeDispatch(frame, new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
     }
@@ -114,11 +114,11 @@ public final class PathPrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object createDirectory(final String dir, final SBlock fail) {
+    public final Object createDirectory(final VirtualFrame frame, final String dir, final SBlock fail) {
       try {
         createDirectory(dir);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
+        dispatchHandler.executeDispatch(frame, new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
     }
@@ -135,11 +135,11 @@ public final class PathPrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object delteDirectory(final String dir, final SBlock fail) {
+    public final Object delteDirectory(final VirtualFrame frame, final String dir, final SBlock fail) {
       try {
         delete(dir);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
+        dispatchHandler.executeDispatch(frame, new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
     }
@@ -222,11 +222,11 @@ public final class PathPrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object moveAs(final String source, final String dest, final SBlock fail) {
+    public final Object moveAs(final VirtualFrame frame, final String source, final String dest, final SBlock fail) {
       try {
         move(source, dest);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
+        dispatchHandler.executeDispatch(frame, new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
     }

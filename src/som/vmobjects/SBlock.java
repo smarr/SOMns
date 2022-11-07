@@ -33,6 +33,7 @@ import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.library.ExportMessage;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 import som.VM;
 import som.interop.ValueConversion;
@@ -91,11 +92,10 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
   }
 
   @ExportMessage
-  public Object execute(final Object[] args)
+  public Object execute( final Object[] args)
       throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
     VM.thisMethodNeedsToBeOptimized(
         "Not ready for compilation, just moved from old interop code");
-
     if (TruffleOptions.AOT) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
     }
@@ -107,7 +107,7 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
 
     try {
       Object[] arguments = ValueConversion.convertToArgArray(convert, this, args);
-      Object result = block.executeDispatch(arguments);
+      Object result = block.executeDispatch(context, arguments);
 
       if (result == Nil.nilObject) {
         return null;

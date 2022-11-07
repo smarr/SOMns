@@ -182,8 +182,8 @@ public final class FilePrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object fileOpen(final SFileDescriptor file, final SBlock handler) {
-      return file.openFile(handler, dispatchHandler);
+    public final Object fileOpen(final VirtualFrame frame, final SFileDescriptor file, final SBlock handler) {
+      return file.openFile(frame, handler, dispatchHandler);
     }
   }
 
@@ -195,9 +195,9 @@ public final class FilePrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final long read(final SFileDescriptor file, final long offset,
+    public final long read(VirtualFrame frame, final SFileDescriptor file, final long offset,
         final SBlock fail) {
-      return file.read(offset, fail, dispatchHandler, errorCases);
+      return file.read(frame, offset, fail, dispatchHandler, errorCases);
     }
   }
 
