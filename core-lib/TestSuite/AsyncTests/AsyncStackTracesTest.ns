@@ -12,7 +12,7 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
         )(
             public class Ping new: cnt with: pong = (
                 | private pingsLeft ::= cnt.
-                    private pong = pong.
+                  private pong = pong.
                 |
                 ) (
                 public start = (
@@ -207,6 +207,19 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
                 |collectedStack correctFrameIndex result|
                     collectedStack:: (asyncTrace: res) collect: [:e | e methodSignature].
                     correctFrameIndex:: collectedStack  indexOf: 'Ping>>#start'.
+                    correctFrameIndex ~= nil.
+            ].
+            ^ assert: toAssert resolvedWith: true
+        )
+
+        public testAsyncPong2AsyncStackTraceHasCallToStop = (
+            | promise result pp resolved toAssert|
+             pp:: PingPong new: 2.
+            promise:: pp pingPong.
+            toAssert:: promise whenResolved: [:res | 
+                |collectedStack correctFrameIndex result|
+                    collectedStack:: (asyncTrace) collect: [:e | e methodSignature].
+                    correctFrameIndex:: collectedStack  indexOf: 'Pong>>#stop'.
                     correctFrameIndex ~= nil.
             ].
             ^ assert: toAssert resolvedWith: true
