@@ -11,10 +11,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
 
@@ -91,15 +93,23 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public int read(final VirtualFrame frame, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler, final BranchProfile errorCases) {
+    Object[] arguments;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      arguments = new Object[]{fail,null, SArguments.getShadowStackEntry(frame)};
+    } else {
+      arguments = new Object[]{fail,null};
+    }
     if (raf == null) {
       errorCases.enter();
-      fail.getMethod().invoke(new Object[] {fail, FILE_IS_CLOSED});
+      arguments[1] = FILE_IS_CLOSED;
+      fail.getMethod().invoke(arguments);
       return 0;
     }
 
     if (accessMode == AccessModes.write) {
       errorCases.enter();
-      fail.getMethod().invoke(new Object[] {fail, WRITE_ONLY_MODE});
+      arguments[1] = WRITE_ONLY_MODE;
+      fail.getMethod().invoke(arguments);
       return 0;
     }
 
@@ -114,7 +124,8 @@ public class SFileDescriptor extends SObjectWithClass {
       bytes = read(position, buff);
     } catch (IOException e) {
       errorCases.enter();
-      dispatchHandler.executeDispatch(frame, new Object[] {fail, toString(e)});
+      arguments[2] = toString(e);
+      dispatchHandler.executeDispatch(frame,arguments);
     }
 
     // move read data to the storage

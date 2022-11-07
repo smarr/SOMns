@@ -1,5 +1,6 @@
 package som.primitives;
 
+import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -278,8 +279,12 @@ public abstract class ActivitySpawn {
       if (!isVal.executeBoolean(frame, procCls)) {
         notAValue.signal(frame, procCls);
       }
-
-      spawnProcess(procCls, argArr, traceProcCreation);
+      Object[] arguments = argArr;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+        arguments = Arrays.copyOf(argArr,argArr.length+1);
+        arguments[argArr.length] = SArguments.getShadowStackEntry(frame);
+      }
+      spawnProcess(procCls, arguments, traceProcCreation);
       return Nil.nilObject;
     }
 
