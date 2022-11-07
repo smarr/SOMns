@@ -5,10 +5,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.MixinDefinition;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ObjectLiteralInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ObjectLiteralInstantiationNodeGen;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 
@@ -44,10 +46,22 @@ public class ObjectLiteralNode extends LiteralNode {
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     SObjectWithClass outer = (SObjectWithClass) outerRead.executeGeneric(frame);
-    Object superclassAndMixins = superClassResolver.call(outer);
+
+    Object superclassAndMixins;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      superclassAndMixins = superClassResolver.call(outer, SArguments.getShadowStackEntry(frame));
+    } else {
+        superclassAndMixins = superClassResolver.call(outer);
+    }
     SClass sClassObject =
         instantiation.execute(outer, superclassAndMixins, frame.materialize());
-    return newMessage.doPreEvaluated(frame, new Object[] {sClassObject});
+    Object[] arguments;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+      arguments = new Object[] {sClassObject,null};
+    } else {
+      arguments = new Object[] {sClassObject};
+    }
+    return newMessage.doPreEvaluated(frame, arguments );
   }
 
   @Override
