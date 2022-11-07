@@ -78,6 +78,11 @@ public final class TaskThreads {
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
+          Object[] arguments = Arrays.copyOf(argArray,argArray.length+1);
+          arguments[argArray.length] = SArguments.instantiateTopShadowStackEntry(target.getRootNode());
+          return target.call(arguments);
+        }
         return target.call(argArray);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
