@@ -28,7 +28,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
   // TODO: tag properly, it is a loop and an access
 
   private void execBlock(final VirtualFrame frame, final SBlock block, final Object arg) {
-    this.block.executeDispatch(SArguments.getPlainXArgumentsWithReceiver(this,
+    this.block.executeDispatch(frame, SArguments.getPlainXArgumentsWithReceiver(this,
         shadowStackEntryLoad, frame, block, arg));
   }
 

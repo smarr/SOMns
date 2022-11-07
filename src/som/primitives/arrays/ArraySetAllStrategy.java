@@ -17,11 +17,11 @@ import som.vmobjects.SBlock;
 
 public final class ArraySetAllStrategy {
 
-  public static void evalBlockForRemaining(final SBlock block,
+  public static void evalBlockForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final Object[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = blockDispatch.executeDispatch(new Object[] {block});
+      storage[i] = blockDispatch.executeDispatch(frame, new Object[] {block});
     }
   }
 
@@ -33,7 +33,7 @@ public final class ArraySetAllStrategy {
       notAValue.signal(frame, Classes.valueArrayClass);
     }
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      Object result = blockDispatch.executeDispatch(new Object[] {block, (long) i + 1});
+      Object result = blockDispatch.executeDispatch(frame, new Object[] {block, (long) i + 1});
       if (!isValue.executeBoolean(frame, result)) {
         notAValue.signal(frame, Classes.valueArrayClass);
       } else {
@@ -42,53 +42,53 @@ public final class ArraySetAllStrategy {
     }
   }
 
-  public static void evalBlockForRemaining(final SBlock block,
+  public static void evalBlockForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final long[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (long) blockDispatch.executeDispatch(new Object[] {block});
+      storage[i] = (long) blockDispatch.executeDispatch(frame, new Object[] {block});
     }
   }
 
-  public static void evalBlockForRemaining(final SBlock block,
+  public static void evalBlockForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final double[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (double) blockDispatch.executeDispatch(new Object[] {block});
+      storage[i] = (double) blockDispatch.executeDispatch(frame, new Object[] {block});
     }
   }
 
-  public static void evalBlockForRemaining(final SBlock block,
+  public static void evalBlockForRemaining(final VirtualFrame frame,final SBlock block,
       final long length, final boolean[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (boolean) blockDispatch.executeDispatch(new Object[] {block});
+      storage[i] = (boolean) blockDispatch.executeDispatch(frame, new Object[] {block});
     }
   }
 
-  public static void evalBlockWithArgForRemaining(final SBlock block,
+  public static void evalBlockWithArgForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final long[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (long) blockDispatch.executeDispatch(
+      storage[i] = (long) blockDispatch.executeDispatch(frame,
           new Object[] {block, (long) i + 1});
     }
   }
 
-  public static void evalBlockWithArgForRemaining(final SBlock block,
+  public static void evalBlockWithArgForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final double[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (double) blockDispatch.executeDispatch(
+      storage[i] = (double) blockDispatch.executeDispatch(frame,
           new Object[] {block, (long) i + 1});
     }
   }
 
-  public static void evalBlockWithArgForRemaining(final SBlock block,
+  public static void evalBlockWithArgForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final boolean[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
-      storage[i] = (boolean) blockDispatch.executeDispatch(
+      storage[i] = (boolean) blockDispatch.executeDispatch(frame,
           new Object[] {block, (long) i + 1});
     }
   }
@@ -176,31 +176,31 @@ public final class ArraySetAllStrategy {
     return exprs.length;
   }
 
-  public static Object evaluateFirstDetermineStorageAndEvaluateRest(
+  public static Object evaluateFirstDetermineStorageAndEvaluateRest(final VirtualFrame frame,
       final SBlock blockNoArg, final long length,
       final BlockDispatchNode blockDispatch) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
-    Object result = blockDispatch.executeDispatch(new Object[] {blockNoArg});
+    Object result = blockDispatch.executeDispatch(frame, new Object[] {blockNoArg});
     if (result instanceof Long) {
       long[] newStorage = new long[(int) length];
       newStorage[0] = (long) result;
-      evalBlockForRemaining(blockNoArg, length, newStorage, blockDispatch);
+      evalBlockForRemaining(frame, blockNoArg, length, newStorage, blockDispatch);
       return newStorage;
     } else if (result instanceof Double) {
       double[] newStorage = new double[(int) length];
       newStorage[0] = (double) result;
-      evalBlockForRemaining(blockNoArg, length, newStorage, blockDispatch);
+      evalBlockForRemaining(frame, blockNoArg, length, newStorage, blockDispatch);
       return newStorage;
     } else if (result instanceof Boolean) {
       boolean[] newStorage = new boolean[(int) length];
       newStorage[0] = (boolean) result;
-      evalBlockForRemaining(blockNoArg, length, newStorage, blockDispatch);
+      evalBlockForRemaining(frame, blockNoArg, length, newStorage, blockDispatch);
       return newStorage;
     } else {
       Object[] newStorage = new Object[(int) length];
       newStorage[0] = result;
-      evalBlockForRemaining(blockNoArg, length, newStorage, blockDispatch);
+      evalBlockForRemaining(frame, blockNoArg, length, newStorage, blockDispatch);
       return newStorage;
     }
   }
@@ -211,22 +211,22 @@ public final class ArraySetAllStrategy {
       final ExceptionSignalingNode notAValue) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
-    Object result = blockDispatch.executeDispatch(new Object[] {blockWithArg, (long) 1});
+    Object result = blockDispatch.executeDispatch(frame, new Object[] {blockWithArg, (long) 1});
 
     if (result instanceof Long) {
       long[] newStorage = new long[(int) length];
       newStorage[0] = (long) result;
-      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch);
+      evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch);
       return newStorage;
     } else if (result instanceof Double) {
       double[] newStorage = new double[(int) length];
       newStorage[0] = (double) result;
-      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch);
+      evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch);
       return newStorage;
     } else if (result instanceof Boolean) {
       boolean[] newStorage = new boolean[(int) length];
       newStorage[0] = (boolean) result;
-      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch);
+      evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch);
       return newStorage;
     } else {
       Object[] newStorage = new Object[(int) length];

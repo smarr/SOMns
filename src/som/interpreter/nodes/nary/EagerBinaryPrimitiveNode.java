@@ -97,13 +97,13 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument) {
     try {
-      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        Object[] args;
-
-        args = new Object[] {receiver, argument, null};
-
-        return makeGenericSend().doPreEvaluated(frame, args);
-      }
+//      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+//        Object[] args;
+//
+//        args = new Object[] {receiver, argument, null};
+//
+//        return makeGenericSend().doPreEvaluated(frame, args);
+//      }
       return primitive.executeEvaluated(frame, receiver, argument);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate(

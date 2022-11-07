@@ -52,14 +52,14 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
       assert SArray.FIRST_IDX == expectedFirstIdx;
 
       if (SArray.FIRST_IDX < length) {
-        this.block.executeDispatch(SArguments.getPlainXArgumentsWithReceiver(this,
+        this.block.executeDispatch(frame, SArguments.getPlainXArgumentsWithReceiver(this,
             shadowStackEntryLoad, frame, block, (long) SArray.FIRST_IDX + 1)); // +1 because it
                                                                                // is going to
                                                                                // the smalltalk
                                                                                // level
       }
       for (long i = 1; i < length; i++) {
-        this.block.executeDispatch(SArguments.getPlainXArgumentsWithReceiver(this,
+        this.block.executeDispatch(frame, SArguments.getPlainXArgumentsWithReceiver(this,
             shadowStackEntryLoad, frame, block, i + 1)); // +1 because it is going to the
                                                          // smalltalk level
       }

@@ -10,11 +10,17 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
+import som.VM;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+
+import java.util.Arrays;
 
 
 public abstract class BlockDispatchNode extends Node {
@@ -22,7 +28,7 @@ public abstract class BlockDispatchNode extends Node {
   @CompilationFinal private boolean initialized;
   @CompilationFinal private boolean isAtomic;
 
-  public abstract Object executeDispatch(Object[] arguments);
+  public abstract Object executeDispatch(VirtualFrame frame, Object[] arguments);
 
   protected static final boolean isSameMethod(final Object[] arguments,
       final SInvokable cached) {
@@ -59,9 +65,14 @@ public abstract class BlockDispatchNode extends Node {
   }
 
   @Specialization(guards = "isSameMethod(arguments, cached)")
-  public Object activateCachedBlock(final Object[] arguments,
+  public Object activateCachedBlock(VirtualFrame frame, final Object[] arguments,
       @Cached("getMethod(arguments)") final SInvokable cached,
       @Cached("createCallNode(arguments)") final DirectCallNode call) {
+    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE && !(arguments[arguments.length-1] instanceof ShadowStackEntry)){
+      Object[] newArguments = Arrays.copyOf(arguments,arguments.length+1);
+      newArguments[arguments.length] = SArguments.getShadowStackEntry(frame);
+      return call.call(newArguments);
+    }
     return call.call(arguments);
   }
 
