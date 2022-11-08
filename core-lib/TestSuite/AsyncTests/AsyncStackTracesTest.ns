@@ -115,7 +115,9 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
     ) : ( TEST_CONTEXT = () )
 
     public class ForkJoinAsyncStackTraceTest = AsyncTestBase () (
-        private calledMethod = (^ self asyncTrace)
+        private calledMethod = (
+            1 halt.
+            ^ self asyncTrace)
         public testForkedAsyncStackTraceHasCorrectTopFrame = (
             | task trace asyncTrace result |
             task:: Task spawn: [ trace:: calledMethod ].
@@ -219,7 +221,7 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
             toAssert:: promise whenResolved: [:res | 
                 |collectedStack correctFrameIndex result|
                     collectedStack:: (asyncTrace) collect: [:e | e methodSignature].
-                    correctFrameIndex:: collectedStack  indexOf: 'Pong>>#stop'.
+                    correctFrameIndex:: collectedStack  indexOf: '#stop'.
                     correctFrameIndex ~= nil.
             ].
             ^ assert: toAssert resolvedWith: true
