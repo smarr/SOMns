@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -271,6 +272,7 @@ public final class SArguments {
 
   private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = new HashMap<>();
 
+  @TruffleBoundary
   public static void saveCausalEntryForPromiseGroup(final Object previousPromiseStack,
       final Object callbackPromiseStack, final long actorId) {
     if (previousPromiseInGroupByActor != null
