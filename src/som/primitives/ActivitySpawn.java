@@ -158,12 +158,13 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == TaskClass")
-    public final SomForkJoinTask spawnTask(VirtualFrame frame, final SClass clazz, final SBlock block) {
+    public final SomForkJoinTask spawnTask(VirtualFrame frame, final SClass clazz,
+        final SBlock block) {
       Object[] arguments;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         arguments = new Object[] {block, SArguments.getShadowStackEntry(frame)};
       } else {
-        arguments =new Object[] {block};
+        arguments = new Object[] {block};
       }
 
       SomForkJoinTask task = createTask(arguments,
@@ -171,7 +172,7 @@ public abstract class ActivitySpawn {
       fork(task);
       return task;
     }
-    
+
     @TruffleBoundary
     private void fork(final SomForkJoinTask task) {
       forkJoinPool.execute(task);
@@ -285,8 +286,8 @@ public abstract class ActivitySpawn {
         notAValue.signal(frame, procCls);
       }
       Object[] arguments = argArr;
-      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-        arguments = Arrays.copyOf(argArr,argArr.length+1);
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        arguments = Arrays.copyOf(argArr, argArr.length + 1);
         arguments[argArr.length] = SArguments.getShadowStackEntry(frame);
       }
       spawnProcess(procCls, arguments, traceProcCreation);

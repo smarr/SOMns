@@ -94,7 +94,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       SInvokable invokable = (SInvokable) Types.getClassOf(self).lookupMessage(
           escapedBlock, AccessModifier.PROTECTED);
 
-      return invokable.invoke(call, new Object[] {self, block, SArguments.getShadowStackEntry(frame)});
+      return invokable.invoke(call,
+          new Object[] {self, block, SArguments.getShadowStackEntry(frame)});
     }
   }
 

@@ -769,13 +769,17 @@ public final class MixinDefinition implements SomInteropObject {
         Object superclassAndMixins;
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
           superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                  .getCallTarget().call(rcvr, SArguments.instantiateTopShadowStackEntry(mixinDefinition.getSuperclassAndMixinResolutionInvokable()));
+                                               .getCallTarget().call(rcvr,
+                                                   SArguments.instantiateTopShadowStackEntry(
+                                                       mixinDefinition.getSuperclassAndMixinResolutionInvokable()));
         } else {
           superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                  .getCallTarget().call(rcvr); }
+                                               .getCallTarget().call(rcvr);
+        }
         // ok, now it is for sure not initialized yet, instantiate class
-       // Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
-                   //                                 .getCallTarget().call(rcvr);
+        // Object superclassAndMixins =
+        // mixinDefinition.getSuperclassAndMixinResolutionInvokable()
+        // .getCallTarget().call(rcvr);
         SClass clazz = mixinDefinition.instantiateClass(null, rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;

@@ -80,13 +80,13 @@ public final class CachedDnuNode extends AbstractDispatchNode {
     Object[] argsArr;
     SArray.SImmutableArray dnuArguments = SArguments.getArgumentsWithoutReceiver(arguments);
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      argsArr = new Object[]{
-              rcvr, selector, dnuArguments,
-              arguments[arguments.length - 1]
+      argsArr = new Object[] {
+          rcvr, selector, dnuArguments,
+          arguments[arguments.length - 1]
       };
     } else {
-      argsArr = new Object[]{
-              rcvr, selector, dnuArguments};
+      argsArr = new Object[] {
+          rcvr, selector, dnuArguments};
     }
     return cachedMethod.call(argsArr);
   }

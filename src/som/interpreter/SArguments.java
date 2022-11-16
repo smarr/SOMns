@@ -247,9 +247,11 @@ public final class SArguments {
     args[args.length - 1] = entry;
   }
 
-  public static void updateShadowStackEntry(final Object[] args, final ShadowStackEntry entry) {
-    //assert args[args.length - 1] instanceof ShadowStackEntry : "Assume shadow stack entry is set";
-    //assert entry.getPreviousShadowStackEntry() == (args[args.length -1]);
+  public static void updateShadowStackEntry(final Object[] args,
+      final ShadowStackEntry entry) {
+    // assert args[args.length - 1] instanceof ShadowStackEntry : "Assume shadow stack entry is
+    // set";
+    // assert entry.getPreviousShadowStackEntry() == (args[args.length -1]);
     args[args.length - 1] = entry;
   }
 

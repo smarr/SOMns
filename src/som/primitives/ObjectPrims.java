@@ -48,8 +48,6 @@ import tools.debugger.frontend.ApplicationThreadStack;
 import tools.dym.Tags.OpComparison;
 
 
-
-
 public final class ObjectPrims {
 
   @GenerateNodeFactory
@@ -58,15 +56,17 @@ public final class ObjectPrims {
     @Specialization
     public final Object doSAbstractObject(VirtualFrame frame, final Object receiver) {
       CompilerDirectives.transferToInterpreter();
-      
+
       Output.errorPrintln("ASYNC STACK TRACE");
-      StackIterator.ShadowStackIterator iterator = new StackIterator.ShadowStackIterator.HaltShadowStackIterator(this.sourceSection);
+      StackIterator.ShadowStackIterator iterator =
+          new StackIterator.ShadowStackIterator.HaltShadowStackIterator(this.sourceSection);
       List<String> stack = new ArrayList<>();
-      while (iterator.hasNext()){
+      while (iterator.hasNext()) {
         ApplicationThreadStack.StackFrame sf = iterator.next();
         if (sf != null) {
           SourceSection section = sf.section;
-          stack.add(sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine());
+          stack.add(
+              sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine());
         }
       }
       return new SImmutableArray(stack.toArray(), Classes.arrayClass);
@@ -91,12 +91,14 @@ public final class ObjectPrims {
       boolean keepLooping = true;
       String methodName;
       while (keepLooping && currentEntry != null) {
-        if(currentEntry instanceof ShadowStackEntry.EntryForPromiseResolution){
-          methodName = ((ShadowStackEntry.EntryForPromiseResolution) currentEntry).resolutionLocation.toString();
+        if (currentEntry instanceof ShadowStackEntry.EntryForPromiseResolution) {
+          methodName =
+              ((ShadowStackEntry.EntryForPromiseResolution) currentEntry).resolutionLocation.toString();
         } else {
-          methodName = ((CachedDispatchNode) currentEntry.getExpression()).getCachedMethod().getName();
+          methodName =
+              ((CachedDispatchNode) currentEntry.getExpression()).getCachedMethod().getName();
         }
-          if (methodName.equals("ON_WHEN_RESOLVED_BLOCK")) {
+        if (methodName.equals("ON_WHEN_RESOLVED_BLOCK")) {
           keepLooping = false;
         } else {
           currentEntry = currentEntry.getPreviousShadowStackEntry();

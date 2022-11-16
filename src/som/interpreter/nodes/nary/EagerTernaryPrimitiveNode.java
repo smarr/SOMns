@@ -105,12 +105,12 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate(
           "Eager Primitive with unsupported specialization.");
-      Object[] arguments =  {receiver, argument1, argument2};
+      Object[] arguments = {receiver, argument1, argument2};
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-         arguments =  new Object[]{receiver, argument1, argument2, null};
+        arguments = new Object[] {receiver, argument1, argument2, null};
       }
       return makeGenericSend().doPreEvaluated(frame,
-          arguments );
+          arguments);
     }
   }
 

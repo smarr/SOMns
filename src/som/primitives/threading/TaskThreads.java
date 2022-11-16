@@ -78,10 +78,11 @@ public final class TaskThreads {
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-          if (!(argArray[argArray.length-1] instanceof ShadowStackEntry)) {
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+          if (!(argArray[argArray.length - 1] instanceof ShadowStackEntry)) {
             Object[] arguments = Arrays.copyOf(argArray, argArray.length + 1);
-            arguments[argArray.length] = SArguments.instantiateTopShadowStackEntry(target.getRootNode());
+            arguments[argArray.length] =
+                SArguments.instantiateTopShadowStackEntry(target.getRootNode());
             return target.call(arguments);
           }
         }
@@ -214,7 +215,6 @@ public final class TaskThreads {
     private final TraceContextNode trace = TraceContextNodeGen.create();
 
     protected final VM vm;
-
 
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot);

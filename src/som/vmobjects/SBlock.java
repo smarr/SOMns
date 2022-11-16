@@ -92,7 +92,7 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
   }
 
   @ExportMessage
-  public Object execute( final Object[] args)
+  public Object execute(final Object[] args)
       throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
     VM.thisMethodNeedsToBeOptimized(
         "Not ready for compilation, just moved from old interop code");

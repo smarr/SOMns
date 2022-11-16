@@ -103,7 +103,8 @@ public final class MutexPrimitives {
     @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
 
     @Specialization
-    public Object critical(final VirtualFrame frame, final ReentrantLock lock, final SBlock block) {
+    public Object critical(final VirtualFrame frame, final ReentrantLock lock,
+        final SBlock block) {
       LockPrim.lock(lock);
       try {
         return dispatchBody.executeDispatch(frame, new Object[] {block});

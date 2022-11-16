@@ -49,19 +49,20 @@ public class ObjectLiteralNode extends LiteralNode {
 
     Object superclassAndMixins;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      superclassAndMixins = superClassResolver.call(outer, SArguments.getShadowStackEntry(frame));
+      superclassAndMixins =
+          superClassResolver.call(outer, SArguments.getShadowStackEntry(frame));
     } else {
-        superclassAndMixins = superClassResolver.call(outer);
+      superclassAndMixins = superClassResolver.call(outer);
     }
     SClass sClassObject =
         instantiation.execute(outer, superclassAndMixins, frame.materialize());
     Object[] arguments;
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-      arguments = new Object[] {sClassObject,null};
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments = new Object[] {sClassObject, null};
     } else {
       arguments = new Object[] {sClassObject};
     }
-    return newMessage.doPreEvaluated(frame, arguments );
+    return newMessage.doPreEvaluated(frame, arguments);
   }
 
   @Override

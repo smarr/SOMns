@@ -69,7 +69,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
           }
         }
         Object[] arguments;
-        if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
           arguments = new Object[] {block, SArguments.getShadowStackEntry(frame)};
         } else {
           arguments = new Object[] {block};

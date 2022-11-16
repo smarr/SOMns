@@ -59,8 +59,9 @@ public abstract class PutAllNode extends BinaryComplexOperation {
     }
 
     try {
-      Object newStorage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(frame,
-          block, length, this.block);
+      Object newStorage =
+          ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(frame,
+              block, length, this.block);
       rcvr.transitionTo(newStorage);
     } finally {
       if (CompilerDirectives.inInterpreter()) {

@@ -49,8 +49,9 @@ public class SFileDescriptor extends SObjectWithClass {
     f = new File(uri);
   }
 
-  //@TruffleBoundary
-  public Object openFile(final VirtualFrame frame, final SBlock fail, final BlockDispatchNode dispatchHandler) {
+  // @TruffleBoundary
+  public Object openFile(final VirtualFrame frame, final SBlock fail,
+      final BlockDispatchNode dispatchHandler) {
     long[] storage = new long[bufferSize];
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
@@ -94,10 +95,10 @@ public class SFileDescriptor extends SObjectWithClass {
   public int read(final VirtualFrame frame, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler, final BranchProfile errorCases) {
     Object[] arguments;
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-      arguments = new Object[]{fail,null, SArguments.getShadowStackEntry(frame)};
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments = new Object[] {fail, null, SArguments.getShadowStackEntry(frame)};
     } else {
-      arguments = new Object[]{fail,null};
+      arguments = new Object[] {fail, null};
     }
     if (raf == null) {
       errorCases.enter();
@@ -125,7 +126,7 @@ public class SFileDescriptor extends SObjectWithClass {
     } catch (IOException e) {
       errorCases.enter();
       arguments[2] = toString(e);
-      dispatchHandler.executeDispatch(frame,arguments);
+      dispatchHandler.executeDispatch(frame, arguments);
     }
 
     // move read data to the storage

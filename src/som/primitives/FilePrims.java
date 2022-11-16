@@ -182,7 +182,8 @@ public final class FilePrims {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object fileOpen(final VirtualFrame frame, final SFileDescriptor file, final SBlock handler) {
+    public final Object fileOpen(final VirtualFrame frame, final SFileDescriptor file,
+        final SBlock handler) {
       return file.openFile(frame, handler, dispatchHandler);
     }
   }
