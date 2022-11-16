@@ -35,7 +35,7 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
           ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL;
       resolutionEntry =
           ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location,
-              "value: " + result.toString());
+              ""); // "value: " + result.toString()
       SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
     }
 
