@@ -3,6 +3,7 @@ package som.primitives;
 import java.util.Arrays;
 import java.util.concurrent.ForkJoinPool;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
@@ -157,7 +158,6 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == TaskClass")
-    //@TruffleBoundary
     public final SomForkJoinTask spawnTask(VirtualFrame frame, final SClass clazz, final SBlock block) {
       Object[] arguments;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
@@ -168,8 +168,13 @@ public abstract class ActivitySpawn {
 
       SomForkJoinTask task = createTask(arguments,
           onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
-      forkJoinPool.execute(task);
+      fork(task);
       return task;
+    }
+    
+    @TruffleBoundary
+    private void fork(final SomForkJoinTask task) {
+      forkJoinPool.execute(task);
     }
 
     @Specialization(guards = "clazz == ThreadClass")

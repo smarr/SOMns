@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -56,6 +57,8 @@ public final class ObjectPrims {
   public abstract static class AsyncTracePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSAbstractObject(VirtualFrame frame, final Object receiver) {
+      CompilerDirectives.transferToInterpreter();
+      
       Output.errorPrintln("ASYNC STACK TRACE");
       StackIterator.ShadowStackIterator iterator = new StackIterator.ShadowStackIterator.HaltShadowStackIterator(this.sourceSection);
       List<String> stack = new ArrayList<>();
