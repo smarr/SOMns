@@ -437,11 +437,11 @@ public abstract class EventualMessage {
         boolean promiseGroup = false;
         Node expression = callPromiseStack.getPreviousShadowStackEntry().getExpression().getParent();
         if (expression != null){
-        if (expression.getParent() instanceof Method) {
+          if (expression.getParent() instanceof Method) {
           promiseGroup =
               ((Method) callPromiseStack.getExpression().getParent()
                                         .getParent()).getName().startsWith("PromiseGroup");
-        }
+        }}
 
         if (promiseGroup) {
           SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1],
