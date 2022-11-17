@@ -5,6 +5,7 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.nodes.Node;
 
 import som.VM;
 import som.interpreter.Method;
@@ -434,8 +435,9 @@ public abstract class EventualMessage {
         assert args[args.length - 1] instanceof ShadowStackEntry;
         ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
         boolean promiseGroup = false;
-        if (callPromiseStack.getPreviousShadowStackEntry().getExpression().getParent()
-                            .getParent() instanceof Method) {
+        Node expression = callPromiseStack.getPreviousShadowStackEntry().getExpression().getParent();
+        if (expression != null){
+        if (expression.getParent() instanceof Method) {
           promiseGroup =
               ((Method) callPromiseStack.getExpression().getParent()
                                         .getParent()).getName().startsWith("PromiseGroup");
