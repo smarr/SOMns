@@ -123,10 +123,10 @@ public abstract class ChannelPrimitives {
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
 
         beforeExec(disp);
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE){
-          disp.invoke(new Object[]{obj,null});
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+          disp.invoke(new Object[] {obj, null});
         } else {
-          disp.invoke(new Object[]{obj});
+          disp.invoke(new Object[] {obj});
         }
       } catch (Throwable t) {
         t.printStackTrace();

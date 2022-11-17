@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -246,9 +247,11 @@ public final class SArguments {
     args[args.length - 1] = entry;
   }
 
-  public static void updateShadowStackEntry(final Object[] args, final ShadowStackEntry entry) {
-    //assert args[args.length - 1] instanceof ShadowStackEntry : "Assume shadow stack entry is set";
-    //assert entry.getPreviousShadowStackEntry() == (args[args.length -1]);
+  public static void updateShadowStackEntry(final Object[] args,
+      final ShadowStackEntry entry) {
+    // assert args[args.length - 1] instanceof ShadowStackEntry : "Assume shadow stack entry is
+    // set";
+    // assert entry.getPreviousShadowStackEntry() == (args[args.length -1]);
     args[args.length - 1] = entry;
   }
 
@@ -271,6 +274,7 @@ public final class SArguments {
 
   private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = new HashMap<>();
 
+  @TruffleBoundary
   public static void saveCausalEntryForPromiseGroup(final Object previousPromiseStack,
       final Object callbackPromiseStack, final long actorId) {
     if (previousPromiseInGroupByActor != null

@@ -73,9 +73,9 @@ public abstract class AbstractSymbolDispatch extends Node {
       @Cached("createForPerformNodes(selector)") final AbstractMessageSendNode cachedSend) {
     Object[] arguments;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      arguments = new Object[]{receiver, null};
+      arguments = new Object[] {receiver, null};
     } else {
-      arguments = new Object[]{receiver};
+      arguments = new Object[] {receiver};
     }
     PreevaluatedExpression realCachedSend = cachedSend;
     return realCachedSend.doPreEvaluated(frame, arguments);
@@ -89,8 +89,8 @@ public abstract class AbstractSymbolDispatch extends Node {
       @Cached("createArgArrayNode()") final ToArgumentsArrayNode toArgArray) {
     Object[] arguments = toArgArray.executedEvaluated(argsArr, receiver);
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      arguments = Arrays.copyOf(arguments,arguments.length+1);
-      arguments[arguments.length-1] = null;
+      arguments = Arrays.copyOf(arguments, arguments.length + 1);
+      arguments[arguments.length - 1] = null;
     }
 
     PreevaluatedExpression realCachedSend = cachedSend;
@@ -99,19 +99,21 @@ public abstract class AbstractSymbolDispatch extends Node {
 
   @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
   // @TruffleBoundary
-  public Object doUncached(final VirtualFrame frame, final Object receiver, final SSymbol selector,
-                           final Object argsArr,
-                           @Cached("create()") final IndirectCallNode call,
-                           @Cached   ShadowStackEntryLoad shadowStackEntryLoad) {
+  public Object doUncached(final VirtualFrame frame, final Object receiver,
+      final SSymbol selector,
+      final Object argsArr,
+      @Cached("create()") final IndirectCallNode call,
+      @Cached ShadowStackEntryLoad shadowStackEntryLoad) {
     CompilerDirectives.transferToInterpreter();
     SClass rcvrClass = Types.getClassOf(receiver);
     Dispatchable invokable = rcvrClass.lookupMessage(selector, AccessModifier.PUBLIC);
     Object[] arguments;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      arguments = new Object[]{receiver, null};
-      BackCacheCallNode.setShadowStackEntry(frame, false, arguments, this, shadowStackEntryLoad);
+      arguments = new Object[] {receiver, null};
+      BackCacheCallNode.setShadowStackEntry(frame, false, arguments, this,
+          shadowStackEntryLoad);
     } else {
-    arguments = new Object[]{receiver};
+      arguments = new Object[] {receiver};
     }
 
     if (invokable != null) {

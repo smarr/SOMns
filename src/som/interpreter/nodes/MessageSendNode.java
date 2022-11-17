@@ -162,9 +162,11 @@ public final class MessageSendNode {
       Object[] arguments = SArguments.allocateArgumentsArray(argumentNodes);
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
-        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE && arguments[i] instanceof ShadowStackEntry) {
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+            && arguments[i] instanceof ShadowStackEntry) {
           CompilerDirectives.transferToInterpreter();
-          insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection)).signal(frame, frame.getArguments());
+          insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection)).signal(frame,
+              frame.getArguments());
         }
         assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
         assert !(arguments[i] instanceof ShadowStackEntry);

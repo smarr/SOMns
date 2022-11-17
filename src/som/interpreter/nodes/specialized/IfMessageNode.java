@@ -57,9 +57,9 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
       @Cached("createDirect(method)") final DirectCallNode callTarget) {
     Object[] args;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      args = new Object[]{arg, SArguments.getShadowStackEntry(frame)};
+      args = new Object[] {arg, SArguments.getShadowStackEntry(frame)};
     } else {
-      args = new Object[]{arg};
+      args = new Object[] {arg};
     }
     // this was there before Async Stack traces
     if (condProf.profile(rcvr == expected)) {

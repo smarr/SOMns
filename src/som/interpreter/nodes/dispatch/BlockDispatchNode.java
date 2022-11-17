@@ -68,8 +68,9 @@ public abstract class BlockDispatchNode extends Node {
   public Object activateCachedBlock(VirtualFrame frame, final Object[] arguments,
       @Cached("getMethod(arguments)") final SInvokable cached,
       @Cached("createCallNode(arguments)") final DirectCallNode call) {
-    if(VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE && !(arguments[arguments.length-1] instanceof ShadowStackEntry)){
-      Object[] newArguments = Arrays.copyOf(arguments,arguments.length+1);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+        && !(arguments[arguments.length - 1] instanceof ShadowStackEntry)) {
+      Object[] newArguments = Arrays.copyOf(arguments, arguments.length + 1);
       newArguments[arguments.length] = SArguments.getShadowStackEntry(frame);
       return call.call(newArguments);
     }

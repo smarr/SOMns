@@ -58,7 +58,7 @@ public final class ArraySetAllStrategy {
     }
   }
 
-  public static void evalBlockForRemaining(final VirtualFrame frame,final SBlock block,
+  public static void evalBlockForRemaining(final VirtualFrame frame, final SBlock block,
       final long length, final boolean[] storage,
       final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
@@ -211,7 +211,8 @@ public final class ArraySetAllStrategy {
       final ExceptionSignalingNode notAValue) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
-    Object result = blockDispatch.executeDispatch(frame, new Object[] {blockWithArg, (long) 1});
+    Object result =
+        blockDispatch.executeDispatch(frame, new Object[] {blockWithArg, (long) 1});
 
     if (result instanceof Long) {
       long[] newStorage = new long[(int) length];

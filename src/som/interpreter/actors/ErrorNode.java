@@ -41,7 +41,7 @@ public abstract class ErrorNode extends AbstractPromiseResolutionNode {
           ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ERROR;
       resolutionEntry =
           ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location,
-              "error: " + result.toString());
+              ""); // "error: " + result.toString()
       SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
     }
 
