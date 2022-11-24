@@ -65,8 +65,9 @@ public final class ObjectPrims {
         ApplicationThreadStack.StackFrame sf = iterator.next();
         if (sf != null) {
           SourceSection section = sf.section;
+          String isFromMCOpt = (sf.fromMethodCache) ? " MC" : "";
           stack.add(
-              sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine());
+              sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine() + isFromMCOpt );
         }
       }
       return new SImmutableArray(stack.toArray(), Classes.arrayClass);

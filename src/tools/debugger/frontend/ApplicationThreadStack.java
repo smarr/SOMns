@@ -36,14 +36,21 @@ public class ApplicationThreadStack {
     public final Frame         frame;
     public final boolean       asyncOperation;
     private final RootNode     root;
+    public boolean fromMethodCache = false;
 
     public StackFrame(final String name, final RootNode root, final SourceSection section,
         final Frame frame, final boolean asyncOperation) {
+      this(name,root,section,frame,asyncOperation,false);
+    }
+
+    public StackFrame(final String name, final RootNode root, final SourceSection section,
+                      final Frame frame, final boolean asyncOperation, final boolean fromMethodCache) {
       this.name = name;
       this.root = root;
       this.section = section;
       this.frame = frame;
       this.asyncOperation = asyncOperation;
+      this.fromMethodCache = fromMethodCache;
     }
 
     public RootNode getRootNode() {

@@ -53,6 +53,12 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         location, localFrame, false);
   }
 
+    protected StackFrame createStackFrame(final Frame localFrame, final RootNode rootNode,
+                                          final String name, final SourceSection location, final boolean isFromMCOpt) {
+        return new StackFrame(name, rootNode,
+                location, localFrame, false,isFromMCOpt);
+    }
+
   public static StackIterator createHaltIterator(final SourceSection topNode) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       return new HaltShadowStackIterator(topNode);

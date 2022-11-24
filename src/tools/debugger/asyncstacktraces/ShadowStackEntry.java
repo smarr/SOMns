@@ -67,7 +67,8 @@ public class ShadowStackEntry {
     if (ALLOCATION_COUNT) {
       numberOfAllocations++;
     }
-    this.actorId = getCurrentActor();
+    //this.actorId = getCurrentActor();
+    this.actorId = 0;
   }
 
   public long getCurrentActor() {
