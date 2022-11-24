@@ -331,8 +331,8 @@ public final class SystemPrims {
       ArrayList<String> location = new ArrayList<String>();
       int maxLengthMethod = 0;
 
-      StackIterator stack = StackIterator.createHaltIterator(topNode);
-
+      //StackIterator stack = StackIterator.createHaltIterator(topNode);
+      StackIterator stack = new StackIterator.HaltIterator(topNode);
       boolean asyncTrace = false;
 
       if (stack instanceof StackIterator.ShadowStackIterator.HaltShadowStackIterator) {
