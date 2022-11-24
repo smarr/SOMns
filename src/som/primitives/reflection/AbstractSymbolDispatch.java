@@ -11,6 +11,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 
 import bd.primitives.nodes.PreevaluatedExpression;
 import som.compiler.AccessModifier;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
