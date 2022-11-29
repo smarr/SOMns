@@ -213,11 +213,11 @@ public final class SArguments {
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
       final Node expr, final boolean async) {
     CompilerAsserts.partialEvaluationConstant(async);
-    if (async) {
-      return ShadowStackEntry.createAtAsyncSend(previous, expr);
-    } else {
-      return ShadowStackEntry.create(previous, expr);
-    }
+//    if (async) {
+//      return ShadowStackEntry.createAtAsyncSend(previous, expr);
+//    } else {
+    return ShadowStackEntry.create(previous, expr);
+  //}
   }
 
   public static ShadowStackEntry getShadowStackEntry(final VirtualFrame frame) {

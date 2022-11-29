@@ -45,7 +45,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     ShadowStackEntry resolutionEntry = null;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
-      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
+      assert entry != null;
 
       ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
           ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_RECEIVE_MESSAGE;

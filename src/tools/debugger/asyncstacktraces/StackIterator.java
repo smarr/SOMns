@@ -18,6 +18,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
 import som.interpreter.Method;
+import som.interpreter.Primitive;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.vm.VmSettings;
@@ -168,7 +169,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     private ShadowStackEntry currentSSEntry;
     protected boolean        first;
     private Node             currentNode;
-    private Invokable        currentMethod;
+    public Invokable        currentMethod;
     private ShadowStackEntry useAgainShadowEntry;
     private Frame            useAgainFrame;
     private StackFrame       topFrame;
@@ -337,7 +338,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         return createStackFrame(shadow, localFrame, usedAgain);
       } else {
         return createStackFrame(localFrame, currentNode.getRootNode(),
-            currentNode.getRootNode().getName(), currentNode.getSourceSection());
+            currentNode.getRootNode().getName(), currentNode.getSourceSection(), true);
       }
     }
 

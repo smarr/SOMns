@@ -27,19 +27,19 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
       haltNode.executeEvaluated(frame, result);
     }
 
-    ShadowStackEntry resolutionEntry = null;
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
-      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
-      final ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location =
-          ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL;
-      resolutionEntry =
-          ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location,
-              ""); // "value: " + result.toString()
-      SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
-    }
+    //ShadowStackEntry resolutionEntry = null;
+//    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+//      ShadowStackEntry entry = SArguments.getShadowStackEntry(frame);
+//      assert entry != null;
+//      final ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location =
+//          ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL;
+//      resolutionEntry =
+//          ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location,
+//              ""); // "value: " + result.toString()
+//      SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
+//    }
 
-    resolvePromise(SPromise.Resolution.SUCCESSFUL, resolver, result, resolutionEntry,
+    resolvePromise(SPromise.Resolution.SUCCESSFUL, resolver, result, maybeEntry,
         haltOnResolution || promise.getHaltOnResolution(), frame, this.getParent());
     return resolver;
   }

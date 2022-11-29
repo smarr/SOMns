@@ -65,7 +65,7 @@ public final class ObjectPrims {
         ApplicationThreadStack.StackFrame sf = iterator.next();
         if (sf != null) {
           SourceSection section = sf.section;
-          String isFromMCOpt = (sf.fromMethodCache) ? " MC" : "";
+          String isFromMCOpt = (sf.fromMethodCache) ? ", MC" : "";
           stack.add(
               sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine() + isFromMCOpt );
         }
