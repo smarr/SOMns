@@ -1,13 +1,10 @@
 package som.interpreter.actors;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
+
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -17,12 +14,16 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+
+
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.Activity;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
+import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.KomposTrace;
@@ -56,6 +57,16 @@ public class SPromise extends SObjectWithClass {
     UNRESOLVED, ERRONEOUS, SUCCESSFUL, CHAINED
   }
 
+  public boolean isPromiseGroup;
+  private Map<SPromise, Entry<Object,ShadowStackEntry>> promiseGroupData = new HashMap();
+  private int promiseGroupCompletedPromisesCount = 0;
+  public List<SPromise> groupRoots = new LinkedList<SPromise>();
+
+  public void setPromiseGroupRoot(SPromise p) {
+    groupRoots.add(p);
+  }
+
+
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner,
@@ -73,6 +84,45 @@ public class SPromise extends SObjectWithClass {
       return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
+    }
+  }
+
+  public void addPromiseToGroup(SPromise promise){
+      assert !promiseGroupData.containsKey(promise);
+      isPromiseGroup = true;
+      Object resolutionValue = null;
+      if( promise.isResolvedUnsync()) {
+        resolutionValue = promise.value;
+        promiseGroupCompletedPromisesCount++;
+      }
+      promiseGroupData.put(promise,new AbstractMap.SimpleEntry<>(resolutionValue,null));
+  }
+
+  public SPromise promiseGroupOrNull() {
+    return isPromiseGroup ? this : null;
+  }
+
+  public List<ShadowStackEntry> getAsyncStacks(){
+    assert isPromiseGroup;
+    return promiseGroupData.values().stream().map(x -> x.getValue()).toList();
+  }
+
+  public synchronized void onResolvedGroupPromise(SPromise promise, Object resolvedValue, ForkJoinPool actorPool, VirtualFrame frame, Object maybeEntry){
+      promiseGroupCompletedPromisesCount++;
+      promiseGroupData.put(promise, new AbstractMap.SimpleEntry(resolvedValue, maybeEntry));
+      if (promiseGroupCompletedPromisesCount == promiseGroupData.size()) {
+        Object promiseValues = new SArray.SMutableArray(promiseGroupData.values().stream().map(x -> x.getKey()).toArray(), Classes.arrayClass);
+        Object wrapped = WrapReferenceNode.wrapForUse(this.owner, promiseValues, this.owner, null);
+        SResolver.resolveAndTriggerListenersUnsynced(Resolution.SUCCESSFUL, promiseValues, wrapped, this, this.owner, actorPool, maybeEntry, false, ValueProfile.createClassProfile(), frame, null, null, null);
+        }
+
+  }
+
+  public void triggerCallInRootPromiseGroup(Object resolutionValue,ForkJoinPool actorPool, VirtualFrame frame, Object maybeEntry){
+    if (!groupRoots.isEmpty()) {
+      for (SPromise root : groupRoots){
+        root.onResolvedGroupPromise(this,resolutionValue,actorPool, frame, maybeEntry);
+      }
     }
   }
 
@@ -119,8 +169,8 @@ public class SPromise extends SObjectWithClass {
    */
   private boolean haltOnResolution;
 
-  protected SPromise(final Actor owner, final boolean haltOnResolver,
-      final boolean haltOnResolution) {
+  public SPromise(final Actor owner, final boolean haltOnResolver,
+                  final boolean haltOnResolution) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
@@ -128,6 +178,20 @@ public class SPromise extends SObjectWithClass {
     this.haltOnResolution = haltOnResolution;
 
     resolutionState = Resolution.UNRESOLVED;
+    assert promiseClass != null;
+  }
+
+  public SPromise(final Actor owner, final boolean haltOnResolver,
+                  final boolean haltOnResolution,Resolution resolutionState, Object value) {
+    super(promiseClass, promiseClass.getInstanceFactory());
+    assert owner != null;
+    this.owner = owner;
+    this.haltOnResolver = haltOnResolver;
+    this.haltOnResolution = haltOnResolution;
+
+    this.resolutionState = resolutionState;
+    this.value = value;
+
     assert promiseClass != null;
   }
 
@@ -141,6 +205,11 @@ public class SPromise extends SObjectWithClass {
   @Override
   public final boolean isValue() {
     return false;
+  }
+
+  public final Object getValueForPromiseGroupResolution() {
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
+    return value;
   }
 
   /**
@@ -926,6 +995,12 @@ public class SPromise extends SObjectWithClass {
         if (VmSettings.SENDER_SIDE_TRACING) {
           tracePromiseResolutionEnd2.record(((STracingPromise) p).version);
         }
+        Object toPassEntry = maybeEntry;
+        if (maybeEntry instanceof ShadowStackEntry){
+          toPassEntry = ShadowStackEntry.createAtPromiseResolution((ShadowStackEntry) maybeEntry,expression, ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL,wrapped.toString());
+        }
+
+        p.triggerCallInRootPromiseGroup(result,actorPool,frame,toPassEntry);
       }
     }
 

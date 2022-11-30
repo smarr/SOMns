@@ -66,8 +66,17 @@ public final class ObjectPrims {
         if (sf != null) {
           SourceSection section = sf.section;
           String isFromMCOpt = (sf.fromMethodCache) ? ", MC" : "";
-          stack.add(
-              sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine() + isFromMCOpt );
+          if (sf instanceof ApplicationThreadStack.ParallelStack){
+             for (List<ApplicationThreadStack.StackFrame> stackList : ((ApplicationThreadStack.ParallelStack) sf).parallelStacks){
+              stack.add("PromiseGroup Parallel Stack");
+               for (ApplicationThreadStack.StackFrame f : stackList){
+                stack.add(" => " +  f.name + ", " + f.section.getSource().getName() + ", " + f.section.getStartLine());
+              }
+             }
+          } else {
+            stack.add(
+                    sf.name + ", " + section.getSource().getName() + ", " + section.getStartLine() + isFromMCOpt);
+          }
         }
       }
       return new SImmutableArray(stack.toArray(), Classes.arrayClass);

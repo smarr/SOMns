@@ -34,6 +34,8 @@ import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.vm.Symbols;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
+import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
@@ -49,6 +51,8 @@ import tools.debugger.breakpoints.Breakpoints;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
+
+import java.util.concurrent.ForkJoinPool;
 
 
 public final class PromisePrims {
@@ -383,5 +387,49 @@ public final class PromisePrims {
       return super.hasTagIgnoringEagerness(tag);
     }
 
+  }
+
+  @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
+  @Primitive(primitive = "actorsGroupPromise:with:", selector = ",",
+          receiverType = SPromise.class)
+  public abstract static class GroupPromisesPrim extends BinarySystemOperation {
+    ForkJoinPool actorPool;
+
+    public final GroupPromisesPrim initialize(final VM vm) {
+      super.initialize(vm);
+      actorPool = vm.getActorPool();
+      return this;
+    }
+    @Specialization
+    public final SPromise groupPromises(final VirtualFrame frame,
+                                               final SPromise promise, final SPromise otherPromise) {
+      // cannot group a promise with itself
+      assert promise != otherPromise;
+      if (promise.isCompleted() && otherPromise.isCompleted()) {
+        Object[] resValues = new Object[]{promise.getValueForPromiseGroupResolution(), otherPromise.getValueForPromiseGroupResolution()};
+        Object groupResValue = new SArray.SMutableArray(resValues,Classes.arrayClass);
+        return new SPromise(promise.getOwner(), false, false, SPromise.Resolution.SUCCESSFUL,groupResValue );
+      }
+
+      if(promise.isPromiseGroup){
+        // add the promise to the promiseGroup
+        otherPromise.setPromiseGroupRoot(promise);
+        promise.addPromiseToGroup(otherPromise);
+        return promise;
+      } else if(otherPromise.isPromiseGroup){
+        //add the promise to the promiseGroup
+        promise.setPromiseGroupRoot(otherPromise);
+        otherPromise.addPromiseToGroup(promise);
+        return otherPromise;
+      } else {
+        SPromise newPromise = new SPromise(promise.getOwner(), false, false);
+        promise.setPromiseGroupRoot(newPromise);
+        otherPromise.setPromiseGroupRoot(newPromise);
+        newPromise.addPromiseToGroup(promise);
+        newPromise.addPromiseToGroup(otherPromise);
+        return newPromise;
+      }
+    }
   }
 }

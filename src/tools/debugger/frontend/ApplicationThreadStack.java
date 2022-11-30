@@ -1,7 +1,6 @@
 package tools.debugger.frontend;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
@@ -30,13 +29,21 @@ public class ApplicationThreadStack {
   private final SuspendedEvent        event;
   private final Suspension            suspension;
 
-  public static final class StackFrame {
+  public static class StackFrame {
     public final String        name;
     public final SourceSection section;
     public final Frame         frame;
     public final boolean       asyncOperation;
     private final RootNode     root;
     public boolean fromMethodCache = false;
+
+    private StackFrame(){
+      asyncOperation = true;
+      name = "Not a Stack Frame";
+      section = null;
+      frame = null;
+      root = null;
+    }
 
     public StackFrame(final String name, final RootNode root, final SourceSection section,
         final Frame frame, final boolean asyncOperation) {
@@ -60,6 +67,15 @@ public class ApplicationThreadStack {
     public boolean hasFrame() {
       return frame != null;
     }
+  }
+
+  public static class ParallelStack extends StackFrame {
+    public List<List<StackFrame>> parallelStacks;
+
+    public ParallelStack(List<List<StackFrame>> parallelStacks){
+      this.parallelStacks = parallelStacks;
+    }
+
   }
 
   ApplicationThreadStack(final Suspension suspension) {

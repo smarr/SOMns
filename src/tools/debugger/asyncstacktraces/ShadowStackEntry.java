@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.SPromise;
 import som.vm.VmSettings;
 
 
@@ -46,10 +47,16 @@ public class ShadowStackEntry {
 
   public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
       final Node expr, final EntryForPromiseResolution.ResolutionLocation resolutionType,
-      final String resolutionValue) {
+      final String resolutionValue, SPromise promiseOrNull) {
     assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
     return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr), resolutionType,
-        resolutionValue);
+        resolutionValue, promiseOrNull);
+  }
+
+  public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
+                                                           final Node expr, final EntryForPromiseResolution.ResolutionLocation resolutionType,
+                                                           final String resolutionValue){
+    return ShadowStackEntry.createAtPromiseResolution(previous, expr, resolutionType,resolutionValue,null);
   }
 
   public static Node unwrapNodeIfNecessary(final Node node) {
@@ -123,6 +130,7 @@ public class ShadowStackEntry {
 
     public ResolutionLocation resolutionLocation;
     public String             resolutionValue;
+    public SPromise           promiseGroupOrNull = null;
 
     private EntryForPromiseResolution(final ShadowStackEntry previous,
         final Node expr, final ResolutionLocation resolutionLocation,
@@ -131,6 +139,15 @@ public class ShadowStackEntry {
       this.resolutionLocation = resolutionLocation;
       this.resolutionValue = resolutionValue;
     }
+
+    private EntryForPromiseResolution(final ShadowStackEntry previous,
+                                      final Node expr, final ResolutionLocation resolutionLocation,
+                                      final String resolutionValue,  SPromise promiseGroup) {
+      this(previous,expr,resolutionLocation,resolutionValue);
+      this.promiseGroupOrNull = promiseGroup;
+    }
+
+    public boolean isPromiseGroup() { return promiseGroupOrNull != null; }
 
     @Override
     public boolean isAsync() {

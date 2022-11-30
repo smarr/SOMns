@@ -1,9 +1,6 @@
 package tools.debugger.asyncstacktraces;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -20,12 +17,14 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.Primitive;
 import som.interpreter.actors.EventualSendNode;
+import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.vm.VmSettings;
 import tools.debugger.asyncstacktraces.ShadowStackEntry.EntryAtMessageSend;
 import tools.debugger.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolution;
 import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.HaltShadowStackIterator;
 import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.SuspensionShadowStackIterator;
+import tools.debugger.frontend.ApplicationThreadStack;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
@@ -231,6 +230,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
       }
 
       return createStackFrame(shadow, localFrame, usedAgain);
+
     }
 
     public StackFrame getTopFrame() {
@@ -279,11 +279,32 @@ public abstract class StackIterator implements Iterator<StackFrame> {
           useAgainShadowEntry = shadow;
           useAgainFrame = localFrame;
         } else if (shadow instanceof EntryForPromiseResolution) {
+
+          //below code is of carmen
           EntryForPromiseResolution.ResolutionLocation resolutionLocation =
               ((EntryForPromiseResolution) shadow).resolutionLocation;
           String resolutionValue = ((EntryForPromiseResolution) shadow).resolutionValue;
           name = "actor " + shadow.actorId + ", " + resolutionLocation.getValue() + ": "
               + shadow.expression.getRootNode().getName() + " " + resolutionValue;
+
+          if (((EntryForPromiseResolution) shadow).promiseGroupOrNull != null){
+            SPromise promiseGroup = ((EntryForPromiseResolution) shadow).promiseGroupOrNull;
+            List<ShadowStackEntry> asyncStacks = promiseGroup.getAsyncStacks();
+            List<List<StackFrame>> listOfStacks = new LinkedList<>();
+            for (ShadowStackEntry entry : asyncStacks) {
+              //ShadowStackIterator iterator = new ShadowStackIterator.HaltShadowStackIterator(entry.getSourceSection());
+              List<StackFrame> internalList = new LinkedList<>();
+              ShadowStackEntry current = entry;
+              while(current != null){
+                if(current.expression != null) {
+                  internalList.add(new StackFrame(current.getRootNode().getName(), current.getRootNode(), current.getSourceSection(), localFrame, false));
+                }
+                current = current.previous;
+              }
+              listOfStacks.add(internalList);
+            }
+            return new ApplicationThreadStack.ParallelStack(listOfStacks);
+          }
         }
 
       } else {

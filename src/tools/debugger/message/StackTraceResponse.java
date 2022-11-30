@@ -1,6 +1,9 @@
 package tools.debugger.message;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Stack;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -86,6 +89,8 @@ public final class StackTraceResponse extends Response {
     /** Indicates if the frame corresponds to an async operation. */
     private final boolean async;
 
+    private  List<List<StackFrame>> parallelStacks;
+
     StackFrame(final long globalId, final String name, final String sourceUri,
         final int line, final int column, final int endLine,
         final int endColumn, final int length, final boolean async) {
@@ -99,6 +104,21 @@ public final class StackTraceResponse extends Response {
       this.endColumn = endColumn;
       this.length = length;
       this.async = async;
+    }
+
+    StackFrame(final long globalId, final String name, final String sourceUri,
+               final int line, final int column, final int endLine,
+               final int endColumn, final int length, final boolean async, Suspension suspension,ApplicationThreadStack.ParallelStack parallelStackFrame){
+      this(globalId,name,sourceUri,line,column,endLine,endColumn,length,async);
+      int count = 0;
+      this.parallelStacks = new LinkedList<>();
+      for(List<ApplicationThreadStack.StackFrame> stackFrameList : parallelStackFrame.parallelStacks){
+        List<StackFrame> internalList = new LinkedList<>();
+        for(ApplicationThreadStack.StackFrame stackFrame : stackFrameList){
+          internalList.add(createFrame(suspension, count++,stackFrame));
+        }
+        parallelStacks.add(internalList);
+      }
     }
   }
 
@@ -202,7 +222,10 @@ public final class StackTraceResponse extends Response {
     }
 
     boolean async = frame.asyncOperation;
-
+    if (frame instanceof ApplicationThreadStack.ParallelStack){
+      return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length,
+              async,suspension,(ApplicationThreadStack.ParallelStack) frame);
+    }
     return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length,
         async);
   }

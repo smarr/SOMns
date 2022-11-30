@@ -97,7 +97,7 @@ public abstract class RegisterOnPromiseNode {
                 // EntryForPromiseResolution
                 ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
                     SArguments.getShadowStackEntry(frame),
-                    getParent().getParent(), onReceiveLocation, "");
+                    getParent().getParent(), onReceiveLocation, "", promise.promiseGroupOrNull());
                 assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
                     || resolutionEntry != null;
                 SArguments.updateShadowStackEntry(msg.args, resolutionEntry);
@@ -215,7 +215,7 @@ public abstract class RegisterOnPromiseNode {
                 SArguments.getShadowStackEntry(frame),
                 getParent().getParent(),
                 ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_ERROR,
-                "");
+                "", promise.promiseGroupOrNull());
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
             SArguments.setShadowStackEntry(msg.args, resolutionEntry);
           }

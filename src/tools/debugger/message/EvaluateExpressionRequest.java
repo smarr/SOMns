@@ -3,6 +3,7 @@ package tools.debugger.message;
 import com.oracle.truffle.api.debug.DebugValue;
 
 import org.java_websocket.WebSocket;
+import som.primitives.ObjectPrims;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.ApplicationThreadTask;
 import tools.debugger.frontend.Suspension;
@@ -52,14 +53,6 @@ public class EvaluateExpressionRequest extends Message.IncommingMessage {
 
   @Override
   public void process(FrontendConnector connector, WebSocket conn) {
-    Suspension suspension = connector.getSuspension(0);
-    EvaluateExpressionTask task =
-        new EvaluateExpressionTask(connector, suspension, frameId, expression);
-    suspension.submitTask(task);
-    int a = 0;
-    while (!task.executed) {
-      a = a + 1;
-    }
-    DebugValue value = task.resultValue;
+
   }
 }

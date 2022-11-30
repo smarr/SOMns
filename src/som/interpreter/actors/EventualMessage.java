@@ -433,23 +433,24 @@ public abstract class EventualMessage {
       // registered on
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         assert args[args.length - 1] instanceof ShadowStackEntry;
-        ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
-        boolean promiseGroup = false;
-        Node expression = callPromiseStack.getPreviousShadowStackEntry().getExpression();
-        if (expression != null){
-          expression = expression.getParent();
-          if (expression != null)
-            if (expression.getParent() instanceof Method) {
-            promiseGroup =
-                ((Method) expression.getParent()).getName().startsWith("PromiseGroup");
-        }}
+//        ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
+//        boolean promiseGroup = false;
+//        Node expression = callPromiseStack.getPreviousShadowStackEntry().getExpression();
+//        if (expression != null){
+//          expression = expression.getParent();
+//          if (expression != null)
+//            if (expression.getParent() instanceof Method) {
+//            promiseGroup =
+//                ((Method) expression.getParent()).getName().startsWith("PromiseGroup");
+//        }}
+////
+//        if (promise.isPromiseGroup) {
+//          SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1],
+//              promise.getOwner().getId());
+//        } else {
 
-        if (promiseGroup) {
-          SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1],
-              promise.getOwner().getId());
-        } else {
           SArguments.saveCausalEntryForPromise(maybeEntry, args[args.length - 1]);
-        }
+
       }
 
       if (VmSettings.SNAPSHOTS_ENABLED) {
