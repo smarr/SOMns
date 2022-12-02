@@ -2,6 +2,7 @@ package tools.debugger.frontend;
 
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
@@ -218,7 +219,7 @@ public class Suspension {
                 suspendedNode, turnName, rootNodeFrames);
           }
         }
-      } catch (InterruptedException e) {
+      } catch (InterruptedException| IllegalMonitorStateException e) {
         /* Just continue waiting */ }
     }
     synchronized (this) {
