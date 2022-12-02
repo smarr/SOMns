@@ -70,7 +70,7 @@ public final class ObjectPrims {
              for (List<ApplicationThreadStack.StackFrame> stackList : ((ApplicationThreadStack.ParallelStack) sf).parallelStacks){
               stack.add("PromiseGroup Parallel Stack");
                for (ApplicationThreadStack.StackFrame f : stackList){
-                stack.add(" => " +  f.name + ", " + f.section.getSource().getName() + ", " + f.section.getStartLine());
+                stack.add(" => ,"  +  f.name + ", " + f.section.getSource().getName() + ", " + f.section.getStartLine());
               }
              }
           } else {

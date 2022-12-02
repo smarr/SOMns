@@ -5,6 +5,7 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
     private Task = platform threading Task.
     public actors = platform actors.
     private Delay = platform threading Delay.
+    private ValueArray = platform kernel ValueArray.
      |
 )(   public class PingPong new: numPings = Value (
         | private NumPings = numPings.
@@ -70,9 +71,12 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
            public actorID = asyncStrings at: 1.
            public methodSignature = asyncStrings at: 2.
            public fileName = asyncStrings at: 3.
-           public fileLine = asyncStrings at: 4.
+           public fileLine =   (asyncStrings size > 3) ifTrue: [
+           asyncStrings at: 4.
+        ] ifFalse: ''.
           
             |
+      
         )(
         
         public splitAsyncString: aString = (
@@ -89,13 +93,15 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
         public isAsync = ( ^ true )
 
         public asyncTrace = (
-            ^ (1 asyncTrace collect: [:e | AsyncStackFrame new: e]) copyFrom: 3. 
+            ^ (1 asyncTrace collect: [:e | (e beginsWith: 'PromiseGroup ') ifTrue: [ AsyncStackFrame new: ' , Parallel Call Stack , , ' ] ifFalse: [AsyncStackFrame new: e]]) copyFrom: 3. 
         )
 
         public asyncTrace: aTrace = (
             ^ (aTrace collect: [:e | AsyncStackFrame new: e]) copyFrom: 2. 
         )
     )
+
+
     public class BasicAsyncTracesTests = AsyncTestBase () (
 
         public testRetrievingAsyncStackTraceReturnsArrayOfTraces = (
@@ -114,9 +120,9 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
 
     ) : ( TEST_CONTEXT = () )
 
+
     public class ForkJoinAsyncStackTraceTest = AsyncTestBase () (
         private calledMethod = (
-            1 halt.
             ^ self asyncTrace)
         public testForkedAsyncStackTraceHasCorrectTopFrame = (
             | task trace asyncTrace result |
@@ -130,7 +136,7 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
             task:: Task spawn: [ trace:: calledMethod ].
             task join.
             result:: trace collect: [:e | e methodSignature].
-            self assert: (result contains: 'Task_class>>#spawn:')
+            self assert: (result contains: 'Task>>#spawnPrim:')
         )
 
          public testForkedAsyncStackTraceHasCallToThisMethod = (
@@ -233,5 +239,68 @@ class AsyncStackTracesTest usingPlatform: platform testFramework: minitest = Val
 
     
     ) : ( TEST_CONTEXT = () )
+
+     public class PromisesAsyncTests = AsyncTestBase () (
+
+        class Promiser = (
+            | |
+        )(
+
+            public a: aResolver = (
+                aResolver resolve: 'A'.
+            )
+
+            public b: aResolver = (
+                aResolver resolve: 'B'.
+            )
+
+            
+
+        )
+
+        public testAsyncPromises = (
+            |pp1 pp2 promiser trace|
+                pp1:: actors createPromisePair.
+                pp2:: actors createPromisePair.
+                promiser:: Promiser new.
+                pp1 promise whenResolved: [:v | trace:: self asyncTrace.
+                v.].
+                promiser a: pp1 resolver.
+                ^self assert: pp1 promise resolvedWith: 'A'.
+        )
+
+        public testAsyncPromisesChainWhenResolved = (
+            |pp1 p promiser trace|
+                pp1:: actors createPromisePair.
+                promiser:: Promiser new.
+                p:: pp1 promise whenResolved: [:v | v ].
+                p whenResolved: [:v | 
+                    trace:: self asyncTrace.
+                     ].
+                promiser a: pp1 resolver.
+                ^self assert: p resolvedWith: 'A'.
+        )
+
+
+        public testAsyncPromisesChainWhenResolvedOnPromiseGroupIncludesBothCallsToPromiser = (
+            |pp1 pp2 p promiser trace resultPromise|
+                pp1:: actors createPromisePair.
+                pp2:: actors createPromisePair.
+                promiser:: Promiser new.
+                p:: pp1 promise , pp2 promise.
+                resultPromise:: p whenResolved: [:v | 
+                    self asyncTrace.].
+                promiser b: pp2 resolver.
+                Task spawn: [promiser a: pp1 resolver.].
+                ^self assert: resultPromise resolvedWithBlock: [:trace | |collectedStack first second|
+                    collectedStack:: trace collect: [:e | e methodSignature].
+                    first:: (collectedStack indexOf: 'Promiser>>#a:').
+                    second:: (collectedStack indexOf: 'Promiser>>#b:').
+                    (first ~= nil) and: ((second) ~= nil).
+                    ].
+        )
+
+    ) : ( TEST_CONTEXT = () ) 
+
    
 )
