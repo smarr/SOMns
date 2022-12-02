@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import bd.primitives.Primitive;
 import som.interpreter.actors.SFarReference;
 import som.vm.constants.Nil;
+import som.vmobjects.SArray;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
@@ -71,6 +72,21 @@ public abstract class EqualsPrim extends ComparisonPrim {
   @Specialization(guards = {"left.isValue()", "right.isValue()"})
   public final boolean doValues(final SImmutableObject left, final SImmutableObject right) {
     return left == right;
+  }
+
+  @Specialization(guards = {"left.isValue()", "right.isValue()"})
+  public final boolean doValueArray(final SArray.SImmutableArray left, final SArray.SImmutableArray right) {
+    Object[] leftStorage = left.getObjectStorage();
+    Object[] rightStorage = right.getObjectStorage();
+    if (leftStorage.length != rightStorage.length){
+      return false;
+    }
+    for(int i = 0;i < leftStorage.length ; i++){
+      if(!leftStorage[i].equals(rightStorage[i])){
+        return false;
+      }
+    }
+    return true;
   }
 
   @Specialization
