@@ -11,6 +11,7 @@ import bd.primitives.nodes.WithContext;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 @NodeChildren({
@@ -19,6 +20,8 @@ import som.vmobjects.SSymbol;
     @NodeChild(value = "secondArg", type = ExpressionNode.class)})
 @GenerateWrapper
 public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
+
+  protected ShadowStackEntry maybeEntry;
 
   protected TernaryExpressionNode() {}
 

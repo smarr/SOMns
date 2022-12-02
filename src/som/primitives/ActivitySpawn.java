@@ -288,7 +288,7 @@ public abstract class ActivitySpawn {
       Object[] arguments = argArr;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
         arguments = Arrays.copyOf(argArr, argArr.length + 1);
-        arguments[argArr.length] = SArguments.getShadowStackEntry(argArr);
+        arguments[argArr.length] = maybeEntry;
       }
       spawnProcess(procCls, arguments, traceProcCreation);
       return Nil.nilObject;

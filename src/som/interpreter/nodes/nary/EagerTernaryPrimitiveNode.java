@@ -101,6 +101,9 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   public Object executeEvaluated(final VirtualFrame frame,
       final Object receiver, final Object argument1, final Object argument2) {
     try {
+      if  (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        primitive.maybeEntry = SArguments.getShadowStackEntry(frame);
+      }
       return primitive.executeEvaluated(frame, receiver, argument1, argument2);
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate(
