@@ -48,6 +48,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.debugger.breakpoints.Breakpoints;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
@@ -162,7 +163,8 @@ public abstract class ActivitySpawn {
         final SBlock block) {
       Object[] arguments;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        arguments = new Object[] {block, SArguments.getShadowStackEntry(frame)};
+        ShadowStackEntry.EntryForTaskSpawn entry = ShadowStackEntry.createAtTaskSpawn(SArguments.getShadowStackEntry(frame),this);
+        arguments = new Object[] {block, entry };
       } else {
         arguments = new Object[] {block};
       }

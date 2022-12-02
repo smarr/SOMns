@@ -5,6 +5,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise;
@@ -59,6 +60,11 @@ public class ShadowStackEntry {
     return ShadowStackEntry.createAtPromiseResolution(previous, expr, resolutionType,resolutionValue,null);
   }
 
+  public static EntryForTaskSpawn createAtTaskSpawn(final ShadowStackEntry previous, final Node currentExpression){
+    ShadowStackEntry methodCallEntry = new ShadowStackEntry(previous,currentExpression);
+    return new EntryForTaskSpawn(methodCallEntry,currentExpression);
+  }
+
   public static Node unwrapNodeIfNecessary(final Node node) {
     if (node instanceof WrapperNode) {
       return ((WrapperNode) node).getDelegateNode();
@@ -67,7 +73,7 @@ public class ShadowStackEntry {
     }
   }
 
-  protected ShadowStackEntry(final ShadowStackEntry previous, final Node expr) {
+  public ShadowStackEntry(final ShadowStackEntry previous, final Node expr) {
     assert VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
     this.previous = previous;
     this.expression = expr;
@@ -154,5 +160,11 @@ public class ShadowStackEntry {
       return true;
     }
 
+  }
+  public static final class EntryForTaskSpawn extends ShadowStackEntry {
+
+    public EntryForTaskSpawn(ShadowStackEntry previous, Node expr) {
+      super(previous, expr);
+    }
   }
 }

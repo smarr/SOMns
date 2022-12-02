@@ -263,10 +263,16 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
       String name = "actor " + shadow.actorId + ", " + shadow.getRootNode().getName();
       SourceSection location = shadow.getSourceSection();
+      if (shadow instanceof ShadowStackEntry.EntryForTaskSpawn){
+        name = "Task>>#spawnPrim:";
+      }
 
-      if (!usedAgain && (shadow instanceof EntryAtMessageSend
-          || shadow instanceof EntryForPromiseResolution)) {
+      if (!usedAgain) {
         contextTransitionElement = true;
+
+        if (shadow instanceof ShadowStackEntry.EntryForTaskSpawn){
+          name = "actor " + shadow.actorId + ", Task>>#spawnPrim:";
+        }
 
         if (shadow instanceof EntryAtMessageSend) {
           Node sendNode = shadow.expression.getParent();
