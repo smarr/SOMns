@@ -772,6 +772,14 @@ OTHER DEALINGS IN THE SOFTWARE. *)
             failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
 
+    assert: promise resolvedWithBlock: aBlock = (
+      ^ promise
+          whenResolved: [:actualResolution |
+            assert: [aBlock value: actualResolution] ]
+          onError: [:actualResolution |
+            failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
+    )
+
     assert: promise erroredWith: expectedErrorClass = (
 (*      | state actualResolution |
       state:: #unresolved.
