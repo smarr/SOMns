@@ -111,7 +111,7 @@ public class SPromise extends SObjectWithClass {
       promiseGroupCompletedPromisesCount++;
       promiseGroupData.put(promise, new AbstractMap.SimpleEntry(resolvedValue, maybeEntry));
       if (promiseGroupCompletedPromisesCount == promiseGroupData.size()) {
-        Object promiseValues = new SArray.SMutableArray(promiseGroupData.values().stream().map(x -> x.getKey()).toArray(), Classes.arrayClass);
+        Object promiseValues = new SArray.SImmutableArray(promiseGroupData.values().stream().map(x -> x.getKey()).toArray(), Classes.valueArrayClass);
         Object wrapped = WrapReferenceNode.wrapForUse(this.owner, promiseValues, this.owner, null);
         SResolver.resolveAndTriggerListenersUnsynced(Resolution.SUCCESSFUL, promiseValues, wrapped, this, this.owner, actorPool, maybeEntry, false, ValueProfile.createClassProfile(), frame, null, null, null);
         }
