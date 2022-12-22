@@ -157,6 +157,29 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     this.structuralProbe = structuralProbe;
   }
 
+  public MixinBuilder(final ScopeBuilder<?> outer, final AccessModifier accessModifier,
+                      final SSymbol name, final SourceSection nameSection,
+                      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
+                      final SomLanguage language, final MixinDefinitionId mixinId){
+    super(outer, outer == null ? null : outer.getScope());
+    this.name = name;
+    this.nameSection = nameSection;
+    this.mixinId = mixinId;
+
+    this.classSide = false;
+    this.language = language;
+
+    this.classScope = createScope(scope);
+
+    this.initializer = new MethodBuilder(this, structuralProbe);
+    this.primaryFactoryMethod =
+            new MethodBuilder(this, classScope, false, language, structuralProbe);
+    this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
+
+    this.accessModifier = accessModifier;
+    this.structuralProbe = structuralProbe;
+  }
+
   public static class MixinDefinitionError extends SemanticDefinitionError {
     private static final long serialVersionUID = 5030639383869198851L;
 
@@ -493,7 +516,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     return true;
   }
 
-  private void setHolders(final MixinDefinition clsDef) {
+  public void setHolders(final MixinDefinition clsDef) {
     assert clsDef != null;
     for (Dispatchable disp : dispatchables.getValues()) {
       if (disp instanceof SInvokable) {
@@ -673,6 +696,10 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, nestedMixin);
     dispatchables.put(name, cacheSlot);
     slots.put(name, cacheSlot);
+  }
+
+  public void addSlotsUnsafe(EconomicMap<SSymbol, SlotDefinition> newSlots){
+    slots.putAll(newSlots);
   }
 
   public MixinDefinitionId getMixinId() {

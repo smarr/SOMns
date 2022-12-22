@@ -4,14 +4,17 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
+import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.debug.DebugValue;
+import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
@@ -24,7 +27,16 @@ import com.sun.net.httpserver.HttpServer;
 
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
+import bd.tools.structure.StructuralProbe;
+import som.VM;
+import som.compiler.MixinDefinition;
+import som.compiler.Variable;
+import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
+import som.interpreter.objectstorage.StorageLocation;
 import som.vm.VmSettings;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
 import tools.TraceData;
@@ -189,6 +201,7 @@ public class FrontendConnector {
   private static TaggedSourceCoordinate[] createSourceSections(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> sourcesTags,
       final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
+
     Set<SourceSection> sections = new HashSet<>();
     Map<SourceSection, Set<Class<? extends Tag>>> tagsForSections = sourcesTags.get(source);
 
@@ -348,5 +361,79 @@ public class FrontendConnector {
       messageHandler.stop(delay);
       traceHandler.stop(delay);
     } catch (InterruptedException e) {}
+  }
+
+  public void restartFrame(Suspension suspension, DebugStackFrame frame) {
+    suspension.getEvent().prepareUnwindFrame(frame,null) ;
+    suspension.resume();
+    suspension.resume();
+  }
+
+  // Code Uptading stuff
+  public MixinDefinition updateClass(String filePath) {
+    try {
+      //TODO: support inner classes
+      VM vm = webDebugger.vm;
+      StructuralProbe<SSymbol, MixinDefinition, SInvokable, MixinDefinition.SlotDefinition, Variable> structuralProbe = vm.getStructuralProbe();
+      EconomicSet<MixinDefinition> modules = structuralProbe.getClasses();
+      MixinDefinition oldModule = null;
+      Path newSource = Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(Path.of(filePath));
+      for(MixinDefinition module : modules ) {
+        if(module.getIdentifier().getString().split(":")[0].equals(newSource.toString())) {
+          oldModule = module;
+        }
+      }
+      MixinDefinition newModule = vm.loadModule(filePath,oldModule);
+      System.out.println(newModule.getName().toString());
+      EconomicMap<SSymbol, Dispatchable> oldMethods = oldModule.getInstanceDispatchables();
+      oldMethods.putAll(newModule.getInstanceDispatchables());
+      EconomicMap<SSymbol,Dispatchable> newDisp = newModule.getInstanceDispatchables();
+      //remove slot definition from dispatchables
+      for(ClassFactory module : oldModule.cache) {
+//        for (SSymbol key : newDisp.getKeys()){
+//          if(newDisp.get(key) instanceof MixinDefinition.SlotDefinition){
+//            newDisp.removeKey(key);
+//          }
+//        }
+        module.dispatchables.putAll(newModule.getInstanceDispatchables());
+      }
+
+      for (Dispatchable disp : oldModule.getInstanceDispatchables().getValues()) {
+          if (disp instanceof SInvokable){
+            SInvokable inv = (SInvokable) disp;
+            inv.setHolder(oldModule);
+          }
+      }
+      oldModule.getSlots().putAll(newModule.getSlots());
+      // Pushing new slots
+      for (MixinDefinition.SlotDefinition sl : oldModule.getSlots().getValues()){
+        for(ClassFactory module : oldModule.cache) {
+          EconomicMap<som.compiler.MixinDefinition.SlotDefinition, StorageLocation> storageLocations  =
+                  module.getInstanceLayout().getStorageLocations();
+          Iterable<MixinDefinition.SlotDefinition> oldKeys = storageLocations.getKeys();
+          Map<MixinDefinition.SlotDefinition, MixinDefinition.SlotDefinition> toSubstitute = new HashMap<>();
+          for (MixinDefinition.SlotDefinition oldKey : oldKeys){
+            if(oldKey.getName() == sl.getName()){
+              toSubstitute.put(oldKey,sl);
+              break;
+            }
+          }
+          for (Map.Entry<MixinDefinition.SlotDefinition, MixinDefinition.SlotDefinition> newOld : toSubstitute.entrySet()){
+            StorageLocation location = storageLocations.get(newOld.getKey());
+            storageLocations.removeKey(newOld.getKey());
+            storageLocations.put(newOld.getValue(),location);
+            location.setSlot(newOld.getValue());
+          }
+        }
+      }
+      System.out.println("SUBSTITUTED METHODS IN MODULE");
+
+      DispatchGuard.invalidateAssumption();
+
+      return oldModule;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return null;
+    }
   }
 }

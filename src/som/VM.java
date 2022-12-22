@@ -419,6 +419,8 @@ public final class VM {
           : "Currently, CandidateIdentifer and Snapshots are not compatible";
       structuralProbe = SnapshotBackend.getProbe();
     }
+
+    structuralProbe = new StructuralProbe<>();
   }
 
   public SClass loadExtensionModule(final String filename) {
@@ -427,6 +429,13 @@ public final class VM {
 
   public MixinDefinition loadModule(final String filename) throws IOException {
     return objectSystem.loadModule(filename);
+  }
+
+  public MixinDefinition loadModule(final String filename,MixinDefinition oldModule) throws IOException {
+    if (oldModule == null) {
+      return objectSystem.loadModule(filename);
+    }
+    return objectSystem.reLoadModule(filename,oldModule);
   }
 
   public MixinDefinition loadModule(final Source source) throws IOException {
@@ -452,5 +461,9 @@ public final class VM {
     ThreadingModule.ConditionClassId = null;
 
     ChannelPrimitives.resetClassReferences();
+  }
+
+  public StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> getStructuralProbe(){
+    return structuralProbe;
   }
 }

@@ -54,15 +54,19 @@ public abstract class StorageLocation {
   }
 
   protected final ObjectLayout   layout;
-  protected final SlotDefinition slot;
+  protected SlotDefinition slot;
 
   protected StorageLocation(final ObjectLayout layout, final SlotDefinition slot) {
     this.layout = layout;
     this.slot = slot;
   }
 
+
   public SlotDefinition getSlot() {
     return slot;
+  }
+  public void setSlot(SlotDefinition slot) {
+    this.slot = slot;
   }
 
   /**
