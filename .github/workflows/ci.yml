@@ -24,14 +24,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: true
 
-      - name: Compile SOMns Jar and Unit Tests
+      - name: Setup MX
+        run: |
+          ./som --setup mx
+          echo "PATH=$PATH:`pwd`/../mx" >> "$GITHUB_ENV"
+
+      - name: Get LabsJDK and Get Graal
+        run: |
+          ./som --setup labsjdk
+          mx sforceimport
+          rm libs/jvmci || true
+          ./som --setup labsjdk
+
+      - name: Compile SOMns
         if: matrix.job != 'lint'
         run: |
-          export JAVA_HOME=$JAVA_HOME_17_X64
-          ant -e jar unit-tests
+          mx build
+
+      - name: Tests
+        if: matrix.job == 'test-1'
+        run: |
+          mx tests-junit
+          mx tests-som
 
       - name: SOMns Test Suite
         if: matrix.job != 'lint'
@@ -77,8 +92,8 @@ jobs:
           export JAVA_HOME=$JAVA_HOME_17_X64
           ./tests/replay/test.sh 2
 
-      # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
-      #- name: Snapshot Tests
+    # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
+    #- name: Snapshot Tests
       # script:
       #   - run ./tests/snapshot/test.sh
       #   - $ANT serialization-tests
@@ -91,10 +106,10 @@ jobs:
       - name: Download Eclipse
         if: matrix.job == 'lint'
         run: |
-          export ECLIPSE_TAR=eclipse.tar.gz
+           export ECLIPSE_TAR=eclipse.tar.gz
           export ECLIPSE_URL=https://archive.eclipse.org/eclipse/downloads/drops4/R-4.30-202312010110/eclipse-SDK-4.30-linux-gtk-x86_64.tar.gz
-          curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
-          tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
+           curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
+           tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
 
       - name: Check Eclipse Format
         if: matrix.job == 'lint'
