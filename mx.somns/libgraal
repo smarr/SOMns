@@ -1,0 +1,7 @@
+JAVA_HOME=libs/jvmci
+DYNAMIC_IMPORTS=/vm,/substratevm,/tools,/truffle,/sdk,/compiler
+FORCE_BASH_LAUNCHERS=true
+DISABLE_LIBPOLYGLOT=true
+EXCLUDE_COMPONENTS=svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm
+GRAALVM_SKIP_ARCHIVE=true
+MX_IDE_ECLIPSE_ASYNC_DISTRIBUTIONS=true

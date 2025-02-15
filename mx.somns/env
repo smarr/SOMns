@@ -1,0 +1,8 @@
+JAVA_HOME=libs/jvmci
+# MX_BUILD_EXPLODED=true  # Java modules, which are now used, don't support exploded builds
+LINKY_LAYOUT=*.jar
+FORCE_BASH_LAUNCHERS=true
+DISABLE_LIBPOLYGLOT=true
+EXCLUDE_COMPONENTS=svmag,nju,nic,nil,ins,dap,lsp,insight,insightheap,vvm
+GRAALVM_SKIP_ARCHIVE=true
+MX_IDE_ECLIPSE_ASYNC_DISTRIBUTIONS=true

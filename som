@@ -171,7 +171,7 @@ args, unknown_args = parser.parse_known_args()
 def get_mx_suite():
   import importlib.util
   import sys
-  spec = importlib.util.spec_from_file_location('suite', BASE_DIR + '/mx.trufflesom/suite.py')
+  spec = importlib.util.spec_from_file_location('suite', BASE_DIR + '/mx.somns/suite.py')
   module = importlib.util.module_from_spec(spec)
   spec.loader.exec_module(module)
   return getattr(module, 'suite')
@@ -239,7 +239,7 @@ if args.setup == 'labsjdk':
 
   mx = find_mx()
   # move the env file out of the way, because of latest mx changes
-  os.rename(BASE_DIR + '/mx.trufflesom/env', BASE_DIR + '/mx.trufflesom/env-load-jdk')
+  os.rename(BASE_DIR + '/mx.somns/env', BASE_DIR + '/mx.somns/env-load-jdk')
 
   if os.path.exists(TRUFFLE_DIR + "/common.json"):
     graal_common_json = ["--configuration", TRUFFLE_DIR + "/common.json"]
@@ -252,7 +252,7 @@ if args.setup == 'labsjdk':
         "--strip-contents-home",
         "--jdk-id", get_labs_jdk_id(), "--alias", BASE_DIR + "/libs/jvmci"])
   finally:
-    os.rename(BASE_DIR + '/mx.trufflesom/env-load-jdk', BASE_DIR + '/mx.trufflesom/env')
+    os.rename(BASE_DIR + '/mx.somns/env-load-jdk', BASE_DIR + '/mx.somns/env')
   exit(p.returncode)
 
 if args.setup == 'truffle-commit-id':
