@@ -94,7 +94,7 @@ suite = {
             "requires": [
                 "java.logging",
             ],
-            "dependencies": ["truffle:TRUFFLE_API", "SOMNS", "mx:JUNIT"],
+            "dependencies": ["truffle:TRUFFLE_API", "SOMNS", "mx:JUNIT", "sdk:POLYGLOT_TCK"],
             "checkstyle": "somns",
             "jacoco": "include",
             "javaCompliance": "17+",
@@ -123,6 +123,7 @@ suite = {
                 "truffle:TRUFFLE_API",
                 "truffle:TRUFFLE_JSON",
                 "tools:TRUFFLE_PROFILER",
+                "sdk:NATIVEIMAGE",
             ],  # , "tools:TRUFFLE_COVERAGE",
         },
         "TRUFFLESOM_TEST": {
