@@ -28,12 +28,17 @@ suite = {
         ]
     },
     "libraries": {
-        "CHECKSTYLE_10.21.0": {
-            "urls": [
-                "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.21.0/checkstyle-10.21.0-all.jar"
-            ],
-            "digest": "sha512:401940e1475a333afee636535708fa842b1a11b30f9fd43518589aaf94c2cf601b24f83176e95ffc171e2befe968267262b24a0a3931a009b39531a6fe570e60",
-            "licence": "LGPLv21",
+        "CHECKSTYLE_10.21.0" : {
+          "urls" : [
+            "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.21.0/checkstyle-10.21.0-all.jar"
+          ],
+          "digest": "sha512:401940e1475a333afee636535708fa842b1a11b30f9fd43518589aaf94c2cf601b24f83176e95ffc171e2befe968267262b24a0a3931a009b39531a6fe570e60",
+          "licence" : "LGPLv21",
+          "maven" : {
+            "groupId" : "com.puppycrawl.tools",
+            "artifactId" : "checkstyle",
+            "version" : "10.21.0",
+          }
         },
         "SOMNS_DEPS_0.3.8": {
             "urls": ["https://stefan-marr.de/dev/somns-deps-0.3.8.jar"],
