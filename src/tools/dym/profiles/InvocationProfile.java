@@ -10,7 +10,7 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
-import som.interpreter.Invokable;
+import somns.interpreter.Invokable;
 
 
 public class InvocationProfile extends Counter {

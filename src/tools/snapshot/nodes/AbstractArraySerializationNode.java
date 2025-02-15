@@ -3,11 +3,11 @@ package tools.snapshot.nodes;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.interpreter.Types;
-import som.interpreter.objectstorage.ClassFactory;
-import som.vm.constants.Classes;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.PartiallyEmptyArray;
+import somns.interpreter.Types;
+import somns.interpreter.objectstorage.ClassFactory;
+import somns.vm.constants.Classes;
+import somns.vmobjects.SArray;
+import somns.vmobjects.SArray.PartiallyEmptyArray;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;

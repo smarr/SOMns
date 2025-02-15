@@ -2,14 +2,14 @@ package tools.replay.actors;
 
 import com.oracle.truffle.api.RootCallTarget;
 
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage.AbstractDirectMessage;
-import som.interpreter.actors.EventualMessage.AbstractPromiseCallbackMessage;
-import som.interpreter.actors.EventualMessage.AbstractPromiseSendMessage;
-import som.interpreter.actors.SPromise;
-import som.interpreter.actors.SPromise.SResolver;
-import som.vmobjects.SBlock;
-import som.vmobjects.SSymbol;
+import somns.interpreter.actors.Actor;
+import somns.interpreter.actors.SPromise;
+import somns.interpreter.actors.EventualMessage.AbstractDirectMessage;
+import somns.interpreter.actors.EventualMessage.AbstractPromiseCallbackMessage;
+import somns.interpreter.actors.EventualMessage.AbstractPromiseSendMessage;
+import somns.interpreter.actors.SPromise.SResolver;
+import somns.vmobjects.SBlock;
+import somns.vmobjects.SSymbol;
 
 
 public class ExternalEventualMessage {

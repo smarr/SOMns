@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.actors.Actor.ExecutorRootNode;
-import som.interpreter.actors.ReceivedRootNode;
+import somns.interpreter.actors.ReceivedRootNode;
+import somns.interpreter.actors.Actor.ExecutorRootNode;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.Suspension;

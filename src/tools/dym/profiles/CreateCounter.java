@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import som.interpreter.objectstorage.ClassFactory;
+import somns.interpreter.objectstorage.ClassFactory;
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 
 

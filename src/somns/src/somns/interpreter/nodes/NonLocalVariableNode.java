@@ -1,0 +1,227 @@
+package somns.interpreter.nodes;
+
+import static somns.interpreter.TruffleCompiler.transferToInterpreter;
+
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.FrameSlotTypeException;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
+
+import bd.inlining.ScopeAdaptationVisitor;
+import bd.tools.nodes.Invocation;
+import somns.compiler.Variable.Local;
+import somns.vm.constants.Nil;
+import somns.vmobjects.SSymbol;
+import tools.debugger.Tags.LocalVariableTag;
+import tools.dym.Tags.LocalVarRead;
+import tools.dym.Tags.LocalVarWrite;
+
+
+public abstract class NonLocalVariableNode extends ContextualNode
+    implements Invocation<SSymbol> {
+
+  protected final int slotIndex;
+
+  protected final Local var;
+
+  // TODO: We currently assume that there is a 1:1 mapping between lexical contexts
+  // and frame descriptors, which is apparently not strictly true anymore in Truffle 1.0.0.
+  // Generally, we also need to revise everything in this area and address issue #240.
+  private NonLocalVariableNode(final int contextLevel, final Local var) {
+    super(contextLevel);
+    this.slotIndex = var.getSlotIndex();
+    this.var = var;
+  }
+
+  public final Local getLocal() {
+    return var;
+  }
+
+  @Override
+  public final SSymbol getInvocationIdentifier() {
+    return var.name;
+  }
+
+  @Override
+  public boolean hasTag(final Class<? extends Tag> tag) {
+    if (tag == LocalVariableTag.class) {
+      return true;
+    } else {
+      return super.hasTag(tag);
+    }
+  }
+
+  public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
+
+    public NonLocalVariableReadNode(final int contextLevel, final Local var) {
+      super(contextLevel, var);
+    }
+
+    public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
+      this(node.contextLevel, node.var);
+    }
+
+    @Specialization(guards = "isUninitialized(frame)")
+    public final Object doNil(final VirtualFrame frame) {
+      return Nil.nilObject;
+    }
+
+    protected boolean isBoolean(final VirtualFrame frame) {
+      return determineContext(frame).isBoolean(slotIndex);
+    }
+
+    protected boolean isLong(final VirtualFrame frame) {
+      return determineContext(frame).isLong(slotIndex);
+    }
+
+    protected boolean isDouble(final VirtualFrame frame) {
+      return determineContext(frame).isDouble(slotIndex);
+    }
+
+    protected boolean isObject(final VirtualFrame frame) {
+      return determineContext(frame).isObject(slotIndex);
+    }
+
+    @Specialization(guards = {"isBoolean(frame)"}, rewriteOn = {FrameSlotTypeException.class})
+    public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getBoolean(slotIndex);
+    }
+
+    @Specialization(guards = {"isLong(frame)"}, rewriteOn = {FrameSlotTypeException.class})
+    public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getLong(slotIndex);
+    }
+
+    @Specialization(guards = {"isDouble(frame)"}, rewriteOn = {FrameSlotTypeException.class})
+    public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getDouble(slotIndex);
+    }
+
+    @Specialization(guards = {"isObject(frame)"},
+        replaces = {"doBoolean", "doLong", "doDouble"},
+        rewriteOn = {FrameSlotTypeException.class})
+    public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
+      return determineContext(frame).getObject(slotIndex);
+    }
+
+    protected final boolean isUninitialized(final VirtualFrame frame) {
+      return var.getFrameDescriptor().getSlotKind(slotIndex) == FrameSlotKind.Illegal;
+    }
+
+    @Override
+    public boolean hasTag(final Class<? extends Tag> tag) {
+      if (tag == LocalVarRead.class) {
+        return true;
+      } else {
+        return super.hasTag(tag);
+      }
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateRead(var, this, contextLevel);
+    }
+  }
+
+  @NodeChild(value = "exp", type = ExpressionNode.class)
+  public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
+
+    public NonLocalVariableWriteNode(final int contextLevel, final Local var) {
+      super(contextLevel, var);
+    }
+
+    public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
+      this(node.contextLevel, node.var);
+    }
+
+    public abstract ExpressionNode getExp();
+
+    @Specialization(guards = "isBoolKind(frame)")
+    public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
+      determineContext(frame).setBoolean(slotIndex, expValue);
+      return expValue;
+    }
+
+    @Specialization(guards = "isLongKind(frame)")
+    public final long writeLong(final VirtualFrame frame, final long expValue) {
+      determineContext(frame).setLong(slotIndex, expValue);
+      return expValue;
+    }
+
+    @Specialization(guards = "isDoubleKind(frame)")
+    public final double writeDouble(final VirtualFrame frame, final double expValue) {
+      determineContext(frame).setDouble(slotIndex, expValue);
+      return expValue;
+    }
+
+    @Specialization(replaces = {"writeBoolean", "writeLong", "writeDouble"})
+    public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
+      ensureObjectKind();
+      determineContext(frame).setObject(slotIndex, expValue);
+      return expValue;
+    }
+
+    protected final boolean isBoolKind(final VirtualFrame frame) {
+      FrameDescriptor descriptor = var.getFrameDescriptor();
+      FrameSlotKind kind = descriptor.getSlotKind(slotIndex);
+      if (kind == FrameSlotKind.Boolean) {
+        return true;
+      }
+      if (kind == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeBoolToUninit");
+        descriptor.setSlotKind(slotIndex, FrameSlotKind.Boolean);
+        return true;
+      }
+      return false;
+    }
+
+    protected final boolean isLongKind(final VirtualFrame frame) {
+      FrameDescriptor descriptor = var.getFrameDescriptor();
+      FrameSlotKind kind = descriptor.getSlotKind(slotIndex);
+      if (kind == FrameSlotKind.Long) {
+        return true;
+      }
+      if (kind == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeIntToUninit");
+        descriptor.setSlotKind(slotIndex, FrameSlotKind.Long);
+        return true;
+      }
+      return false;
+    }
+
+    protected final boolean isDoubleKind(final VirtualFrame frame) {
+      FrameDescriptor descriptor = var.getFrameDescriptor();
+      FrameSlotKind kind = descriptor.getSlotKind(slotIndex);
+      if (kind == FrameSlotKind.Double) {
+        return true;
+      }
+      if (kind == FrameSlotKind.Illegal) {
+        transferToInterpreter("LocalVar.writeDoubleToUninit");
+        descriptor.setSlotKind(slotIndex, FrameSlotKind.Double);
+        return true;
+      }
+      return false;
+    }
+
+    protected final void ensureObjectKind() {
+      var.getFrameDescriptor().setSlotKind(slotIndex, FrameSlotKind.Object);
+    }
+
+    @Override
+    public boolean hasTag(final Class<? extends Tag> tag) {
+      if (tag == LocalVarWrite.class) {
+        return true;
+      } else {
+        return super.hasTag(tag);
+      }
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateWrite(var, this, getExp(), contextLevel);
+    }
+  }
+}

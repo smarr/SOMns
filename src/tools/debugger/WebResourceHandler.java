@@ -10,8 +10,8 @@ import java.nio.charset.Charset;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import som.Output;
-import som.vm.NotYetImplementedException;
+import somns.Output;
+import somns.vm.NotYetImplementedException;
 
 
 class WebResourceHandler implements HttpHandler {

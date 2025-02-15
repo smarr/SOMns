@@ -9,7 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.source.FullSourceCoordinate;
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
-import som.interpreter.Method;
+import somns.interpreter.Method;
 import tools.debugger.message.Message.OutgoingMessage;
 
 

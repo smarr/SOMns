@@ -24,9 +24,9 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.SourceCoordinate;
-import som.VM;
-import som.vm.Activity;
-import som.vm.Symbols;
+import somns.VM;
+import somns.vm.Activity;
+import somns.vm.Symbols;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;

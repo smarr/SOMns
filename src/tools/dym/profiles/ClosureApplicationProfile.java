@@ -5,9 +5,9 @@ import java.util.Map;
 
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.Invokable;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.EagerPrimitiveNode;
+import somns.interpreter.Invokable;
+import somns.interpreter.nodes.ExpressionNode;
+import somns.interpreter.nodes.nary.EagerPrimitiveNode;
 
 
 public class ClosureApplicationProfile extends Counter {

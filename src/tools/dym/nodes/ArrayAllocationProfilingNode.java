@@ -2,8 +2,8 @@ package tools.dym.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import som.primitives.SizeAndLengthPrim;
-import som.primitives.SizeAndLengthPrimFactory;
+import somns.primitives.SizeAndLengthPrimFactory;
+import somns.primitives.SizeAndLengthPrim;
 import tools.dym.profiles.ArrayCreationProfile;
 
 

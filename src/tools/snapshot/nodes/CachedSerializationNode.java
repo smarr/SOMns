@@ -5,10 +5,10 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
-import som.interpreter.Types;
-import som.interpreter.nodes.dispatch.DispatchGuard;
-import som.interpreter.objectstorage.ObjectTransitionSafepoint;
-import som.vmobjects.SObject;
+import somns.interpreter.Types;
+import somns.interpreter.nodes.dispatch.DispatchGuard;
+import somns.interpreter.objectstorage.ObjectTransitionSafepoint;
+import somns.vmobjects.SObject;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 

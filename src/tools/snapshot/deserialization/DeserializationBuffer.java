@@ -5,8 +5,8 @@ import java.nio.ByteOrder;
 
 import org.graalvm.collections.EconomicMap;
 
-import som.interpreter.actors.Actor;
-import som.vmobjects.SClass;
+import somns.interpreter.actors.Actor;
+import somns.vmobjects.SClass;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.deserialization.FixupInformation.FixupList;
 

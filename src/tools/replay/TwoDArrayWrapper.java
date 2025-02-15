@@ -1,6 +1,6 @@
 package tools.replay;
 
-import som.vmobjects.SArray.SImmutableArray;
+import somns.vmobjects.SArray.SImmutableArray;
 
 
 public class TwoDArrayWrapper {

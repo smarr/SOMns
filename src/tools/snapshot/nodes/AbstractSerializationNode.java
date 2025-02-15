@@ -2,8 +2,8 @@ package tools.snapshot.nodes;
 
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.objectstorage.ClassFactory;
-import som.vm.VmSettings;
+import somns.interpreter.objectstorage.ClassFactory;
+import somns.vm.VmSettings;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 

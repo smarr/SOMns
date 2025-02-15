@@ -3,8 +3,8 @@ package tools.concurrency;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.TruffleOptions;
 
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.vm.VmSettings;
+import somns.interpreter.actors.Actor.ActorProcessingThread;
+import somns.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.UnsafeUtil;
 import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;

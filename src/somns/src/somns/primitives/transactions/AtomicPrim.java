@@ -1,0 +1,121 @@
+package somns.primitives.transactions;
+
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
+
+import bd.primitives.Primitive;
+import somns.interpreter.actors.SuspendExecutionNodeGen;
+import somns.VM;
+import somns.interpreter.nodes.nary.UnaryExpressionNode;
+import somns.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
+import somns.interpreter.transactions.Transactions;
+import somns.vm.VmSettings;
+import somns.vmobjects.SBlock;
+import somns.vmobjects.SClass;
+import tools.concurrency.Tags.Atomic;
+import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
+import tools.debugger.nodes.AbstractBreakpointNode;
+import tools.debugger.session.Breakpoints;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
+
+
+@GenerateNodeFactory
+@Primitive(primitive = "tx:atomic:", selector = "atomic:")
+public abstract class AtomicPrim extends BinarySystemOperation {
+  @Child protected AbstractBreakpointNode beforeCommit;
+  @Child protected UnaryExpressionNode    haltNode;
+  @Child protected RecordOneEvent         recordCommit;
+
+  @Override
+  public final AtomicPrim initialize(final VM vm) {
+    super.initialize(vm);
+    if (VmSettings.UNIFORM_TRACING) {
+      recordCommit = insert(new RecordOneEvent(TraceRecord.TRANSACTION_COMMIT));
+    }
+    beforeCommit = insert(
+        Breakpoints.create(sourceSection, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
+    haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+    return this;
+  }
+
+  @Specialization
+  public final Object atomic(final VirtualFrame frame, final SClass clazz,
+      final SBlock block) {
+    // TODO: needs to be optimized for compilation
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+        SteppingType.STEP_TO_NEXT_TX.isSet()) {
+      haltNode.executeEvaluated(frame, block);
+    }
+
+    while (true) {
+      Transactions tx = Transactions.startTransaction();
+      try {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
+
+          // TODO: here we are using a different approach for stepping, and for breakpointing,
+          // should unify
+          if (beforeCommit.executeShouldHalt()) {
+            vm.getWebDebugger().prepareSteppingAfterNextRootNode(Thread.currentThread());
+          }
+        }
+
+        Object result = block.getMethod().getAtomicCallTarget().call(new Object[] {block});
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+            SteppingType.STEP_TO_COMMIT.isSet()) {
+          haltNode.executeEvaluated(frame, result);
+        }
+
+        if (tx.commit(recordCommit)) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
+            haltNode.executeEvaluated(frame, result);
+          }
+
+          // TODO: still need to make sure that we don't have
+          // a working copy as `result`, I think, or do I?
+          return result;
+        }
+      } catch (Throwable t) {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+            SteppingType.STEP_TO_COMMIT.isSet()) {
+          haltNode.executeEvaluated(frame, t);
+        }
+
+        if (tx.commit(recordCommit)) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
+            haltNode.executeEvaluated(frame, t);
+          }
+
+          // TODO: still need to make sure that we don't have
+          // a working copy as value in `t`, I think, or do I?
+          throw t;
+        }
+      } finally {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          TracingActivityThread.currentThread().leaveConcurrentScope(EntityType.TRANSACTION);
+        }
+      }
+    }
+  }
+
+  @Override
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+    if (tag == Atomic.class ||
+        tag == ExpressionBreakpoint.class ||
+        tag == StatementTag.class) {
+      return true;
+    }
+    return super.hasTagIgnoringEagerness(tag);
+  }
+}

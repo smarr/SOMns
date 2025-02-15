@@ -6,10 +6,10 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.openhft.affinity.AffinityLock;
-import som.VM;
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.vm.Activity;
-import som.vm.VmSettings;
+import somns.VM;
+import somns.interpreter.actors.Actor.ActorProcessingThread;
+import somns.vm.Activity;
+import somns.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;

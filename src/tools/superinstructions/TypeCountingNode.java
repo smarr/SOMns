@@ -5,9 +5,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
-import som.interpreter.ReturnException;
-import som.interpreter.SomException;
-import som.vm.NotYetImplementedException;
+import somns.interpreter.ReturnException;
+import somns.interpreter.SomException;
+import somns.vm.NotYetImplementedException;
 
 
 /**

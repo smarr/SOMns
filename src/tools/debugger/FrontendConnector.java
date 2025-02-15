@@ -24,8 +24,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
-import som.vm.VmSettings;
-import som.vmobjects.SSymbol;
+import somns.vm.VmSettings;
+import somns.vmobjects.SSymbol;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.TracingBackend;

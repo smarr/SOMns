@@ -6,7 +6,7 @@ import java.util.Map;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.objectstorage.ClassFactory;
+import somns.interpreter.objectstorage.ClassFactory;
 
 
 public class ReadValueProfile extends Counter implements CreateCounter {

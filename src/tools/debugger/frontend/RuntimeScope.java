@@ -2,8 +2,8 @@ package tools.debugger.frontend;
 
 import com.oracle.truffle.api.frame.Frame;
 
-import som.compiler.Variable;
-import som.interpreter.LexicalScope.MethodScope;
+import somns.compiler.Variable;
+import somns.interpreter.LexicalScope.MethodScope;
 
 
 public class RuntimeScope {

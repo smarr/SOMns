@@ -2,8 +2,8 @@ package tools.replay.actors;
 
 import java.util.Arrays;
 
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.vm.Activity;
+import somns.interpreter.actors.Actor.ActorProcessingThread;
+import somns.vm.Activity;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;

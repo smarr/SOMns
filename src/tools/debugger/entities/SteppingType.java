@@ -3,7 +3,7 @@ package tools.debugger.entities;
 import com.google.gson.annotations.SerializedName;
 import com.oracle.truffle.api.instrumentation.Tag;
 
-import som.vm.NotYetImplementedException;
+import somns.vm.NotYetImplementedException;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;

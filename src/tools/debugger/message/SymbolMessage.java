@@ -2,7 +2,7 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
-import som.vmobjects.SSymbol;
+import somns.vmobjects.SSymbol;
 import tools.debugger.message.Message.OutgoingMessage;
 
 

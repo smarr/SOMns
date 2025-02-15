@@ -5,9 +5,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.ReturnException;
-import som.interpreter.nodes.SOMNode;
-import som.vm.NotYetImplementedException;
+import somns.interpreter.ReturnException;
+import somns.interpreter.nodes.SOMNode;
+import somns.vm.NotYetImplementedException;
 import tools.dym.DynamicMetrics;
 import tools.dym.Tags.ArgumentExpr;
 import tools.dym.profiles.OperationProfile;

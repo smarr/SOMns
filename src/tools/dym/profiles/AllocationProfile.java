@@ -5,10 +5,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.objectstorage.ClassFactory;
-import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObject.SMutableObject;
-import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import somns.interpreter.objectstorage.ClassFactory;
+import somns.vmobjects.SObject.SImmutableObject;
+import somns.vmobjects.SObject.SMutableObject;
+import somns.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.dym.profiles.AllocationProfileFactory.AllocProfileNodeGen;
 
 

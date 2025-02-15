@@ -6,8 +6,8 @@ import com.oracle.truffle.api.utilities.JSONHelper;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONArrayBuilder;
 import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
-import som.interpreter.Types;
-import som.interpreter.objectstorage.ClassFactory;
+import somns.interpreter.Types;
+import somns.interpreter.objectstorage.ClassFactory;
 
 
 public final class Arguments {

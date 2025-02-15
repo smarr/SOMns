@@ -11,9 +11,9 @@ import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import som.Output;
-import som.interpreter.actors.EventualMessage;
-import som.vm.VmSettings;
+import somns.Output;
+import somns.interpreter.actors.EventualMessage;
+import somns.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.ReplayData.EntityNode;
 import tools.replay.ReplayData.Subtrace;

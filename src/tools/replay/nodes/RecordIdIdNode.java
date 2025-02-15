@@ -3,7 +3,7 @@ package tools.replay.nodes;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.vm.VmSettings;
+import somns.vm.VmSettings;
 import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 

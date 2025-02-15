@@ -2,7 +2,7 @@ package tools.dym.profiles;
 
 import java.util.Map;
 
-import som.interpreter.Invokable;
+import somns.interpreter.Invokable;
 
 
 public interface DispatchProfile {

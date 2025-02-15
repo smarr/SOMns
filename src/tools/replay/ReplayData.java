@@ -3,7 +3,7 @@ package tools.replay;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import som.vm.Activity;
+import somns.vm.Activity;
 import tools.concurrency.TracingActivityThread;
 
 

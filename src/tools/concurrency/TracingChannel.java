@@ -2,7 +2,7 @@ package tools.concurrency;
 
 import java.util.concurrent.SynchronousQueue;
 
-import som.interpreter.processes.SChannel;
+import somns.interpreter.processes.SChannel;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;

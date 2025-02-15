@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
-import som.Output;
-import som.vm.VmSettings;
+import somns.Output;
+import somns.vm.VmSettings;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
 import tools.debugger.entities.Implementation;

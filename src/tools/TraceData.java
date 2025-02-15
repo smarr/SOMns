@@ -1,6 +1,6 @@
 package tools;
 
-import som.vm.VmSettings;
+import somns.vm.VmSettings;
 
 
 /**

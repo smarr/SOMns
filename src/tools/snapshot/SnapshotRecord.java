@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
-import som.interpreter.Types;
+import somns.interpreter.Types;
 
 
 public class SnapshotRecord {

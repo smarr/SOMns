@@ -7,10 +7,10 @@ import java.util.Map;
 
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.Invokable;
-import som.interpreter.actors.ReceivedRootNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
-import som.interpreter.objectstorage.ClassFactory;
+import somns.interpreter.Invokable;
+import somns.interpreter.actors.ReceivedRootNode;
+import somns.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import somns.interpreter.objectstorage.ClassFactory;
 import tools.dym.nodes.TypeProfileNode;
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 

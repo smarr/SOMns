@@ -5,7 +5,7 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import somns.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 
 
 public class PrimitiveCallOrigin {

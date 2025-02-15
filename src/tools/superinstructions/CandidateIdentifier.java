@@ -25,11 +25,11 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 import bd.tools.structure.StructuralProbe;
-import som.compiler.MixinDefinition;
-import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.Variable;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
+import somns.compiler.MixinDefinition;
+import somns.compiler.Variable;
+import somns.compiler.MixinDefinition.SlotDefinition;
+import somns.vmobjects.SInvokable;
+import somns.vmobjects.SSymbol;
 import tools.dym.Tags.AnyNode;
 
 

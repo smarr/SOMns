@@ -5,13 +5,13 @@ import java.util.ArrayList;
 
 import org.graalvm.collections.MapCursor;
 
-import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.Types;
-import som.interpreter.objectstorage.StorageLocation;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-import som.vmobjects.SArray.PartiallyEmptyArray;
-import som.vmobjects.SObject;
+import somns.compiler.MixinDefinition.SlotDefinition;
+import somns.interpreter.Types;
+import somns.interpreter.objectstorage.StorageLocation;
+import somns.vm.constants.Nil;
+import somns.vmobjects.SArray;
+import somns.vmobjects.SObject;
+import somns.vmobjects.SArray.PartiallyEmptyArray;
 import tools.TraceData;
 import tools.debugger.frontend.RuntimeScope;
 import tools.debugger.frontend.Suspension;
@@ -107,7 +107,7 @@ public final class VariablesResponse extends Response {
   private static ArrayList<Variable> createFromScope(final RuntimeScope scope,
       final Suspension suspension) {
     ArrayList<Variable> results = new ArrayList<>();
-    for (som.compiler.Variable v : scope.getVariables()) {
+    for (somns.compiler.Variable v : scope.getVariables()) {
       if (!v.isInternal()) {
         Object val = scope.read(v);
         results.add(createVariable(v.name.getString(), val, suspension));

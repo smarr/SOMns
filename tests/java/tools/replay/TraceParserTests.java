@@ -17,7 +17,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import som.vm.VmSettings;
+import somns.vm.VmSettings;
 import tools.replay.ReplayData.EntityNode;
 
 

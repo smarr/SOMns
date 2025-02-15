@@ -1,9 +1,9 @@
 package tools.snapshot;
 
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.objectstorage.ClassFactory;
-import som.vm.VmSettings;
-import som.vm.constants.Classes;
+import somns.interpreter.actors.Actor.ActorProcessingThread;
+import somns.interpreter.objectstorage.ClassFactory;
+import somns.vm.VmSettings;
+import somns.vm.constants.Classes;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.nodes.TraceContextNode;

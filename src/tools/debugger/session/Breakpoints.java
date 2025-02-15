@@ -17,9 +17,9 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.FullSourceCoordinate;
 import bd.source.SourceCoordinate;
-import som.VM;
-import som.interpreter.actors.ReceivedRootNode;
-import som.vm.VmSettings;
+import somns.VM;
+import somns.interpreter.actors.ReceivedRootNode;
+import somns.vm.VmSettings;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.BreakpointType;

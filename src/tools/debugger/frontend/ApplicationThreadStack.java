@@ -7,7 +7,7 @@ import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
 
-import som.interpreter.LexicalScope.MethodScope;
+import somns.interpreter.LexicalScope.MethodScope;
 
 
 /**

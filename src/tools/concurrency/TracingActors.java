@@ -12,12 +12,12 @@ import java.util.function.BiConsumer;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-import som.VM;
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.SPromise.STracingPromise;
-import som.vm.VmSettings;
+import somns.VM;
+import somns.interpreter.actors.Actor;
+import somns.interpreter.actors.EventualMessage;
+import somns.interpreter.actors.EventualMessage.PromiseMessage;
+import somns.interpreter.actors.SPromise.STracingPromise;
+import somns.vm.VmSettings;
 import tools.debugger.WebDebugger;
 import tools.replay.PassiveEntityWithEvents;
 import tools.replay.ReplayRecord;

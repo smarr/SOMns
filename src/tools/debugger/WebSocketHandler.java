@@ -11,7 +11,7 @@ import org.java_websocket.server.WebSocketServer;
 
 import com.google.gson.Gson;
 
-import som.Output;
+import somns.Output;
 import tools.debugger.message.Message.IncommingMessage;
 
 

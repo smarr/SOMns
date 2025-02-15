@@ -3,8 +3,8 @@ package tools.dym.nodes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import som.interpreter.actors.SFarReference;
-import som.vm.NotYetImplementedException;
+import somns.interpreter.actors.SFarReference;
+import somns.vm.NotYetImplementedException;
 import tools.dym.profiles.ActorCreationProfile;
 
 

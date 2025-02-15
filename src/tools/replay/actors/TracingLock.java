@@ -5,8 +5,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import som.vm.Activity;
-import som.vm.VmSettings;
+import somns.vm.Activity;
+import somns.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.PassiveEntityWithEvents;
 import tools.replay.ReplayRecord;

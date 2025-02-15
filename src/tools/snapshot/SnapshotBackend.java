@@ -9,15 +9,15 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.graalvm.collections.EconomicMap;
 
 import bd.tools.structure.StructuralProbe;
-import som.compiler.MixinDefinition;
-import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.Variable;
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
-import som.vm.VmSettings;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SSymbol;
+import somns.compiler.MixinDefinition;
+import somns.compiler.Variable;
+import somns.compiler.MixinDefinition.SlotDefinition;
+import somns.interpreter.actors.Actor;
+import somns.interpreter.actors.EventualMessage;
+import somns.vm.VmSettings;
+import somns.vmobjects.SClass;
+import somns.vmobjects.SInvokable;
+import somns.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
 

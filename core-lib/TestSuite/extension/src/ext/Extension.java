@@ -5,12 +5,12 @@ import java.util.List;
 
 import bd.primitives.PrimitiveLoader;
 import bd.primitives.Specializer;
-import som.VM;
-import som.interpreter.nodes.ExpressionNode;
-import som.vmobjects.SSymbol;
+import somns.VM;
+import somns.interpreter.nodes.ExpressionNode;
+import somns.vmobjects.SSymbol;
 
 
-public class Extension implements som.vm.Extension {
+public class Extension implements somns.vm.Extension {
 
   @Override
   public List<Specializer<VM, ExpressionNode, SSymbol>> getSpecializers() {
