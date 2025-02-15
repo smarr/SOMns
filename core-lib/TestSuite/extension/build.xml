@@ -5,13 +5,11 @@
   <property name="src.dir"     location="src"/>
   <property name="src_dep.dir" location="src-cp-dep"/>
   <property name="src_gen.dir" location="src_gen"/>
-  <property name="lib.dir"     location="${som.dir}/libs" />
-  <property name="bd.dir"      location="${lib.dir}/black-diamonds" />
-  <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
-  <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
+  <property name="sdk.dir"     location="${som.dir}/../graal/sdk" />
+  <property name="truffle.dir" location="${som.dir}/../graal/truffle" />
   <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
   <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
-  
+
   <property name="build.dir"   location="build"/>
   <property name="classes.dir" location="${build.dir}/classes"/>
   <property name="classes_dep.dir" location="${build.dir}/classes-dep"/>
@@ -21,14 +19,13 @@
   <path id="project.classpath">
       <pathelement location="${classes.dir}" />
       <pathelement location="${classes_dep.dir}" />
-      
-      <pathelement location="${som.dir}/build/classes/" />
-      <pathelement location="${bd.dir}/build/classes" />
-      <pathelement location="${sdk.build}/graal-sdk.jar" />
+
+      <pathelement location="${som.dir}/mxbuild/dists/somns.jar" />
+      <pathelement location="${sdk.build}/polyglot.jar" />
       <pathelement location="${truffle.build}/truffle-api.jar" />
       <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
   </path>
-    
+
   <echo>ant.java.version: ${ant.java.version}
 java.version:     ${java.version}</echo>
 
@@ -58,7 +55,7 @@ java.version:     ${java.version}</echo>
       <compilerarg line="-s ${src_gen.dir}" />
       <compilerarg line="-Xlint:all" />
     </javac>
-    
+
     <!-- Register the extension class -->
     <propertyfile file="${classes.dir}/somns.extension" comment="Extension Configuration">
       <entry key="class" value="ext.Extension" />

@@ -121,6 +121,13 @@ suite = {
                     "org.graalvm.collections",
                     "org.graalvm.polyglot",
                 ],
+                "exports": [
+                    "somns.vm",
+                    "somns.interpreter",
+                    "somns.interpreter.nodes",
+                    "somns.interpreter.nodes.nary",
+                    "bd.primitives"
+                ]
             },
             "dependencies": ["somns"],
             "distDependencies": [
