@@ -19,6 +19,12 @@ suite = {
                 "version": "217d8bc47ee1076cca072c8e8e9a760d24b12b5d",
                 "urls": [{"url": "https://github.com/smarr/truffle", "kind": "git"}],
             },
+            {
+                "name": "tools",
+                "subdir": True,
+                "version": "217d8bc47ee1076cca072c8e8e9a760d24b12b5d",
+                "urls": [{"url": "https://github.com/smarr/truffle", "kind": "git"}],
+            },
         ]
     },
     "libraries": {
@@ -40,7 +46,10 @@ suite = {
         "somns": {
             "subDir": "src",
             "sourceDirs": ["src"],
-            "dependencies": ["truffle:TRUFFLE_API"],
+            "dependencies": [
+                "truffle:TRUFFLE_API",
+                "tools:TRUFFLE_PROFILER",
+            ],
             "requires": [
                 "java.logging",
                 "java.management",
@@ -83,12 +92,15 @@ suite = {
                     "jdk.unsupported",
                     "org.graalvm.collections",
                     "org.graalvm.polyglot",
+                    "com.oracle.truffle.tools.profiler",
                 ],
             },
             "dependencies": ["somns"],
             "distDependencies": [
-                "truffle:TRUFFLE_API"
-            ],  # , "tools:TRUFFLE_COVERAGE", "tools:TRUFFLE_PROFILER"
+                "truffle:TRUFFLE_API",
+                "truffle:TRUFFLE_JSON",
+                "tools:TRUFFLE_PROFILER",
+            ],  # , "tools:TRUFFLE_COVERAGE",
         },
         "TRUFFLESOM_TEST": {
             "description": "TruffleSOM JUnit Tests",
