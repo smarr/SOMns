@@ -104,9 +104,9 @@ public class Breakpoints {
       WebDebugger.log("SectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
-                     .sectionLength(bId.getCoordinate().charLength)
+//                     .sectionLength(bId.getCoordinate().charLength)
                      .sourceElements(SourceElement.EXPRESSION)
-                     .tag(tag)
+//                     .tag(tag)
                      .suspendAnchor(anchor).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
