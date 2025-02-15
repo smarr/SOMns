@@ -35,13 +35,13 @@ suite = {
             "digest": "sha512:401940e1475a333afee636535708fa842b1a11b30f9fd43518589aaf94c2cf601b24f83176e95ffc171e2befe968267262b24a0a3931a009b39531a6fe570e60",
             "licence": "LGPLv21",
         },
-        "SOMNS_DEPS_0.3.7": {
-            "urls": ["https://stefan-marr.de/dev/somns-deps-0.3.7.jar"],
-            "digest": "sha512:a2faf1811856aebfd10e75f4dfedb9f0673e24369989b7ecc7f4b0dc7b9095dd90e7e103011f153edf425c761b1551845102751b749ab92abdc2c7da3d9dbbfa",
+        "SOMNS_DEPS_0.3.8": {
+            "urls": ["https://stefan-marr.de/dev/somns-deps-0.3.8.jar"],
+            "digest": "sha512:4fee76ab8797ca57b35f735489073d51b8f760a0d8f548830c09827898e666fb87f901c37789d32b54db6776784828d1ecfe1093b966f2200ec3f8b66c9dfed5",
         },
-        "SOMNS_DEPS_0.3.7_DEV": {
-            "urls": ["https://stefan-marr.de/dev/somns-deps-dev-0.3.7.jar"],
-            "digest": "sha512:b82d82e3ca99668b2e87438d7ae1e652b51b18bef81dfeefae9c02f684b6ef2024fdb7fd97f8f6357da445da832b5108b017636bb86d4470e104d5f8296a452e",
+        "SOMNS_DEPS_0.3.8_DEV": {
+            "urls": ["https://stefan-marr.de/dev/somns-deps-dev-0.3.8.jar"],
+            "digest": "sha512:b506ef4feac9ffe90c2a87aa46fb0c48c2fcfa146998fd43e1d28cdfe397b1ea1244b96d9a57f819e5642aefdea3be562be00c0d7bd568b63f208ff285510bb4",
         },
 
         "AFFINITY": {
@@ -69,7 +69,7 @@ suite = {
             "dependencies": [
                 "truffle:TRUFFLE_API",
                 "tools:TRUFFLE_PROFILER",
-                "SOMNS_DEPS_0.3.7",
+                "SOMNS_DEPS_0.3.8",
                 "AFFINITY",
             ],
             "requires": [
