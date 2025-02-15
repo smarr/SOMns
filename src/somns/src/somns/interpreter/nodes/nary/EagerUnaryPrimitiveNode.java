@@ -21,8 +21,8 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitiveNode {
   public EagerUnaryPrimitiveNode(final SSymbol selector, final ExpressionNode receiver,
       final UnaryExpressionNode primitive) {
     super(selector);
-    this.receiver = insert(receiver);
-    this.primitive = insert(primitive);
+    this.receiver = receiver;
+    this.primitive = primitive;
   }
 
   @Override

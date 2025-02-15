@@ -22,9 +22,9 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   public EagerBinaryPrimitiveNode(final SSymbol selector, final ExpressionNode receiver,
       final ExpressionNode argument, final BinaryExpressionNode primitive) {
     super(selector);
-    this.receiver = insert(receiver);
-    this.argument = insert(argument);
-    this.primitive = insert(primitive);
+    this.receiver = receiver;
+    this.argument = argument;
+    this.primitive = primitive;
   }
 
   @Override
