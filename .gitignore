@@ -1,4 +1,6 @@
+__pycache__
 build
+mxbuild
 src_gen
 mini-som.sh
 mini.sh
