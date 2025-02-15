@@ -16,13 +16,13 @@ suite = {
             {
                 "name": "truffle",
                 "subdir": True,
-                "version": "217d8bc47ee1076cca072c8e8e9a760d24b12b5d",
+                "version": "36b837a59fc17a6c7642a46cd287e86306039520",
                 "urls": [{"url": "https://github.com/smarr/truffle", "kind": "git"}],
             },
             {
                 "name": "tools",
                 "subdir": True,
-                "version": "217d8bc47ee1076cca072c8e8e9a760d24b12b5d",
+                "version": "36b837a59fc17a6c7642a46cd287e86306039520",
                 "urls": [{"url": "https://github.com/smarr/truffle", "kind": "git"}],
             },
         ]
