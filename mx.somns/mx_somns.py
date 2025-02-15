@@ -156,13 +156,13 @@ def build_native(args, **kwargs):
 
     if opt.method_filter:
         cmd += [
-            "--initialize-at-build-time=trufflesom,org.graalvm.graphio",
+            "--initialize-at-build-time=somns,org.graalvm.graphio",
             "-H:Dump=:3",
             "-H:PrintGraph=File",
             "-H:MethodFilter=" + opt.method_filter,
         ]
     else:
-        cmd += ["--initialize-at-build-time=bd,tools,trufflesom"]
+        cmd += ["--initialize-at-build-time=bd,tools,somns"]
 
     if opt.without_jit:
         cmd += ["-Dsom.jitCompiler=false"]
@@ -183,7 +183,7 @@ def build_native(args, **kwargs):
     if opt.use_g1 and opt.graalvm and os.uname().sysname != "Darwin":
         cmd += ["--gc=G1"]
 
-    cmd += ["trufflesom.Launcher"]
+    cmd += ["somns.Launcher"]
 
     if opt.graalvm:
         mx.run(cmd, svm_path)

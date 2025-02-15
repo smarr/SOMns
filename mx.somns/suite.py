@@ -4,7 +4,7 @@ suite = {
     "versionConflictResolution": "latest",
     "version": "0.0.1",
     "release": False,
-    "groupId": "trufflesom",
+    "groupId": "somns",
     "url": "https://github.com/smarr/SOMns",
     "scm": {
         "url": "https://github.com/smarr/SOMns",
@@ -120,7 +120,6 @@ suite = {
                     "jdk.unsupported",
                     "org.graalvm.collections",
                     "org.graalvm.polyglot",
-                    "com.oracle.truffle.tools.profiler",
                 ],
             },
             "dependencies": ["somns"],
@@ -131,8 +130,8 @@ suite = {
                 "sdk:NATIVEIMAGE",
             ],  # , "tools:TRUFFLE_COVERAGE",
         },
-        "TRUFFLESOM_TEST": {
-            "description": "TruffleSOM JUnit Tests",
+        "SOMNS_TEST": {
+            "description": "SOMns JUnit Tests",
             "javaCompliance": "17+",
             "dependencies": ["tests"],
             "exclude": ["mx:JUNIT", "mx:HAMCREST"],
