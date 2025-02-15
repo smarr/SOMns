@@ -339,7 +339,7 @@ else:
   GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:+UseJVMCICompiler', '-XX:-UseJVMCINativeLibrary']
 
 MODULE_PATH_ENTRIES = [
-  BASE_DIR + '/mxbuild/dists/som.jar',
+  BASE_DIR + '/mxbuild/dists/somns.jar',
   BASE_DIR + '/libs/somns-deps.jar',
   BASE_DIR + '/libs/affinity.jar',
   BASE_DIR + '/libs/slf4j-api.jar',
@@ -352,12 +352,15 @@ MODULE_PATH_ENTRIES = [
   TRUFFLE_DIR + '/sdk/mxbuild/dists/word.jar',
   TRUFFLE_DIR + '/sdk/mxbuild/dists/nativeimage.jar',
   TRUFFLE_DIR + '/sdk/mxbuild/dists/jniutils.jar',
+  TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-json.jar',
+  TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-compiler.jar',
+  TRUFFLE_DIR + '/tools/mxbuild/dists/truffle-profiler.jar',
   TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar',
   TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-runtime.jar']
 
 SOM_ARGS = [
-   '-Dbd.settings=som.vm.VmSettings',
-    '--module', 'somns/som.Launcher',
+   '-Dbd.settings=somns.vm.VmSettings',
+    '--module', 'somns/somns.Launcher',
     '--platform', args.som_platform, '--kernel', args.som_kernel
 ]
 
