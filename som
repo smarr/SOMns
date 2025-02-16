@@ -214,6 +214,12 @@ def get_compiled_graalvm_java_bin(use_libgraal):
   libgraal_jdk_home = lines[-1].strip()
   return libgraal_jdk_home + '/bin/java'
 
+def get_third_party_jars():
+  if not os.path.exists(BASE_DIR + '/.modules'):
+      mx = find_mx()
+      check_output([mx, 'create-third-party-module-file'], cwd=BASE_DIR)
+  with open(BASE_DIR + '/.modules') as f:
+    return f.read().strip()
 
 if args.setup == 'mx':
   mx = find_mx(False)
@@ -341,9 +347,7 @@ else:
 MODULE_PATH_ENTRIES = [
   BASE_DIR + '/mxbuild/dists/somns.jar',
   BASE_DIR + '/libs/somns-deps.jar',
-  BASE_DIR + '/libs/affinity.jar',
-  BASE_DIR + '/libs/slf4j-api.jar',
-  BASE_DIR + '/libs/slf4j-simple.jar',
+  get_third_party_jars(),
   BASE_DIR + '/libs/jna-platform.jar',
   BASE_DIR + '/libs/jna.jar',
   TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar',

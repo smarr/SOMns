@@ -58,6 +58,33 @@ suite = {
                 "version": "3.23.2",
             },
         },
+        "SLF4J_API": {
+            "moduleName": "org.slf4j.api",
+            "digest": "sha512:f9b033fc019a44f98b16048da7e2b59edd4a6a527ba60e358f65ab88e0afae03a9340f1b3e8a543d49fa542290f499c5594259affa1ff3e6e7bf3b428d4c610b",
+            "maven": {
+                "groupId": "org.slf4j",
+                "artifactId": "slf4j-api",
+                "version": "1.7.36",
+            },
+        },
+        "SLF4J_NOP": {
+            "moduleName": "org.slf4j.nop",
+            "digest": "sha512:3ee0417e7a3b1bbd490b15ee8329681b397a4042a5bfec032719fab696c3f0ad401e9ed4ac16f550ccd1ee8c179ad8ec438142b7a7cf8522b793685bd218a9a2",
+            "maven": {
+                "groupId": "org.slf4j",
+                "artifactId": "slf4j-nop",
+                "version": "1.7.36",
+            },
+        },
+        "SLF4J_SIMPLE": {
+            "moduleName": "org.slf4j.simple",
+            "digest": "sha512:cdcebe8fa58527a1bc7da0c18e90a9547ce8ac99cccfe5657860c2a25478c030ea758251da3e32a71eab9cbb91360692b5c6c5887a1f1597d1fda07151b27e5f",
+            "maven": {
+                "groupId": "org.slf4j",
+                "artifactId": "slf4j-simple",
+                "version": "1.7.36",
+            },
+        },
         "LABS_JDK": {
             "id": "labsjdk-ce-latest",
             # I am just using the suite.py to store the info
@@ -74,6 +101,9 @@ suite = {
                 "tools:TRUFFLE_PROFILER",
                 "SOMNS_DEPS_0.3.8",
                 "AFFINITY",
+                "SLF4J_API",
+                "SLF4J_NOP",
+                "SLF4J_SIMPLE"
             ],
             "requires": [
                 "java.logging",

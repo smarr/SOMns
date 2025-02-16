@@ -253,3 +253,19 @@ def tests_update_data(args, **kwargs):
     """update expected data for tests"""
     mx.run(["tests/tools/nodestats/test.sh", "update"])
     mx.run(["tests/tools/coverage/test.sh", "update"])
+
+@mx.command(suite.name, "create-third-party-module-file")
+def create_third_party_module_file(args, **kwargs):
+    """create the third party module file"""
+    paths = []
+    for lib in mx.libraries():
+        if lib.name.startswith("SOMNS_DEP") and "DEV" not in lib.name:
+            paths.append(lib.path)
+        elif lib.name == "AFFINITY":
+            paths.append(lib.path)
+        elif lib.name.startswith("SLF4J"):
+            paths.append(lib.path)
+
+    # create file in suite.dir with the paths as text
+    with open(suite.dir + "/.modules", "w") as file:
+        file.write(":".join(paths) + "\n")
