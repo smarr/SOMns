@@ -44,10 +44,6 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
     return Truffle.getRuntime().createDirectCallNode(method.getCallTarget());
   }
 
-  protected static IndirectCallNode createIndirect() {
-    return Truffle.getRuntime().createIndirectCallNode();
-  }
-
   @Specialization(guards = {"arg.getMethod() == method"})
   public final Object cachedBlock(final boolean rcvr, final SBlock arg,
       @Cached("arg.getMethod()") final SInvokable method,
@@ -61,7 +57,7 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
 
   @Specialization(replaces = "cachedBlock")
   public final Object fallback(final boolean rcvr, final SBlock arg,
-      @Cached("createIndirect()") final IndirectCallNode callNode) {
+      @Cached final IndirectCallNode callNode) {
     if (condProf.profile(rcvr == expected)) {
       return callNode.call(arg.getMethod().getCallTarget(), new Object[] {arg});
     } else {

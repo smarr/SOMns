@@ -51,10 +51,6 @@ public abstract class BlockDispatchNode extends Node {
     return Truffle.getRuntime().createDirectCallNode(ct);
   }
 
-  protected static final IndirectCallNode createIndirectCall() {
-    return Truffle.getRuntime().createIndirectCallNode();
-  }
-
   @Specialization(guards = "isSameMethod(arguments, cached)")
   public Object activateCachedBlock(final Object[] arguments,
       @Cached("getMethod(arguments)") final SInvokable cached,
@@ -64,7 +60,7 @@ public abstract class BlockDispatchNode extends Node {
 
   @Specialization(replaces = "activateCachedBlock")
   public Object activateBlock(final Object[] arguments,
-      @Cached("createIndirectCall()") final IndirectCallNode indirect) {
+      @Cached final IndirectCallNode indirect) {
     return indirect.call(getCallTarget(arguments), arguments);
   }
 
