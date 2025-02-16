@@ -4,9 +4,6 @@ variables:
   ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse4.25/eclipse
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
-before_script:
-  - git submodule update --init
-
 build_and_test_job:
   tags: [yuria]
   script:
@@ -17,7 +14,7 @@ benchmark_y1:
   needs: ["build_and_test_job"]
   allow_failure: true
   script:
-    - ant compile
+    - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria
   after_script:
     - sudo reown-project.sh
@@ -26,7 +23,7 @@ benchmark_y2:
   tags: [yuria2]
   allow_failure: true
   script:
-    - ant compile
+    - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria2
   after_script:
     - sudo reown-project.sh
@@ -35,7 +32,7 @@ benchmark_y3:
   tags: [yuria3]
   allow_failure: true
   script:
-    - ant compile
+    - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria3
   after_script:
     - sudo reown-project.sh
@@ -79,7 +76,7 @@ benchmark_nightly_job:
   only:
     - triggers
   script:
-    - ant compile
+    - mx --env libgraal build
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf nightly
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina-tracing
   after_script:
