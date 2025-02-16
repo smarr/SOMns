@@ -4,6 +4,23 @@ variables:
   ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse4.25/eclipse
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
+.shared-scripts:
+  ensure_labsjdk: &ENSURE_LABSJDK_AND_GRAAL_VERSION |
+    ./som --setup labsjdk
+    mx sforceimport
+    rm libs/jvmci || true
+    ./som --setup labsjdk
+
+before_script:
+  - ./som --setup latest-mx
+  - export PATH=${PATH}:$(pwd)/../mx:/opt/local/bin
+  - echo "PATH=$PATH"
+  - (cd ../graal/compiler/mxbuild && sudo reown-project.sh) || true
+
+  - |
+    COMMIT_ID=`./som --setup truffle-commit-id`
+    (cd ../graal && git fetch --all && git reset --hard $COMMIT_ID) || true
+
 build_and_test_job:
   tags: [yuria]
   script:
@@ -11,9 +28,10 @@ build_and_test_job:
 
 benchmark_y1:
   tags: [yuria]
-  needs: ["build_and_test_job"]
+  # needs: ["build_and_test_job"]
   allow_failure: true
   script:
+    - *ENSURE_LABSJDK_AND_GRAAL_VERSION
     - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria
   after_script:
@@ -23,6 +41,7 @@ benchmark_y2:
   tags: [yuria2]
   allow_failure: true
   script:
+    - *ENSURE_LABSJDK_AND_GRAAL_VERSION
     - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria2
   after_script:
@@ -32,6 +51,7 @@ benchmark_y3:
   tags: [yuria3]
   allow_failure: true
   script:
+    - *ENSURE_LABSJDK_AND_GRAAL_VERSION
     - mx --env libgraal build
     - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria3
   after_script:
