@@ -129,12 +129,6 @@ kernel:           ${kernel}</echo>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
     </target>
 
-    <target name="truffle-submodule"
-            unless="truffle.present">
-      <exec executable="./.gitloadmodules" failonerror="true">
-      </exec>
-    </target>
-
     <!-- libgraal-jdk also implicitly builds truffle-libs -->
     <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule,jvmci-libs">
         <exec executable="${mx.cmd}" dir="${compiler.dir}" failonerror="true">
@@ -324,14 +318,14 @@ kernel:           ${kernel}</echo>
 
     <target name="compile-core" depends="libs,compile-som,compile-test-extension" description="Compile libs and core">
     </target>
-    
+
     <target name="compile-svm">
       <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
         <env key="JAVA_HOME" value="${jvmci.home}" />
         <arg line="build" />
       </exec>
     </target>
-    
+
     <target name="compile" depends="libgraal-jdk,compile-core" description="Compile SOMns and dependencies">
     </target>
 
@@ -391,7 +385,7 @@ kernel:           ${kernel}</echo>
 
     <target name="som-tests" depends="truffle-libs,compile-core">
     </target>
-    
+
     <target name="run-som-tests">
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
