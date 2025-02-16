@@ -5,7 +5,8 @@ package bd.inlining;
  * required state.
  * It is thus merely a marker interface.
  *
- * <p>Node state can typically include information about lexical bindings, for instance in form
+ * <p>
+ * Node state can typically include information about lexical bindings, for instance in form
  * of unique identifiers, which might be class names or ids of mixins or similar lexical
  * constructs.
  */

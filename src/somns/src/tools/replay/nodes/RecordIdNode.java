@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.Node;
 import somns.vm.VmSettings;
 import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
+
 @GenerateInline(false)
 public abstract class RecordIdNode extends Node {
   private static final int BYTE_LEN       = 1;

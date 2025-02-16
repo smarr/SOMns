@@ -18,7 +18,8 @@ import bd.settings.VmSettings;
  * Represents the entry point to access the inlining functionality controlled with
  * the @{@link Inline} annotation.
  *
- * <p>A typical use case would be in a parser, which can use the
+ * <p>
+ * A typical use case would be in a parser, which can use the
  * {@link #inline(Object, List, ScopeBuilder, SourceSection)} to request inlining.
  * For this purpose, {@link InlinableNodes} takes a list of node classes and factories as
  * candidates for inlining.
@@ -104,7 +105,8 @@ public final class InlinableNodes<Id> {
    * Try to construct an inlined version for a potential node (which is not given here, but
    * would be constructed as a fall-back version).
    *
-   * <p>The potential node is identified with a {@code selector} and it is determined whether
+   * <p>
+   * The potential node is identified with a {@code selector} and it is determined whether
    * inlining is applicable by using the data from {@link Inline} and matching it with the
    * {@code argNodes}.
    *

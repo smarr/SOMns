@@ -8,15 +8,18 @@ import com.oracle.truffle.api.source.SourceSection;
  * A {@link Variable} represents a variable most often in the user code, or sometimes internal
  * to the language implementation.
  *
- * <p>Generally, we expect variables to be read or written, but do not require an
+ * <p>
+ * Generally, we expect variables to be read or written, but do not require an
  * implementation the writing operation, since variables might be immutable and initialized
  * otherwise.
  *
- * <p>Some special variables, such as <code>this</code> can require extra handling and can thus
+ * <p>
+ * Some special variables, such as <code>this</code> can require extra handling and can thus
  * require the use of special nodes. We provide here factory methods for <code>this</code>-like
  * variables as well as <code>super</code>-like reads.
  *
- * <p>Note that variable access are typically associated with a <code>contextLevel</code>. The
+ * <p>
+ * Note that variable access are typically associated with a <code>contextLevel</code>. The
  * precise semantics is specific to your language's use of {@link Scope}s. But generally, we
  * assume that scopes are defined lexically, and a context level of 0 means the local scope,
  * and every increment represents one step outwards in a scope chain.
@@ -55,7 +58,8 @@ public interface Variable<N extends Node> {
   /**
    * Create a node to read the special <code>this</code> variable.
    *
-   * <p>This operation should only be used on variables that are <code>this</code>-like
+   * <p>
+   * This operation should only be used on variables that are <code>this</code>-like
    * variables.
    *
    * @param contextLevel references the scope in which the variable is defined,
@@ -74,7 +78,8 @@ public interface Variable<N extends Node> {
   /**
    * Create a node to read the special <code>super</code> variable.
    *
-   * <p>This operation should only be used on variables that are <code>this</code>-like
+   * <p>
+   * This operation should only be used on variables that are <code>this</code>-like
    * variables supporting <code>super</code> reads.
    *
    * @param contextLevel references the scope in which the variable is defined,

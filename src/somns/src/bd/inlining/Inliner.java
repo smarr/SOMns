@@ -83,7 +83,8 @@ class Inliner {
    * going to be evaluated by the DSL, which means, they are going to be appended at the end
    * of the args array.
    *
-   * <p>The rest is treated as normal, first the args, then the inlined args,
+   * <p>
+   * The rest is treated as normal, first the args, then the inlined args,
    * then possibly to be introduced temps, and finally possible additional args.
    *
    * @param <ExprT>

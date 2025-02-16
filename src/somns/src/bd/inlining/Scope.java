@@ -9,10 +9,12 @@ import com.oracle.truffle.api.nodes.RootNode;
  * {@link Variable} definitions that belong together, usually based on the textual/language
  * properties of the implemented language.
  *
- * <p>Many languages use lexical scopes, i.e., grouping of variables based on textual elements.
+ * <p>
+ * Many languages use lexical scopes, i.e., grouping of variables based on textual elements.
  * Often such groups are delimited by parentheses or other indicators for textual blocks.
  *
- * <p>Scopes are expected to form a chain from the inner to the outer scopes.
+ * <p>
+ * Scopes are expected to form a chain from the inner to the outer scopes.
  *
  * @param <This> the concrete type of the scope
  * @param <MethodT> the type for a run-time representation of a method, block, lambda,
@@ -24,7 +26,8 @@ public interface Scope<This extends Scope<This, MethodT>, MethodT> {
   /**
    * The set of variables defined by this scope.
    *
-   * <p>The set excludes variables that are defined in other scopes, even if they might be
+   * <p>
+   * The set excludes variables that are defined in other scopes, even if they might be
    * logically part of the set from language perspective, perhaps because of nesting scopes.
    *
    * @param <T> the type of the {@link Variable} implementation

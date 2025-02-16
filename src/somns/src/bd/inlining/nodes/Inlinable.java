@@ -11,14 +11,17 @@ import bd.inlining.ScopeBuilder;
 /**
  * <code>Inlinable</code> nodes can be replaced, inlined with arbitrary other nodes.
  *
- * <p>Note, {@link Inlinable} is different from {@link Inline}. Nodes marked
+ * <p>
+ * Note, {@link Inlinable} is different from {@link Inline}. Nodes marked
  * with @{@link Inline} are replacing more general nodes, which typically have
  * <code>Inlinable</code> nodes as their children.
  *
- * <p>In most cases, the replacement nodes for an <code>Inlinable</code> node will be at least
+ * <p>
+ * In most cases, the replacement nodes for an <code>Inlinable</code> node will be at least
  * logically sub-nodes of the inlinable node.
  *
- * <p>An example for an <code>Inlinable</code> node is a lambda (closure, block) that
+ * <p>
+ * An example for an <code>Inlinable</code> node is a lambda (closure, block) that
  * represents for instance the body of a for-each operation. The for-each operation can be
  * annotated with @{@link Inline}, so that it's children, which include the node representing
  * the lambda are then inlined. Concretely, the node to replace the <code>Inlinable</code> node
