@@ -529,7 +529,7 @@ if not args.interpreter and not args.background_compilation:
 if not args.interpreter and args.no_compilation:
     flags.append('-Dpolyglot.engine.CompileOnly=__FAKE_METHOD_NON_EXISTING__')
 if not args.interpreter and args.no_trace and not args.perf_warnings:
-    flags += ['-Dpolyglot.engine.TraceInlining=false', '-Dpolyglot.engine.TraceCompilation=false']
+    flags += ['-Dpolyglot.compiler.TraceInlining=false', '-Dpolyglot.engine.TraceCompilation=false']
 if not args.interpreter and not args.graph_pe:
     flags += ['-Dpolyglot.engine.GraphPE=false']
 if args.threads:
