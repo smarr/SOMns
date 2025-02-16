@@ -28,17 +28,17 @@ suite = {
         ]
     },
     "libraries": {
-        "CHECKSTYLE_10.21.0" : {
-          "urls" : [
-            "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.21.0/checkstyle-10.21.0-all.jar"
-          ],
-          "digest": "sha512:401940e1475a333afee636535708fa842b1a11b30f9fd43518589aaf94c2cf601b24f83176e95ffc171e2befe968267262b24a0a3931a009b39531a6fe570e60",
-          "licence" : "LGPLv21",
-          "maven" : {
-            "groupId" : "com.puppycrawl.tools",
-            "artifactId" : "checkstyle",
-            "version" : "10.21.0",
-          }
+        "CHECKSTYLE_10.21.0": {
+            "urls": [
+                "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-10.21.0/checkstyle-10.21.0-all.jar"
+            ],
+            "digest": "sha512:401940e1475a333afee636535708fa842b1a11b30f9fd43518589aaf94c2cf601b24f83176e95ffc171e2befe968267262b24a0a3931a009b39531a6fe570e60",
+            "licence": "LGPLv21",
+            "maven": {
+                "groupId": "com.puppycrawl.tools",
+                "artifactId": "checkstyle",
+                "version": "10.21.0",
+            },
         },
         "SOMNS_DEPS_0.3.8": {
             "urls": ["https://stefan-marr.de/dev/somns-deps-0.3.8.jar"],
@@ -48,18 +48,16 @@ suite = {
             "urls": ["https://stefan-marr.de/dev/somns-deps-dev-0.3.8.jar"],
             "digest": "sha512:b506ef4feac9ffe90c2a87aa46fb0c48c2fcfa146998fd43e1d28cdfe397b1ea1244b96d9a57f819e5642aefdea3be562be00c0d7bd568b63f208ff285510bb4",
         },
-
         "AFFINITY": {
             "moduleName": "net.openhft.affinity",
-            "digest" : "sha512:dc7684a3504280723813f7a6852e7a6178ac50410c40b8857c41a89d3779d2f7f3c8004f2ac231981162116aadd6d0a6f3135d84f1e255a50618ff5322ea1638",
-            "sourceDigest" : "sha512:66ef85ff88e52079bdcbfed147dbeb6b75c5273457b47208172576541c3c549588d74c24aaf22c385fd28411ff5262ad3fd61dc8deef82c7ce0041291740efd7",
-            "maven" : {
-                "groupId" : "net.openhft",
-                "artifactId" : "affinity",
-                "version" : "3.23.2",
-            }
+            "digest": "sha512:dc7684a3504280723813f7a6852e7a6178ac50410c40b8857c41a89d3779d2f7f3c8004f2ac231981162116aadd6d0a6f3135d84f1e255a50618ff5322ea1638",
+            "sourceDigest": "sha512:66ef85ff88e52079bdcbfed147dbeb6b75c5273457b47208172576541c3c549588d74c24aaf22c385fd28411ff5262ad3fd61dc8deef82c7ce0041291740efd7",
+            "maven": {
+                "groupId": "net.openhft",
+                "artifactId": "affinity",
+                "version": "3.23.2",
+            },
         },
-
         "LABS_JDK": {
             "id": "labsjdk-ce-latest",
             # I am just using the suite.py to store the info
@@ -82,7 +80,7 @@ suite = {
                 "java.management",
                 "jdk.management",
                 "jdk.unsupported",  # sun.misc.Unsafe
-                "jdk.httpserver"
+                "jdk.httpserver",
             ],
             "requiresConcealed": {
                 "java.base": ["jdk.internal.module"],
@@ -99,7 +97,12 @@ suite = {
             "requires": [
                 "java.logging",
             ],
-            "dependencies": ["truffle:TRUFFLE_API", "SOMNS", "mx:JUNIT", "sdk:POLYGLOT_TCK"],
+            "dependencies": [
+                "truffle:TRUFFLE_API",
+                "SOMNS",
+                "mx:JUNIT",
+                "sdk:POLYGLOT_TCK",
+            ],
             "checkstyle": "somns",
             "jacoco": "include",
             "javaCompliance": "17+",
@@ -126,8 +129,8 @@ suite = {
                     "somns.interpreter",
                     "somns.interpreter.nodes",
                     "somns.interpreter.nodes.nary",
-                    "bd.primitives"
-                ]
+                    "bd.primitives",
+                ],
             },
             "dependencies": ["somns"],
             "distDependencies": [
