@@ -27,7 +27,7 @@ jobs:
 
       - name: Install Black and PyLint
         run: |
-          pip install black pylint==2.4
+          pip install black pylint==2.4.4
 
       - name: Run Style Gate
         run: |
