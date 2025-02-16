@@ -25,9 +25,11 @@ jobs:
           curl -L ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
           tar --warning=no-unknown-keyword -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
 
-      - name: Install Black and PyLint
+      - name: Install Black
+        # and PyLint
         run: |
-          pip install black pylint==2.4.4
+          pip install black
+        # pylint==2.4.4
 
       - name: Run Style Gate
         run: |
