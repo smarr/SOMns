@@ -3,6 +3,7 @@ package tools.dym.nodes;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -32,10 +33,12 @@ public abstract class TypeProfileNode extends Node {
 
   public abstract void executeProfiling(Object obj);
 
+  @NeverDefault
   protected ProfileCounter create(final Object obj) {
     return profile.createCounter(Types.getClassOf(obj).getInstanceFactory());
   }
 
+  @NeverDefault
   protected ProfileCounter create(final Object obj, final ClassFactory factory) {
     return profile.createCounter(factory);
   }

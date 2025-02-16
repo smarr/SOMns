@@ -7,6 +7,7 @@ import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
@@ -168,6 +169,7 @@ public final class MessageSendNode {
     }
 
     @Override
+    @NeverDefault
     public WrapperNode createWrapper(final ProbeNode probe) {
       Node parent = getParent();
       // this.isSafelyReplaceableBy(newNode)

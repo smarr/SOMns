@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Idempotent;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -72,6 +74,7 @@ public class EventualSendNode extends ExprWithTagsNode {
   protected EventualSendNode() {}
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new EventualSendNodeWrapper(this, probe);
   }
@@ -110,6 +113,7 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return isParentResultUsed(this, this);
   }
@@ -176,6 +180,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Override
+    @NeverDefault
     public WrapperNode createWrapper(final ProbeNode probe) {
       return new SendNodeWrapper(this, probe);
     }
@@ -185,16 +190,19 @@ public class EventualSendNode extends ExprWithTagsNode {
       return source;
     }
 
+    @Idempotent
     protected final boolean isResultUsed() {
       Node parent = SOMNode.getParentIgnoringWrapper(this);
       assert parent instanceof EventualSendNode;
       return isParentResultUsed(parent, parent);
     }
 
+    @Idempotent
     protected static final boolean isFarRefRcvr(final Object[] args) {
       return args[0] instanceof SFarReference;
     }
 
+    @Idempotent
     protected static final boolean isPromiseRcvr(final Object[] args) {
       return args[0] instanceof SPromise;
     }
@@ -252,6 +260,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
+    @NeverDefault
     protected RegisterWhenResolved createRegisterNode() {
       return new RegisterWhenResolved(actorPool);
     }

@@ -2,6 +2,7 @@ package somns.interpreter.nodes.dispatch;
 
 import java.util.Map;
 
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode;
@@ -45,6 +46,7 @@ public abstract class AbstractDispatchNode extends Node
   }
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new AbstractDispatchNodeWrapper(this, probe);
   }

@@ -21,6 +21,7 @@
  */
 package somns.interpreter.nodes.literals;
 
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
@@ -47,6 +48,7 @@ public abstract class LiteralNode extends ExprWithTagsNode
   protected LiteralNode(final LiteralNode wrapped) {}
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new LiteralNodeWrapper(this, probe);
   }

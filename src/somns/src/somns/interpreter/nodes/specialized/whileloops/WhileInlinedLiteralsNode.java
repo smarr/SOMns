@@ -1,6 +1,7 @@
 package somns.interpreter.nodes.specialized.whileloops;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -88,6 +89,7 @@ public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

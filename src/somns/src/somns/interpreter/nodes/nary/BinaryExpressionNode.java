@@ -1,5 +1,6 @@
 package somns.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -26,6 +27,7 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode {
       Object argument);
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new BinaryExpressionNodeWrapper(this, probe);
   }

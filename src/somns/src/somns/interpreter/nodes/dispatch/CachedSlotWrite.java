@@ -3,6 +3,7 @@ package somns.interpreter.nodes.dispatch;
 import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
@@ -84,6 +85,7 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   }
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     if (getParent() instanceof ClassSlotAccessNode) {
       return new CachedSlotWriteWrapper(this, probe);

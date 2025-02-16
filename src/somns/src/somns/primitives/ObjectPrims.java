@@ -6,6 +6,7 @@ import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -160,6 +161,7 @@ public final class ObjectPrims {
     public abstract boolean executeBoolean(VirtualFrame frame, Object rcvr);
 
     @Override
+    @NeverDefault
     public WrapperNode createWrapper(final ProbeNode probe) {
       return new IsValueWrapper(this, probe);
     }

@@ -3,6 +3,7 @@ package somns.interpreter.nodes.specialized;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -69,6 +70,7 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   @Override
+  @Idempotent
   public final boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

@@ -3,6 +3,7 @@ package somns.interpreter.actors;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
@@ -24,6 +25,7 @@ import tools.replay.TraceRecord;
  */
 public abstract class SchedulePromiseHandlerNode extends Node {
 
+  @NeverDefault
   protected static final WrapReferenceNode createWrapper() {
     return WrapReferenceNodeGen.create();
   }

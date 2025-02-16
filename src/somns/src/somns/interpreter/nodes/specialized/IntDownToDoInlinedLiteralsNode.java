@@ -2,6 +2,7 @@ package somns.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
@@ -111,6 +112,7 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

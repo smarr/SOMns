@@ -3,6 +3,7 @@ package somns.interpreter.nodes.specialized.whileloops;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 
@@ -74,6 +75,7 @@ public abstract class WhileCache extends BinaryComplexOperation {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

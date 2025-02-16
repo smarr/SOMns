@@ -1,12 +1,14 @@
 package tools.replay.nodes;
 
+import com.oracle.truffle.api.dsl.GenerateInline;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import somns.vm.VmSettings;
 import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
-
+@GenerateInline(false)
 public abstract class RecordIdNode extends Node {
   private static final int BYTE_LEN       = 1;
   private static final int SHORT_LEN      = 2;
@@ -15,18 +17,22 @@ public abstract class RecordIdNode extends Node {
 
   public abstract int execute(UniformTraceBuffer buffer, int idx, int id);
 
+  @Idempotent
   protected static boolean smallIds() {
     return VmSettings.TRACE_SMALL_IDS;
   }
 
+  @Idempotent
   protected static boolean byteId(final int id) {
     return (id & 0xFFFFFF00) == 0;
   }
 
+  @Idempotent
   protected static boolean shortId(final int id) {
     return (id & 0xFFFF0000) == 0;
   }
 
+  @Idempotent
   protected static boolean threeByteId(final int id) {
     return (id & 0xFF000000) == 0;
   }

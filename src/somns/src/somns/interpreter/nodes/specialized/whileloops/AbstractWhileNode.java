@@ -3,6 +3,7 @@ package somns.interpreter.nodes.specialized.whileloops;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -80,6 +81,7 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
       SBlock loopBody);
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

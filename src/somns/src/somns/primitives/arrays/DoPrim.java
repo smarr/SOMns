@@ -2,6 +2,7 @@ package somns.primitives.arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
@@ -141,6 +142,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import somns.interpreter.actors.SFarReference;
@@ -184,6 +185,7 @@ public abstract class PrimitiveSerializationNodes {
       super(classFact);
     }
 
+    @NeverDefault
     protected short getSymbolId(final SClass clazz) {
       return clazz.getMixinDefinition().getIdentifier().getSymbolId();
     }

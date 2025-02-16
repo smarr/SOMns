@@ -26,6 +26,7 @@ package somns.vmobjects;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.oracle.truffle.api.dsl.NeverDefault;
 import somns.vm.VmSettings;
 import somns.vm.constants.Classes;
 import tools.concurrency.TracingBackend;
@@ -72,6 +73,7 @@ public final class SSymbol extends SAbstractObject {
     return string;
   }
 
+  @NeverDefault
   public short getSymbolId() {
     return symbolId;
   }

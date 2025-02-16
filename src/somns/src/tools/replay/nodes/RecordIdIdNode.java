@@ -1,5 +1,6 @@
 package tools.replay.nodes;
 
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -15,18 +16,22 @@ public abstract class RecordIdIdNode extends Node {
 
   public abstract int execute(UniformTraceBuffer storage, int idx, int id1, int id2);
 
+  @Idempotent
   protected static boolean smallIds() {
     return VmSettings.TRACE_SMALL_IDS;
   }
 
+  @Idempotent
   protected static boolean byteId(final int id1, final int id2) {
     return (id1 & id2 & 0xFFFFFF00) == 0;
   }
 
+  @Idempotent
   protected static boolean shortId(final int id1, final int id2) {
     return (id1 & id2 & 0xFFFF0000) == 0;
   }
 
+  @Idempotent
   protected static boolean threeByteId(final int id1, final int id2) {
     return (id1 & id2 & 0xFF000000) == 0;
   }

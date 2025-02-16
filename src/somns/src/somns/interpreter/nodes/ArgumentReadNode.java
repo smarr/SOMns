@@ -1,5 +1,6 @@
 package somns.interpreter.nodes;
 
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
@@ -50,6 +51,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
+    @NeverDefault
     public WrapperNode createWrapper(final ProbeNode probe) {
       return new LocalArgumentReadNodeWrapper(this, probe);
     }

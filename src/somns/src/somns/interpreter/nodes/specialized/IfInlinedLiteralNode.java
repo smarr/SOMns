@@ -1,5 +1,6 @@
 package somns.interpreter.nodes.specialized;
 
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -58,6 +59,7 @@ public final class IfInlinedLiteralNode extends ExprWithTagsNode {
   }
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     Node parent = getParent();
     if (parent instanceof ExpressionNode) {

@@ -3,6 +3,7 @@ package somns.interpreter.actors;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -74,6 +75,7 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
       boolean haltOnResolution);
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new AbstractPromiseResolutionNodeWrapper(this, probe);
   }

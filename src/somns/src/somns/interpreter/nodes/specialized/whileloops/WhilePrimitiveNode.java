@@ -1,5 +1,6 @@
 package somns.interpreter.nodes.specialized.whileloops;
 
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
@@ -38,6 +39,7 @@ public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
       SBlock loopCondition, SBlock loopBody);
 
   @Override
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     return false;
   }

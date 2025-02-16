@@ -23,6 +23,8 @@ package somns.interpreter.nodes;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.dsl.Idempotent;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode;
@@ -145,6 +147,7 @@ public abstract class ExpressionNode extends SOMNode implements InstrumentableNo
     return TypesGen.expectSPromise(executeGeneric(frame));
   }
 
+  @Idempotent
   public boolean isResultUsed(final ExpressionNode child) {
     if (this instanceof WrapperNode) {
       Node p = getParent();
@@ -161,6 +164,7 @@ public abstract class ExpressionNode extends SOMNode implements InstrumentableNo
   }
 
   @Override
+  @NeverDefault
   public WrapperNode createWrapper(final ProbeNode probe) {
     return new ExpressionNodeWrapper(this, probe);
   }
