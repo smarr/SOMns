@@ -3,6 +3,44 @@ name: Tests
 on: [push, pull_request]
 
 jobs:
+  style:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MX
+        run: |
+          ./som --setup mx
+          echo "PATH=$PATH:`pwd`/../mx" >> "$GITHUB_ENV"
+
+      - name: Get LabsJDK
+        run: |
+          ./som --setup labsjdk
+
+      - name: Download Eclipse
+        run: |
+          export ECLIPSE_TAR=eclipse.tar.gz
+          export ECLIPSE_URL=https://archive.eclipse.org/eclipse/downloads/drops4/R-4.30-202312010110/eclipse-SDK-4.30-linux-gtk-x86_64.tar.gz
+          curl -L ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
+          tar --warning=no-unknown-keyword -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
+
+      - name: Install Black and PyLint
+        run: |
+          pip install black pylint==2.4
+
+      - name: Run Style Gate
+        run: |
+          export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
+          export JAVA_HOME=$JAVA_HOME_21_X64
+          mx --java-home=${JAVA_HOME} gate --tags style
+
+      - name: Lint Kompos
+        run: |
+          cd tools/kompos
+          npm install
+          npm run verify
+
   test_som:
     strategy:
       fail-fast: false # we want all jobs to run, because they may fail independently
@@ -16,9 +54,6 @@ jobs:
 
           - os: ubuntu-24.04
             job: test-2
-
-          - os: ubuntu-24.04
-            job: lint
 
     runs-on: ubuntu-24.04 # ubuntu-latest
     steps:
@@ -38,7 +73,6 @@ jobs:
           ./som --setup labsjdk
 
       - name: Compile SOMns
-        if: matrix.job != 'lint'
         run: |
           mx build
 
@@ -49,7 +83,6 @@ jobs:
           mx tests-som
 
       - name: SOMns Test Suite
-        if: matrix.job != 'lint'
         run: |
           export JAVA_HOME=$JAVA_HOME_17_X64
           ./som -G core-lib/TestSuite/TestRunner.ns
@@ -92,35 +125,8 @@ jobs:
           export JAVA_HOME=$JAVA_HOME_17_X64
           ./tests/replay/test.sh 2
 
-    # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
-    #- name: Snapshot Tests
+      # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
+      #- name: Snapshot Tests
       # script:
       #   - run ./tests/snapshot/test.sh
       #   - $ANT serialization-tests
-
-      - name: CheckStyle
-        if: matrix.job == 'lint'
-        run: |
-          ant -e checkstyle
-
-      - name: Download Eclipse
-        if: matrix.job == 'lint'
-        run: |
-           export ECLIPSE_TAR=eclipse.tar.gz
-          export ECLIPSE_URL=https://archive.eclipse.org/eclipse/downloads/drops4/R-4.30-202312010110/eclipse-SDK-4.30-linux-gtk-x86_64.tar.gz
-           curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
-           tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
-
-      - name: Check Eclipse Format
-        if: matrix.job == 'lint'
-        run: |
-          export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
-          export JAVA_HOME=$JAVA_HOME_17_X64
-          ant -e eclipseformat-check
-
-      - name: Lint Kompos
-        if: matrix.job == 'lint'
-        run: |
-          cd tools/kompos
-          npm install
-          npm run verify

@@ -35,7 +35,6 @@ kernel:           ${kernel}</echo>
     <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.7" />
-    <property name="checkstyle.version" value="8.36" />
     <property name="jacoco.version"     value="0.8.8" />
     <property name="affinity.version"   value="3.23.2" />
     <property name="jna.version"        value="5.12.1" />
@@ -220,63 +219,6 @@ kernel:           ${kernel}</echo>
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-source.jar" />
-    </target>
-
-    <target name="eclipseformat">
-        <pathconvert pathsep=" " property="javafiles">
-            <fileset dir="${src.dir}">
-                <include name="**/*.java"/>
-            </fileset>
-            <fileset dir="${unit.dir}">
-                <include name="**/*.java"/>
-            </fileset>
-            <fileset dir="${corelib.dir}">
-                <include name="**/*.java"/>
-            </fileset>
-        </pathconvert>
-        <exec executable="${env.ECLIPSE_EXE}" dir="${basedir}">
-            <arg value="-nosplash"/>
-            <arg value="-application"/>
-            <arg value="-consolelog"/>
-            <arg value="-data"/>
-            <arg value="${basedir}"/>
-            <arg value="-vm"/>
-            <arg value="${env.JAVA_HOME}/bin/java"/>
-            <arg value="org.eclipse.jdt.core.JavaCodeFormatter"/>
-            <arg value="-config"/>
-            <arg value="${basedir}/.settings/org.eclipse.jdt.core.prefs"/>
-            <arg line="${javafiles}"/>
-        </exec>
-    </target>
-
-    <target name="eclipseformat-check" depends="eclipseformat">
-        <exec executable="git" dir="${basedir}">
-            <arg value="status" />
-            <arg value="*.java" />
-        </exec>
-        <exec executable="git" dir="${basedir}" failonerror="true">
-            <arg value="diff-index" />
-            <arg value="--quiet" />
-            <arg value="--exit-code" />
-            <arg value="--ignore-submodules" />
-            <arg value="HEAD" />
-        </exec>
-    </target>
-
-    <target name="checkstyle-jar">
-        <get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
-    </target>
-
-    <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
-        <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
-        <checkstyle config=".checkstyle_checks.xml">
-          <fileset dir="${src.dir}" includes="**/*.java"/>
-          <fileset dir="${unit.dir}" includes="**/*.java"/>
-          <fileset dir="${corelib.dir}" includes="**/*.java"/>
-          <formatter type="plain"/>
-        </checkstyle>
     </target>
 
     <target name="jacoco-lib" description="Get JaCoCo dependency">
