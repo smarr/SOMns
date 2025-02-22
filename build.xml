@@ -87,32 +87,10 @@ kernel:           ${kernel}</echo>
     <available file="${truffle.dir}" type="dir" property="truffle.present"/>
     <available file="${jvmci.home}"  type="dir" property="jvmci.home.present" />
 
-    <condition property="truffle.and.jvmci.present">
-      <and>
-        <available file="${truffle.dir}" />
-        <available file="${jvmci.home}" />
-       </and>
-    </condition>
-
     <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
         <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="clean" inheritAll="false" />
-    </target>
-
-    <target name="clean-truffle" if="truffle.and.jvmci.present">
-        <exec executable="${mx.cmd}" dir="${vm.dir}">
-          <arg value="--dynamicimports"/>
-          <arg value="../substratevm,../tools,../truffle,../sdk,../compiler"/>
-          <arg value="clean"/>
-          <env key="JAVA_HOME" value="${jvmci.home}" />
-        </exec>
-    </target>
-
-    <target name="clobber-truffle" >
-      <exec executable="git" dir="${lib.dir}/truffle">
-        <arg line="clean -f -f -d -x" />
-      </exec>
     </target>
 
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clobber-truffle">
@@ -128,58 +106,6 @@ kernel:           ${kernel}</echo>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
     </target>
 
-    <!-- libgraal-jdk also implicitly builds truffle-libs -->
-    <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule,jvmci-libs">
-        <exec executable="${mx.cmd}" dir="${compiler.dir}" failonerror="true">
-            <env key="DYNAMIC_IMPORTS" value="/tools" />
-            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm" />
-            <arg value="build"/>
-            <arg value="--no-native" unless:true="${build.native}" />
-            <env key="JAVA_HOME" value="${jvmci.home}" />
-        </exec>
-    </target>
-
-    <target name="libgraal-jdk" unless="skip.truffle" depends="truffle-submodule,jvmci-libs">
-        <exec executable="${mx.cmd}" dir="${vm.dir}" failonerror="true">
-            <env key="JAVA_HOME" value="${jvmci.home}" />
-            <!-- REM: This needs to match ./som -->
-            <env key="DYNAMIC_IMPORTS" value="/substratevm,/tools,/truffle,/sdk,/compiler" />
-            <env key="FORCE_BASH_LAUNCHERS" value="true" />
-            <env key="DISABLE_LIBPOLYGLOT" value="true" />
-            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm" />
-            <arg line="build"/>
-        </exec>
-    </target>
-
-    <target name="bd-libs"> <!-- implicit dependency on truffle-libs/libgraal-jdk -->
-        <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false">
-        </ant>
-        <ant dir="${bd.dir}" useNativeBasedir="true" target="compile-nodeps" inheritAll="false">
-            <property name="sdk.build"   value="${sdk.build}" />
-            <property name="truffle.dir" value="${truffle.dir}" />
-            <property name="truffle.build" value="${truffle.build}" />
-        </ant>
-    </target>
-
-    <target name="ideinit" depends="source">
-        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
-            <env key="JAVA_HOME" value="${jvmci.home}" />
-            <arg value="--dynamicimports"/>
-            <arg value="../truffle,../tools,../compiler,../sdk"/>
-            <arg value="eclipseinit"/>
-        </exec>
-    </target>
-
-    <target name="jvmci-libs" unless="skip.libs">
-        <exec executable="${mx.cmd}" dir="${compiler.dir}">
-            <arg line="fetch-jdk --jdk-id ${labs-jdk} --alias ${lib.dir}/jvmci" />
-        </exec>
-    </target>
-
-    <target name="jvmci-home">
-        <echo>${jvmci.home}</echo>
-    </target>
-
     <target name="som-libs">
         <get src="${lib.url}/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
@@ -190,12 +116,8 @@ kernel:           ${kernel}</echo>
         <get src="https://repo1.maven.org/maven2/org/java-websocket/Java-WebSocket/1.5.1/Java-WebSocket-1.5.1.jar"
             usetimestamp="true"
             dest="${lib.dir}/Java-WebSocket-1.5.1.jar" />
-        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/${affinity.version}/affinity-${affinity.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/affinity.jar" />
-        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/${affinity.version}/affinity-${affinity.version}-sources.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/affinity-sources.jar" />
+
+
         <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-api/${slf4j.version}/slf4j-api-${slf4j.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/slf4j-api.jar" />
@@ -211,14 +133,6 @@ kernel:           ${kernel}</echo>
         <get src="https://repo1.maven.org/maven2/net/java/dev/jna/jna/${jna.version}/jna-${jna.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/jna.jar" />
-    </target>
-
-    <target name="libs" depends="som-libs,bd-libs" unless="skip.libs" />
-
-    <target name="source" description="Download Source Jars for development">
-        <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
-            usetimestamp="true"
-            dest="${lib.dir}/somns-deps-source.jar" />
     </target>
 
     <target name="jacoco-lib" description="Get JaCoCo dependency">
@@ -285,11 +199,11 @@ kernel:           ${kernel}</echo>
     <target name="compile-all" depends="compile,kompos" description="Build SOMns and Kompos">
     </target>
 
-    <target name="jar" depends="truffle-libs,compile-core" description="Package as JAR">
+    <target name="jar" depends=",compile-core" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
-    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib,run-unit-tests" description="Execute tests">
+    <target name="unit-tests" depends="compile-core,jacoco-lib,run-unit-tests" description="Execute tests">
     </target>
 
     <target name="run-unit-tests" depends="jacoco-lib" description="Execute tests, without dependencies">
@@ -325,7 +239,7 @@ kernel:           ${kernel}</echo>
      <fail message="Basic tests failed." if="test.failed" />
     </target>
 
-    <target name="som-tests" depends="truffle-libs,compile-core">
+    <target name="som-tests" depends="compile-core">
     </target>
 
     <target name="run-som-tests">
@@ -347,7 +261,7 @@ kernel:           ${kernel}</echo>
       </exec>
     </target>
 
-    <target name="serialization-tests" depends="truffle-libs,compile-core">
+    <target name="serialization-tests" depends="compile-core">
       <exec executable="./som" failonerror="true">
         <arg value="-G" />
         <arg value="-at" />
@@ -377,7 +291,7 @@ kernel:           ${kernel}</echo>
       </exec>
     </target>
 
-    <target name="replay-tests" depends="truffle-libs,compile-core">
+    <target name="replay-tests" depends="compile-core">
       <exec executable="tests/replay/test.sh" failonerror="true">
           <arg value="1" />
       </exec>
@@ -386,7 +300,7 @@ kernel:           ${kernel}</echo>
       </exec>
     </target>
 
-    <target name="snapshot-tests" depends="truffle-libs,compile-core">
+    <target name="snapshot-tests" depends="compile-core">
       <exec executable="tests/snapshot/test.sh" failonerror="true">
       </exec>
     </target>
@@ -447,7 +361,7 @@ kernel:           ${kernel}</echo>
     <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
 
-    <target name="native-deps" depends="truffle-libs,libs,jvmci-libs,compile-svm,compile-som" />
+    <target name="native-deps" depends="libs,compile-svm,compile-som" />
 
     <target name="native" depends="native-deps,compile-native" />
 
