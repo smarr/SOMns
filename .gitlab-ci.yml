@@ -18,7 +18,7 @@ benchmark_y1:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria
   after_script:
     - sudo reown-project.sh
 
@@ -27,7 +27,7 @@ benchmark_y2:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria2
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria2
   after_script:
     - sudo reown-project.sh
 
@@ -36,7 +36,7 @@ benchmark_y3:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI m:yuria3
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-CI t:yuria3
   after_script:
     - sudo reown-project.sh
 

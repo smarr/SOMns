@@ -2,13 +2,14 @@
 # quit on first error
 set -e
 
-function cleanup()
-{
-  tar -cjf traces.tar.bz2 traces
-  curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
-}
-
-trap cleanup EXIT
+# TODO: replace transfer.sh with another service, if available.
+# function cleanup()
+# {
+#   tar -cjf traces.tar.bz2 traces
+#   curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
+# }
+#
+# trap cleanup EXIT
 
 if [ "$1" = "1" ]
 then

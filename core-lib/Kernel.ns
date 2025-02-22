@@ -69,6 +69,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ifNil: aBlock = ( ^ self )
     public ifNotNil: aBlock = ( ^ aBlock value )
     public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock cull: self )
+    public ifNotNil: goBlock ifNil: noGoBlock = ( ^ goBlock cull: self )
 
     (* Debugging *)
     public print    = ( self asString print )
@@ -170,6 +171,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ifNil: aBlock = ( ^ aBlock value )
     public ifNotNil: aBlock = ( ^ self )
     public ifNil: goBlock ifNotNil: noGoBlock = ( ^ goBlock value )
+    public ifNotNil: noGoBlock ifNil: goBlock = ( ^ goBlock value )
   )
 
   public class Integer = Value ()
