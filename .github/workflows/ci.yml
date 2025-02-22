@@ -92,7 +92,7 @@ jobs:
         if: matrix.job == 'lint'
         run: |
           export ECLIPSE_TAR=eclipse.tar.gz
-          export ECLIPSE_URL=https://mirror.dkm.cz/eclipse/eclipse/downloads/drops4/R-4.25-202208311800/eclipse-SDK-4.25-linux-gtk-x86_64.tar.gz
+          export ECLIPSE_URL=https://archive.eclipse.org/eclipse/downloads/drops4/R-4.30-202312010110/eclipse-SDK-4.30-linux-gtk-x86_64.tar.gz
           curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
           tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
 
