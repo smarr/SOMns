@@ -376,6 +376,7 @@ TWEAK_INLINING = ['-Dpolyglot.engine.CompilationThreshold=191',
 JAVA_ARGS = [
     '-server', '-XX:+UseParallelGC',
     '-XX:+UseThreadPriorities',
+    # '--sun-misc-unsafe-memory-access=allow',
     '--enable-native-access=org.graalvm.truffle'
 ]
 
@@ -551,6 +552,7 @@ if args.java_args:
 
 flags += [
   '--module-path=' + ':'.join(MODULE_PATH_ENTRIES),
+  # '--upgrade-module-path=' + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar',
   '--upgrade-module-path=' + LIBGRAAL_JAR
 ]
 
