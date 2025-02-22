@@ -982,4 +982,30 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: #overridden2 equals: OtherScope new AnotherA new B new C new localTarget.
     )
   ) : ( TEST_CONTEXT = () )
+
+  public class IfNilTest = TestContext ()(
+    public testIfNil = (
+      assert: (nil ifNil: [ true ]).
+      deny:   (nil ifNil: [ false ]).
+      assert: (#rcvr ifNil: [ #notExec ]) equals: #rcvr.
+      assert: (#rcvr ifNil: [ #notExec ]) equals: #rcvr.
+    )
+
+    public testIfNotNil = (
+      assert: (self ifNotNil: [ true ]).
+      deny:   (self ifNotNil: [ false ]).
+      assert: (nil ifNotNil: [ #notExec ]) is: nil.
+      assert: (nil ifNotNil: [ #notExec ]) is: nil.
+    )
+
+    public testIfNilIfNotNil = (
+      assert: (nil ifNil: [ #exec ] ifNotNil: [ #notExec ]) equals: #exec.
+      assert: (self ifNil: [ #notExec ] ifNotNil: [ #exec ]) equals: #exec.
+    )
+
+    public testIfNotNilIfNil = (
+      assert: (nil ifNotNil: [ #exec ] ifNil: [ #notExec ]) equals: #notExec.
+      assert: (self ifNotNil: [ #exec ] ifNil: [ #notExec ]) equals: #exec.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
