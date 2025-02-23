@@ -132,7 +132,7 @@ public class Suspension {
     frontend.sendVariables(varRef, requestId, this, filter, start, count);
   }
 
-  private void submitTask(final ApplicationThreadTask task) {
+  public void submitTask(final ApplicationThreadTask task) {
     try {
       tasks.put(task);
     } catch (InterruptedException e) {

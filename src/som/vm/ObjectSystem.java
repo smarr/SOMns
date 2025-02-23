@@ -152,10 +152,39 @@ public final class ObjectSystem {
     return loadModule(source);
   }
 
+  public MixinDefinition reLoadModule(final String filename, MixinDefinition oldModule) throws IOException{
+    File file = new File(filename);
+
+    if (!file.exists()) {
+      throw new FileNotFoundException(filename);
+    }
+
+    if (!file.isFile()) {
+      throw new NotAFileException(filename);
+    }
+
+    Source source = SomLanguage.getSource(file);
+    return reLoadModule(source,oldModule);
+  }
+
+  public MixinDefinition reLoadModule(final Source source, MixinDefinition oldModule) throws IOException {
+    try {
+      return compiler.recompileModule(source,null,oldModule);
+    } catch (ProgramDefinitionError programDefinitionError) {
+      programDefinitionError.printStackTrace();
+    }
+    return null;
+  }
+
   public MixinDefinition loadModule(final Source source) throws IOException {
     URI uri = source.getURI();
     if (loadedModules.containsKey(uri)) {
-      return loadedModules.get(uri);
+      System.out.println("UPDATING MODULE");
+      try {
+        return compiler.recompileModule(source,null);
+      } catch (ProgramDefinitionError programDefinitionError) {
+        programDefinitionError.printStackTrace();
+      }
     }
 
     MixinDefinition module;

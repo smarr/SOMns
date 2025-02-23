@@ -1,5 +1,9 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleRuntime;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -14,6 +18,15 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 public abstract class DispatchGuard {
+
+  @CompilerDirectives.CompilationFinal
+  private static Assumption noModuleReloaded = Truffle.getRuntime().createAssumption("noMoRel");
+
+  public static void invalidateAssumption() {
+    noModuleReloaded.invalidate();
+    noModuleReloaded = Truffle.getRuntime().createAssumption("noMoRel");
+  }
+
   public abstract boolean entryMatches(Object obj)
       throws InvalidAssumptionException;
 
@@ -58,6 +71,7 @@ public abstract class DispatchGuard {
   private static final class CheckClass extends DispatchGuard {
 
     private final Class<?> expected;
+    private final Assumption noLoad = noModuleReloaded;
 
     CheckClass(final Class<?> expectedClass) {
       this.expected = expectedClass;
@@ -65,20 +79,29 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       return obj.getClass() == expected;
     }
   }
 
   private static final class CheckTrue extends DispatchGuard {
+
+    private final Assumption noLoad = noModuleReloaded;
+
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       return obj == Boolean.TRUE;
     }
   }
 
   private static final class CheckFalse extends DispatchGuard {
+
+    private final Assumption noLoad = noModuleReloaded;
+
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       return obj == Boolean.FALSE;
     }
   }
@@ -86,6 +109,7 @@ public abstract class DispatchGuard {
   private static final class CheckObjectWithoutFields extends DispatchGuard {
 
     private final ClassFactory expected;
+    private final Assumption noLoad = noModuleReloaded;
 
     CheckObjectWithoutFields(final ClassFactory expected) {
       this.expected = expected;
@@ -93,6 +117,7 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       return obj instanceof SObjectWithoutFields &&
           ((SObjectWithoutFields) obj).getFactory() == expected;
     }
@@ -101,6 +126,7 @@ public abstract class DispatchGuard {
   private static final class CheckSClass extends DispatchGuard {
 
     private final ClassFactory expected;
+    private final Assumption noLoad = noModuleReloaded;
 
     CheckSClass(final ClassFactory expected) {
       this.expected = expected;
@@ -108,6 +134,7 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       return obj instanceof SClass &&
           ((SClass) obj).getFactory() == expected;
     }
@@ -115,6 +142,7 @@ public abstract class DispatchGuard {
 
   public abstract static class CheckSObject extends DispatchGuard {
     protected final ObjectLayout expected;
+    protected final Assumption noLoad = noModuleReloaded;
 
     CheckSObject(final ObjectLayout expected) {
       this.expected = expected;
@@ -136,6 +164,7 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       expected.checkIsLatest();
       return obj instanceof SMutableObject &&
           ((SMutableObject) obj).getObjectLayout() == expected;
@@ -155,6 +184,7 @@ public abstract class DispatchGuard {
 
     @Override
     public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+      noLoad.check();
       expected.checkIsLatest();
       return obj instanceof SImmutableObject &&
           ((SImmutableObject) obj).getObjectLayout() == expected;

@@ -30,3 +30,6 @@ traces
 /tests/streams/*.txt
 npm-debug.log*
 /.metadata
+.DS_Store
+/SOMns.iml
+/libs/black-diamonds
