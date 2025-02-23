@@ -1,0 +1,121 @@
+class InstantMessengerApplication usingPlatform: platform = Value (
+| private actors = platform actors.
+  private Array = platform kernel Array.
+  private Dictionary = platform collections Dictionary.
+|)(
+  class TextMessage new: content sender: senderName = Value (
+  | public content = content.
+    public sender = senderName.
+  |)()
+
+  public class InstantMessenger new: name  total: size = (
+  | private buddyMap = Dictionary new: size.
+    public name = name.
+    private textMessage ::= nil.
+  |)(
+
+    public startChat: remoteMessenger = (
+      | pDiscover pName pSend msg pp array |
+      pp:: actors createPromisePair.
+
+      (* returns a far reference of the remote messenger *)
+      pDiscover:: self addMessenger: remoteMessenger.
+
+      pName:: pDiscover <-: name.
+      pName whenResolved: [:remoteName |
+        msg:: 'Hello ' + remoteName.
+        pSend:: sendMessage: remoteName contentMsg: msg.
+
+        pSend whenResolved: [:result |
+          result = #ok
+            ifTrue: [
+              pp resolver resolve: (TextMessage new: msg sender: name) ]
+            ifFalse:[
+              pp resolver resolve: nil ] ] ].
+
+      ^ pp promise
+    )
+
+    public sendMessage: receiverName contentMsg: content = (
+      | pp receiverActor pReceive |
+      textMessage:: TextMessage new: content sender: name.
+
+      receiverActor:: buddyMap at: receiverName.
+      pReceive:: receiverActor <-: receive: textMessage.
+
+      ^ pReceive
+    )
+
+    public displayMessage: msg = (
+      (name + ' screen> ' + msg) println
+    )
+
+    public addMessenger: messenger = (
+      | p pName buddy |
+      p:: actors createPromisePair.
+
+      pName:: messenger <-: name.
+      pName whenResolved: [:n |
+        (buddyMap containsKey: n)
+          ifTrue: [
+            buddyMap at: n put: messenger. (* update el far reference *)
+            (name + ' updated the far reference to buddy: ' + n) println. ]
+          ifFalse: [
+            buddyMap at: n put: messenger.
+            (name + ' discovered a new messenger buddy: ' + n) println ].
+
+        p resolver resolve: (buddyMap at: n).
+      ] onError: [:e |
+        ('-Error adding the messenger: ' + e) println.
+        p resolver resolve: nil.
+      ].
+
+      ^ p promise
+    )
+
+    public receive: textMessage = (
+      | sender content p |
+      content:: textMessage content.
+      sender:: textMessage sender.
+
+      (* print message to the screen *)
+      self displayMessage: sender + ': ' + content.
+
+      (* acknowledgement notification of message received *)
+      ^ #ok
+    )
+  )
+
+  public main: args = (
+    | completionPP1 completionPP2 users messenger1 messenger2 pResult1 pResult2 |
+    completionPP1:: actors createPromisePair.
+    completionPP2:: actors createPromisePair.
+
+    '[INSTANT MESSENGER APPLICATION] Starting' println.
+
+    users:: Array new: 2.
+    users at: 1 put: 'Joe'.
+    users at: 2 put: 'Marie'.
+
+    messenger1:: (actors createActorFromValue: InstantMessenger) <-: new: (users at: 1) total: users size.
+    messenger2:: (actors createActorFromValue: InstantMessenger) <-: new: (users at: 2) total: users size.
+
+    pResult1:: messenger1 <-: startChat: messenger2.
+    pResult1 whenResolved: [:result |
+      result ifNotNil: [
+        messenger1 <-: displayMessage: result sender + ': ' + result content.
+        completionPP1 resolver resolve: 0. (* end application *)
+      ] ].
+
+    pResult2:: messenger2 <-: startChat: messenger1.
+    pResult2 whenResolved: [:result |
+      result ifNotNil:[
+        messenger2 <-: displayMessage: result sender + ': ' + result content.
+        completionPP2 resolver resolve: 0. (* end application *)
+      ] ].
+
+    ^ completionPP1 promise whenResolved: [:result1 |
+        completionPP2 promise whenResolved: [:result2 |
+          '\n\n[INSTANT MESSENGER APPLICATION] Ending' println ] ].
+  )
+)

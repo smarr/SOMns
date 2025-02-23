@@ -1,0 +1,136 @@
+class PaperScissorStoneTest usingPlatform: platform testFramework: minitest = Value (
+| private actors = platform actors.
+  private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private paperScissorStoneApp = (platform system
+    loadModule: '../../demos/applications/PaperScissorStoneApplication.ns' nextTo: self)
+      usingPlatform: platform.
+  private Peer = paperScissorStoneApp Peer.
+  private TransferArray = platform kernel TransferArray.
+|)(
+     public class PaperScissorStoneTests = AsyncTestContext ()(
+
+        public testAsyncPlay = (
+          | completionPP players peerActors firstCoordinator gameFinish numberPlayers |
+
+         completionPP:: actors createPromisePair.
+
+         numberPlayers:: 2.
+
+         players:: TransferArray new: numberPlayers.
+         players at: 1 put: 'Joe'.
+         players at: 2 put: 'Marie'.
+
+         peerActors:: TransferArray new: numberPlayers.
+
+         players doIndexes:[: i |
+          | peer |
+          peer:: (actors createActorFromValue: Peer) <-: new: i name: (players at: i) resolver: completionPP resolver iterations: 1.
+          peerActors at: i put: peer.
+        ].
+
+        firstCoordinator:: peerActors at: peerActors size.
+        firstCoordinator <-: setCoordinatorPeer.
+
+        gameFinish:: firstCoordinator <-: play: (peerActors at: 1) andPlayer: (peerActors at: 2).
+
+        ^ assert: gameFinish resolvedWith: 'ok'.
+      )
+
+       public testAsyncGame = (
+         | completionPP players peerActors firstCoordinator playPromise gamePromise answerPromise numberPlayers |
+
+           completionPP:: actors createPromisePair.
+
+           numberPlayers:: 2.
+
+           players:: TransferArray new: numberPlayers.
+           players at: 1 put: 'Joe'.
+           players at: 2 put: 'Marie'.
+
+           peerActors:: TransferArray new: numberPlayers.
+
+           players doIndexes:[: i |
+            | peer |
+            peer:: (actors createActorFromValue: Peer) <-: new: i name: (players at: i) resolver: completionPP resolver iterations: 1.
+            peerActors at: i put: peer.
+          ].
+
+          firstCoordinator:: peerActors at: peerActors size.
+          firstCoordinator <-: setCoordinatorPeer.
+
+          playPromise:: firstCoordinator <-: play: (peerActors at: 1) andPlayer: (peerActors at: 2).
+
+          ^ playPromise whenResolved:[: finished |
+
+           finished = #ok
+           ifTrue:[
+             gamePromise:: firstCoordinator <-: getLastGame.
+
+             gamePromise whenResolved:[: game |
+               answerPromise:: firstCoordinator <-: isFirstAnswerWinner: (game getFirstAnswer) andAnswer: (game getSecondAnswer).
+                answerPromise whenResolved:[: answer|
+                   answer = true
+                   ifTrue:[
+                    (game getWinner <-: getName) whenResolved:[: name |
+                      (game getFirstPlayer <-: getName) whenResolved: [: player |
+                         assert: name equals: player.
+                      ].
+                    ].
+                   ]
+                   ifFalse:[
+                     assert: (game getWinner) equals: nil.
+                   ].
+               ].
+             ].
+           ].
+          ].
+       )
+
+
+      public testAsyncJoinRequest = (
+        | completionPP players peerActors firstCoordinator gameFinish numberPlayers p1 p2 assertPromise allGamesPromise gamePromise1 gamePromise2 |
+
+         completionPP:: actors createPromisePair.
+
+         numberPlayers:: 2.
+
+         players:: TransferArray new: numberPlayers.
+         players at: 1 put: 'Joe'.
+         players at: 2 put: 'Marie'.
+
+         peerActors:: TransferArray new: numberPlayers.
+
+         players doIndexes:[: i |
+          | peer |
+          peer:: (actors createActorFromValue: Peer) <-: new: i name: (players at: i) resolver: completionPP resolver iterations: 2.
+          peerActors at: i put: peer.
+        ].
+
+        firstCoordinator:: peerActors at: peerActors size.
+        firstCoordinator <-: setCoordinatorPeer.
+
+        firstCoordinator <-: startGame: peerActors gameNumber: 1.
+
+        firstCoordinator <-: joinRequest: ((actors createActorFromValue: Peer) <-: new: (players size + 1) name: 'Mike' resolver: completionPP resolver iterations: 2).
+
+        ^ completionPP promise whenResolved:[: r |
+            allGamesPromise:: firstCoordinator <-: getAllGames.
+
+            allGamesPromise whenResolved:[: all |
+              gamePromise1:: (all <-: at: 1).
+              gamePromise2:: (all <-: at: 2).
+
+              gamePromise1 whenResolved:[: gp1 |
+                assert: gp1 getTotal equals: 2.
+              ].
+
+              gamePromise2 whenResolved:[: gp2 |
+                assert: gp2 getTotal equals: 3.
+              ].
+            ].
+        ].
+      )
+
+     )  : ( TEST_CONTEXT = () )
+)
