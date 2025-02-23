@@ -11,6 +11,7 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.dym.DynamicMetrics;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
@@ -72,6 +73,8 @@ public abstract class RegisterOnPromiseNode {
             ((SReplayPromise) promise).registerOnResolvedReplay(msg);
             return;
           }
+        } else if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
+          msg.messageId = ((TracingActor) current).getNextPromiseMsgNumber();
         }
 
         if (!promise.isResolvedUnsync()) {
@@ -154,6 +157,8 @@ public abstract class RegisterOnPromiseNode {
             ((SReplayPromise) promise).registerOnErrorReplay(msg);
             return;
           }
+        } else if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
+          msg.messageId = ((TracingActor) current).getNextPromiseMsgNumber();
         }
 
         if (!promise.isErroredUnsync()) {
