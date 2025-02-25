@@ -225,7 +225,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            target.getId());
+            target.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
       }
 
       target.send(msg, actorPool);
@@ -241,9 +241,15 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      Actor target = null;
+      if (isFarRefRcvr(args)) {
+        SFarReference farReference = (SFarReference) args[0];
+        target = farReference.getActor();
+      }
+
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
-            rcvr.getPromiseId());
+            rcvr.getPromiseId(), msg.getSelector(), target != null ? target.getId() : -1, msg.getTargetSourceSection());
       }
 
       registerNode.register(rcvr, msg, rcvr.getOwner());
@@ -300,7 +306,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            current.getId());
+            current.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
       }
 
       if (VmSettings.SENDER_SIDE_REPLAY) {
@@ -351,7 +357,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
-            current.getId());
+            current.getId(), msg.getSelector(), msg.getTarget().getId(), msg.getTargetSourceSection());
       }
 
       if (VmSettings.SENDER_SIDE_REPLAY) {

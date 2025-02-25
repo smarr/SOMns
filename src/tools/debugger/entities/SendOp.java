@@ -1,5 +1,7 @@
 package tools.debugger.entities;
 
+import tools.TraceData;
+
 public enum SendOp {
   ACTOR_MSG(Marker.ACTOR_MSG_SEND, EntityType.ACT_MSG, EntityType.ACTOR),
   PROMISE_MSG(Marker.PROMISE_MSG_SEND, EntityType.ACT_MSG, EntityType.PROMISE),
@@ -9,6 +11,9 @@ public enum SendOp {
   private final byte       id;
   private final EntityType entity;
   private final EntityType target;
+
+  private static final int SYMBOL_ID_SIZE = 2;
+  private static final int RECEIVER_ACTOR_ID_SIZE = 8;
 
   SendOp(final byte id, final EntityType entity, final EntityType target) {
     this.id = id;
@@ -29,6 +34,6 @@ public enum SendOp {
   }
 
   public int getSize() {
-    return 17;
+    return 17 + RECEIVER_ACTOR_ID_SIZE + SYMBOL_ID_SIZE + TraceData.SOURCE_SECTION_SIZE;
   }
 }

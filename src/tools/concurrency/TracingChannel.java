@@ -55,7 +55,7 @@ public final class TracingChannel extends SChannel {
         super.write(value, traceWrite);
       } finally {
         KomposTrace.sendOperation(
-            SendOp.CHANNEL_SEND, current.messageId, current.channelId);
+            SendOp.CHANNEL_SEND, current.messageId, current.channelId, null, 0, null);
       }
     }
   }
